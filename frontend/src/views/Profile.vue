@@ -51,25 +51,7 @@
         <router-link to="/credits" class="credits-link">이용권 구매</router-link>
       </div>
 
-      <!-- Service Section -->
-      <div class="section-card menu-group">
-        <div class="menu-item" @click="toggleTheme">
-          <span class="menu-label">화면 모드</span>
-          <div class="theme-toggle">
-            <span class="theme-label">{{ theme === 'dark' ? '다크' : '라이트' }}</span>
-            <div class="toggle-switch" :class="{ light: theme === 'light' }">
-              <div class="toggle-knob"></div>
-            </div>
-          </div>
-        </div>
-        <div class="menu-divider"></div>
-        <router-link to="/features" class="menu-item">
-          <span class="menu-label">서비스 소개</span>
-          <span class="menu-arrow">›</span>
-        </router-link>
-      </div>
-
-      <!-- Accordion: 고객센터 -->
+      <!-- 고객센터 (모든 서비스 메뉴 포함) -->
       <div class="section-card accordion-group">
         <button class="accordion-header" @click="toggleAccordion('support')">
           <span class="accordion-title">고객센터</span>
@@ -77,127 +59,28 @@
         </button>
         <Transition name="accordion">
           <div v-if="openAccordion === 'support'" class="accordion-body">
-            <div class="support-contact">
-              <div class="support-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-              </div>
-              <div>
-                <div class="support-label">이메일 문의</div>
-                <a href="mailto:support@tiresiasview.com" class="support-email">support@tiresiasview.com</a>
-              </div>
-            </div>
-            <div class="faq-section">
-              <div class="faq-title">자주 묻는 질문</div>
-              <div v-for="(item, i) in faqItems" :key="i" class="faq-item">
-                <button class="faq-question" @click.stop="toggleFaq(i)">
-                  <span>{{ item.q }}</span>
-                  <span class="faq-toggle" :class="{ open: openFaq === i }">›</span>
-                </button>
-                <Transition name="faq">
-                  <div v-if="openFaq === i" class="faq-answer">
-                    <p>{{ item.a }}</p>
-                  </div>
-                </Transition>
-              </div>
+            <div class="support-links">
+              <router-link to="/support" class="support-link-item">
+                <span>자주 묻는 질문</span>
+                <span class="menu-arrow">›</span>
+              </router-link>
+              <router-link to="/features" class="support-link-item">
+                <span>서비스 소개</span>
+                <span class="menu-arrow">›</span>
+              </router-link>
+              <router-link to="/terms" class="support-link-item">
+                <span>서비스 이용약관</span>
+                <span class="menu-arrow">›</span>
+              </router-link>
+              <router-link to="/privacy" class="support-link-item">
+                <span>개인정보 처리방침</span>
+                <span class="menu-arrow">›</span>
+              </router-link>
             </div>
           </div>
         </Transition>
       </div>
 
-      <!-- Accordion: 이용약관 -->
-      <div class="section-card accordion-group">
-        <button class="accordion-header" @click="toggleAccordion('terms')">
-          <span class="accordion-title">이용약관</span>
-          <span class="accordion-chevron" :class="{ open: openAccordion === 'terms' }">›</span>
-        </button>
-        <Transition name="accordion">
-          <div v-if="openAccordion === 'terms'" class="accordion-body">
-            <!-- 서비스 이용약관 -->
-            <div class="legal-block">
-              <div class="legal-block-title">서비스 이용약관</div>
-              <section class="legal-section">
-                <h3>제1조 (목적)</h3>
-                <p>이 약관은 TIRESIAS VIEW(이하 "서비스")가 제공하는 시뮬레이션 서비스의 이용에 관한 제반 사항을 규정함을 목적으로 합니다.</p>
-              </section>
-              <section class="legal-section">
-                <h3>제2조 (정의)</h3>
-                <p>1. "서비스"란 TIRESIAS VIEW가 제공하는 시뮬레이션 분석 및 보고서 생성 서비스를 의미합니다.</p>
-                <p>2. "이용자"란 본 약관에 동의하고 서비스를 이용하는 자를 의미합니다.</p>
-                <p>3. "이용권(크레딧)"이란 서비스 내에서 시뮬레이션을 실행하기 위해 필요한 디지털 이용 단위를 의미합니다.</p>
-              </section>
-              <section class="legal-section">
-                <h3>제3조 (이용권 및 결제)</h3>
-                <p>1. 이용권(크레딧) 1개는 시뮬레이션 1회 실행 권한에 해당합니다.</p>
-                <p>2. 이용권은 구매 후 사용 기한 없이 보유할 수 있으며, 서비스 종료 시까지 유효합니다.</p>
-                <p>3. 결제는 토스페이먼츠를 통해 처리되며, 결제 완료 후 즉시 크레딧이 충전됩니다.</p>
-                <p>4. 환불은 미사용 크레딧에 한하여 구매일로부터 7일 이내에 고객센터를 통해 요청할 수 있습니다.</p>
-              </section>
-              <section class="legal-section">
-                <h3>제4조 (서비스 이용)</h3>
-                <p>1. 이용자는 서비스를 본래의 목적에 맞게 이용하여야 합니다.</p>
-                <p>2. 이용자는 타인의 계정을 무단으로 사용하거나, 서비스를 부정한 방법으로 이용해서는 안 됩니다.</p>
-                <p>3. 서비스는 시스템 점검, 업데이트 등의 사유로 사전 공지 후 일시적으로 중단될 수 있습니다.</p>
-              </section>
-              <section class="legal-section">
-                <h3>제5조 (면책)</h3>
-                <p>1. 서비스에서 제공하는 시뮬레이션 결과는 참고용이며, 실제 결과와 다를 수 있습니다.</p>
-                <p>2. 이용자가 시뮬레이션 결과를 기반으로 내린 결정에 대해 서비스는 책임을 지지 않습니다.</p>
-                <p>3. 천재지변, 시스템 장애 등 불가항력적 사유로 인한 서비스 중단에 대해 서비스는 책임을 지지 않습니다.</p>
-              </section>
-              <div class="legal-date">시행일: 2024년 1월 1일</div>
-            </div>
-
-            <div class="legal-divider"></div>
-
-            <!-- 개인정보 처리방침 -->
-            <div class="legal-block">
-              <div class="legal-block-title">개인정보 처리방침</div>
-              <section class="legal-section">
-                <h3>1. 수집하는 개인정보</h3>
-                <p>서비스는 회원가입 및 서비스 제공을 위해 다음의 개인정보를 수집합니다.</p>
-                <ul>
-                  <li>필수 항목: 이름, 이메일 주소, 비밀번호(암호화 저장)</li>
-                  <li>결제 시: 결제 수단 정보(토스페이먼츠를 통해 처리, 서비스에 직접 저장하지 않음)</li>
-                </ul>
-              </section>
-              <section class="legal-section">
-                <h3>2. 이용 목적</h3>
-                <p>수집된 개인정보는 다음의 목적으로 이용됩니다.</p>
-                <ul>
-                  <li>회원 식별 및 서비스 제공</li>
-                  <li>이용권 결제 처리 및 이용 내역 관리</li>
-                  <li>서비스 관련 공지 및 고객 문의 대응</li>
-                </ul>
-              </section>
-              <section class="legal-section">
-                <h3>3. 보관 기간</h3>
-                <p>개인정보는 회원 탈퇴 시까지 보관되며, 탈퇴 후 즉시 파기합니다.</p>
-                <ul>
-                  <li>결제 기록: 전자상거래법에 따라 5년 보관</li>
-                  <li>로그인 기록: 통신비밀보호법에 따라 3개월 보관</li>
-                </ul>
-              </section>
-              <section class="legal-section">
-                <h3>4. 제3자 제공</h3>
-                <p>서비스는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만, 다음의 경우는 예외로 합니다.</p>
-                <ul>
-                  <li>결제 처리를 위한 토스페이먼츠 연동 (결제 정보에 한함)</li>
-                  <li>법령에 의한 수사기관의 요청</li>
-                </ul>
-              </section>
-              <section class="legal-section">
-                <h3>5. 이용자의 권리</h3>
-                <p>이용자는 언제든지 개인정보 열람, 수정, 삭제, 처리 정지를 요청할 수 있습니다.</p>
-                <p>상기 요청은 고객센터(support@tiresiasview.com)를 통해 접수할 수 있습니다.</p>
-              </section>
-              <div class="legal-date">시행일: 2024년 1월 1일</div>
-            </div>
-          </div>
-        </Transition>
-      </div>
 
       <!-- Footer -->
       <div class="profile-footer">
@@ -228,21 +111,23 @@
             <button class="photo-remove-btn" v-if="editProfileImage" @click="editProfileImage = null">사진 삭제</button>
           </div>
 
-          <label class="modal-label">이름</label>
+          <label class="modal-label">이름 / 닉네임</label>
           <input
             v-model="editName"
             type="text"
             class="modal-input"
-            placeholder="이름을 입력하세요"
+            placeholder="이름 또는 닉네임"
           />
 
-          <label class="modal-label" style="margin-top: 16px;">닉네임</label>
-          <input
-            v-model="editNickname"
-            type="text"
-            class="modal-input"
-            placeholder="닉네임을 입력하세요"
-          />
+          <div class="modal-theme-row">
+            <span class="modal-label">화면 모드</span>
+            <div class="theme-toggle" @click="toggleTheme">
+              <span class="theme-label">{{ theme === 'dark' ? '다크' : '라이트' }}</span>
+              <div class="toggle-switch" :class="{ light: theme === 'light' }">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+          </div>
 
           <div class="modal-actions">
             <button class="modal-cancel" @click="showEditModal = false">취소</button>
@@ -919,8 +804,8 @@ function handleLogout() {
 }
 
 .modal-content {
-  background: #1a1828;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 28px 24px;
   width: 100%;
@@ -1006,8 +891,8 @@ function handleLogout() {
 
 .modal-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 12px 14px;
   color: var(--text-primary);
@@ -1019,6 +904,14 @@ function handleLogout() {
 
 .modal-input:focus {
   border-color: rgba(99, 102, 241, 0.5);
+}
+
+.modal-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 12px 0;
 }
 
 .modal-actions {

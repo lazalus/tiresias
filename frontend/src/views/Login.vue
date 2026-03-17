@@ -3,8 +3,8 @@
     <div class="login-bg"></div>
     <div class="login-card">
       <div class="card-header">
-        <img src="/logoss.png" alt="Tiresias" class="logo" />
-        <h1 class="title">Tiresias</h1>
+        <img src="/logoss.png" alt="Tiresias View" class="logo" />
+        <h1 class="title">Tiresias View</h1>
         <p class="tagline">집단 지능 예측 엔진</p>
       </div>
 
@@ -67,6 +67,7 @@
         <span class="footer-text">계정이 없으신가요?</span>
         <router-link to="/signup" class="footer-link">회원가입</router-link>
       </div>
+      <router-link to="/features" class="features-link">서비스 소개 →</router-link>
     </div>
   </div>
 </template>
@@ -105,7 +106,7 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #09090b;
+  background: #0c0a15;
   position: relative;
   overflow: hidden;
   padding: 24px;
@@ -315,5 +316,19 @@ async function handleLogin() {
 
 .footer-link:hover {
   color: #a5b4fc;
+}
+
+.features-link {
+  display: block;
+  text-align: center;
+  padding: 0 0 28px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.features-link:hover {
+  color: #818cf8;
 }
 </style>

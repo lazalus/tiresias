@@ -5,8 +5,8 @@
       <div class="header-inner">
         <div class="header-left">
           <router-link to="/" class="header-home">
-            <img src="/logoss.png" alt="Tiresias" class="app-logo" />
-            <span class="app-name">Tiresias</span>
+            <img src="/logoss.png" alt="Tiresias View" class="app-logo" />
+            <span class="app-name">Tiresias View</span>
           </router-link>
         </div>
         <div class="header-right">
@@ -128,7 +128,7 @@ onUnmounted(() => {
 
 // 토스 결제위젯 SDK 로드
 async function loadTossSDK() {
-  if (window.PaymentWidget) return
+  if (window.TossPayments) return
   return new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://js.tosspayments.com/v2/standard'
@@ -182,18 +182,21 @@ async function handlePurchase(plan) {
     await loadTossSDK()
 
     const customerKey = `${TOSS_CUSTOMER_KEY}_${currentUser.value?.id || 'guest'}`
-    paymentWidget = window.PaymentWidget(TOSS_CLIENT_KEY, customerKey)
+    const tossPayments = window.TossPayments(TOSS_CLIENT_KEY)
+    paymentWidget = tossPayments.widgets({ customerKey })
+
+    await paymentWidget.setAmount({ currency: 'KRW', value: plan.price })
 
     // 위젯 렌더링 대기
     await new Promise(resolve => setTimeout(resolve, 100))
 
-    paymentMethodsWidget = paymentWidget.renderPaymentMethods(
-      '#payment-method',
-      { value: plan.price },
-      { variantKey: 'tiresias' }
-    )
+    await paymentWidget.renderPaymentMethods({
+      selector: '#payment-method',
+      variantKey: 'tiresias'
+    })
 
-    agreementWidget = paymentWidget.renderAgreement('#agreement', {
+    await paymentWidget.renderAgreement({
+      selector: '#agreement',
       variantKey: 'tiresias'
     })
   } catch (e) {
@@ -216,8 +219,6 @@ async function submitPayment() {
       orderName: `Tiresias ${selectedPlan.value.name} (${selectedPlan.value.credits} 크레딧)`,
       successUrl: `${window.location.origin}/credits?planId=${selectedPlan.value.id}`,
       failUrl: `${window.location.origin}/credits?fail=true`,
-      customerEmail: currentUser.value?.email,
-      customerName: currentUser.value?.name,
     })
   } catch (e) {
     if (e.code === 'USER_CANCEL') {
@@ -289,7 +290,7 @@ function formatDate(d) {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #09090b;
+  background: #0c0a15;
   color: #fafafa;
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -33,21 +33,32 @@ export default {
       } else if (url.pathname.startsWith('/api/files')) {
         response = await handleFiles(request, env, url)
 
-      // Python 백엔드로 프록시 (Vercel)
+      // Python 백엔드로 프록시
       } else if (
         url.pathname.startsWith('/api/graph') ||
         url.pathname.startsWith('/api/simulation') ||
         url.pathname.startsWith('/api/report')
       ) {
-        // Verify authenticated user with credits before proxying
         const user = await getUser(request, env)
         if (!user) {
           response = json({ error: 'Unauthorized' }, 401)
         } else {
           const dbUser = await env.DB.prepare('SELECT credits FROM users WHERE id = ?').bind(user.id).first()
-          if (!dbUser || dbUser.credits <= 0) {
+
+          // 크레딧 소모 API: 시뮬레이션 시작 시에만 차감
+          const isCreditsRequired = url.pathname === '/api/graph/generate_ontology' && request.method === 'POST'
+
+          if (isCreditsRequired && (!dbUser || dbUser.credits <= 0)) {
             response = json({ error: '크레딧이 부족합니다. 이용권을 구매해주세요.' }, 403)
           } else {
+            if (isCreditsRequired) {
+              // 크레딧 1 차감 + 거래 기록
+              await env.DB.prepare('UPDATE users SET credits = credits - 1 WHERE id = ?').bind(user.id).run()
+              const txId = crypto.randomUUID()
+              await env.DB.prepare(
+                'INSERT INTO credit_transactions (id, user_id, amount, type, description, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+              ).bind(txId, user.id, -1, 'usage', '시뮬레이션 실행', new Date().toISOString()).run()
+            }
             response = await proxyToBackend(request, env, url)
           }
         }

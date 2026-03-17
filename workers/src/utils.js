@@ -12,9 +12,19 @@ export async function hashPassword(password) {
   return btoa(String.fromCharCode(...new Uint8Array(hash)))
 }
 
+function toBase64Url(str) {
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
+function fromBase64Url(str) {
+  const pad = str + '='.repeat((4 - str.length % 4) % 4)
+  return decodeURIComponent(escape(atob(pad.replace(/-/g, '+').replace(/_/g, '/'))))
+}
+
 export async function createJWT(payload, secret) {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const body = btoa(JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }))
+  const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const body = toBase64Url(JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }))
   const signature = await sign(`${header}.${body}`, secret)
   return `${header}.${body}.${signature}`
 }
@@ -24,7 +34,7 @@ export async function verifyJWT(token, secret) {
   if (parts.length !== 3) throw new Error('Invalid token')
   const signature = await sign(`${parts[0]}.${parts[1]}`, secret)
   if (signature !== parts[2]) throw new Error('Invalid signature')
-  const payload = JSON.parse(atob(parts[1]))
+  const payload = JSON.parse(fromBase64Url(parts[1]))
   if (payload.exp < Date.now()) throw new Error('Token expired')
   return payload
 }

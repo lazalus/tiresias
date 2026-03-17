@@ -5,8 +5,8 @@
       <div class="header-inner">
         <div class="header-left">
           <router-link to="/" class="header-home">
-            <img src="/logoss.png" alt="Tiresias" class="app-logo" />
-            <span class="app-name">Tiresias</span>
+            <img src="/logoss.png" alt="Tiresias View" class="app-logo" />
+            <span class="app-name">Tiresias View</span>
           </router-link>
           <span class="admin-badge">Admin</span>
         </div>
@@ -256,7 +256,7 @@ function formatDate(d) {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #09090b;
+  background: #0c0a15;
   color: #fafafa;
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -4,8 +4,8 @@
     <header class="app-header">
       <div class="header-inner">
         <div class="header-left">
-          <img src="/logoss.png" alt="Tiresias" class="app-logo" />
-          <span class="app-name">Tiresias</span>
+          <img src="/logoss.png" alt="Tiresias View" class="app-logo" />
+          <span class="app-name">Tiresias View</span>
         </div>
         <nav class="header-nav">
           <router-link to="/" class="header-link">홈으로</router-link>
@@ -141,7 +141,7 @@
       <footer class="footer">
         <div class="footer-line"></div>
         <p class="footer-text">
-          Tiresias is open source (AGPL-3.0) based on <a href="https://github.com/666ghj/MiroFish" target="_blank" class="footer-link">MiroFish</a>.
+          Tiresias View is open source (AGPL-3.0) based on <a href="https://github.com/666ghj/MiroFish" target="_blank" class="footer-link">MiroFish</a>.
           <a href="https://github.com/lazalus/tiresias" target="_blank" class="footer-link">Source Code</a>
         </p>
       </footer>
@@ -178,7 +178,7 @@ const steps = [
 /* ── Base ── */
 .app-screen {
   min-height: 100vh;
-  background: #09090b;
+  background: #0c0a15;
   color: #fafafa;
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

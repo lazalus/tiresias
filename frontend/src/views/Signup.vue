@@ -3,9 +3,9 @@
     <div class="signup-bg"></div>
     <div class="signup-card">
       <div class="card-header">
-        <img src="/logoss.png" alt="Tiresias" class="logo" />
+        <img src="/logoss.png" alt="Tiresias View" class="logo" />
         <h1 class="title">회원가입</h1>
-        <p class="tagline">Tiresias에 오신 것을 환영합니다</p>
+        <p class="tagline">Tiresias View에 오신 것을 환영합니다</p>
       </div>
 
       <!-- Success state after signup -->
@@ -154,7 +154,7 @@ async function handleSignup() {
     login(user, token)
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
+    error.value = err.response?.data?.error || '회원가입에 실패했습니다. 다시 시도해주세요.'
   } finally {
     loading.value = false
   }
@@ -167,7 +167,7 @@ async function handleSignup() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #09090b;
+  background: #0c0a15;
   position: relative;
   overflow: hidden;
   padding: 24px;

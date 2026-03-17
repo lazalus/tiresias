@@ -4,11 +4,10 @@
     <header class="app-header">
       <div class="header-inner">
         <div class="header-left">
-          <img src="/logoss.png" alt="Tiresias" class="app-logo" />
-          <span class="app-name">Tiresias</span>
+          <img src="/logoss.png" alt="Tiresias View" class="app-logo" />
+          <span class="app-name">Tiresias View</span>
         </div>
         <div class="header-right">
-          <router-link to="/features" class="header-link">기능 소개</router-link>
           <router-link v-if="user?.role === 'admin'" to="/admin" class="header-link">어드민</router-link>
           <div class="credits-display" v-if="userCredits !== null">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -220,7 +219,7 @@ const startSimulation = () => {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #09090b;
+  background: #0c0a15;
   color: #fafafa;
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;

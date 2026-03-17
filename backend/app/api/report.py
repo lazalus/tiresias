@@ -4,7 +4,6 @@ Report API路由
 """
 
 import os
-import traceback
 import threading
 from flask import request, jsonify, send_file
 
@@ -14,6 +13,7 @@ from ..services.report_agent import ReportAgent, ReportManager, ReportStatus
 from ..services.simulation_manager import SimulationManager
 from ..models.project import ProjectManager
 from ..models.task import TaskManager, TaskStatus
+from ..utils.api_response import error_traceback_payload
 from ..utils.logger import get_logger
 
 logger = get_logger('mirofish.api.report')
@@ -191,7 +191,7 @@ def generate_report():
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -307,7 +307,7 @@ def get_report(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -346,7 +346,7 @@ def get_report_by_simulation(simulation_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -386,7 +386,7 @@ def list_reports():
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -432,7 +432,7 @@ def download_report(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -458,7 +458,7 @@ def delete_report(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -555,7 +555,7 @@ def chat_with_report_agent():
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -598,7 +598,7 @@ def get_report_progress(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -649,7 +649,7 @@ def get_report_sections(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -693,7 +693,7 @@ def get_single_section(report_id: str, section_index: int):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -744,7 +744,7 @@ def check_report_status(simulation_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -805,7 +805,7 @@ def get_agent_log(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -839,7 +839,7 @@ def stream_agent_log(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -887,7 +887,7 @@ def get_console_log(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -921,7 +921,7 @@ def stream_console_log(report_id: str):
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -971,7 +971,7 @@ def search_graph_tool():
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500
 
 
@@ -1011,5 +1011,5 @@ def get_graph_statistics_tool():
         return jsonify({
             "success": False,
             "error": str(e),
-            "traceback": traceback.format_exc()
+            **error_traceback_payload()
         }), 500

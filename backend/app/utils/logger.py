@@ -27,7 +27,13 @@ def _ensure_utf8_stdout():
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
 
 
-def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.Logger:
+def _get_log_level(default: int = logging.INFO) -> int:
+    """从环境变量读取日志级别。"""
+    level_name = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    return getattr(logging, level_name, default)
+
+
+def setup_logger(name: str = 'mirofish', level: int = None) -> logging.Logger:
     """
     设置日志器
     
@@ -38,6 +44,9 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
     Returns:
         配置好的日志器
     """
+    if level is None:
+        level = _get_log_level()
+
     # 确保日志目录存在
     os.makedirs(LOG_DIR, exist_ok=True)
     
@@ -71,14 +80,14 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
         backupCount=5,
         encoding='utf-8'
     )
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(level)
     file_handler.setFormatter(detailed_formatter)
     
     # 2. 控制台处理器 - 简洁日志（INFO及以上）
     # 确保 Windows 下使用 UTF-8 编码，避免中文乱码
     _ensure_utf8_stdout()
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(level)
     console_handler.setFormatter(simple_formatter)
     
     # 添加处理器
@@ -123,4 +132,3 @@ def error(msg, *args, **kwargs):
 
 def critical(msg, *args, **kwargs):
     logger.critical(msg, *args, **kwargs)
-

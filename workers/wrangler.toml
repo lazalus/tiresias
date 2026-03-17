@@ -1,0 +1,17 @@
+name = "tiresias-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+assets = { directory = "../frontend/dist" }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tiresias-db"
+database_id = "8c21f6d8-c670-4767-8a95-9e4144e28036"
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "tiresias-files"
+
+[vars]
+JWT_SECRET = "change-this-in-production"
+SIMULATION_API = "https://api.tiresiasview.com"

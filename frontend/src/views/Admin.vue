@@ -845,7 +845,7 @@ function formatShortDate(d) {
   background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  color: #f4f4f5;
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;

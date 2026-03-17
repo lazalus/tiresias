@@ -216,7 +216,7 @@ async function handleSignup() {
 .title {
   font-size: 22px;
   font-weight: 600;
-  color: #f4f4f5;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -281,7 +281,7 @@ async function handleSignup() {
   background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  color: #f4f4f5;
+  color: var(--text-primary);
   font-size: 14px;
   outline: none;
   transition: all 0.2s ease;
@@ -388,7 +388,7 @@ async function handleSignup() {
 .success-title {
   font-size: 15px;
   font-weight: 600;
-  color: #f4f4f5;
+  color: var(--text-primary);
   margin: 0;
 }
 

@@ -49,23 +49,41 @@ export async function handleAdmin(request, env, url) {
     return json({ success: true })
   }
 
+  // Set admin back to user
+  if (path.match(/^\/users\/[^/]+\/set-user$/) && request.method === 'POST') {
+    const userId = path.split('/')[2]
+    await env.DB.prepare('UPDATE users SET role = ? WHERE id = ?').bind('user', userId).run()
+    return json({ success: true })
+  }
+
   // List credit plans
   if (path === '/plans' && request.method === 'GET') {
     const plans = await env.DB.prepare('SELECT * FROM credit_plans WHERE active = 1').all()
     return json({ plans: plans.results })
   }
 
-  // Dashboard stats
+  // Dashboard stats (enhanced)
   if (path === '/stats' && request.method === 'GET') {
     const totalUsers = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first()
     const pendingUsers = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'pending'").first()
+    const todaySignups = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE created_at >= date('now')").first()
+    const totalCreditsUsed = await env.DB.prepare("SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM credit_transactions WHERE type = 'usage'").first()
+    const monthlyCreditsUsed = await env.DB.prepare("SELECT COALESCE(SUM(ABS(amount)), 0) as total FROM credit_transactions WHERE type = 'usage' AND created_at >= date('now', 'start of month')").first()
+    const todayRevenue = await env.DB.prepare("SELECT COALESCE(COUNT(*), 0) as count, COALESCE(SUM(amount), 0) as credits FROM credit_transactions WHERE type = 'purchase' AND created_at >= date('now')").first()
+    const monthlyRevenue = await env.DB.prepare("SELECT COALESCE(COUNT(*), 0) as count, COALESCE(SUM(amount), 0) as credits FROM credit_transactions WHERE type = 'purchase' AND created_at >= date('now', 'start of month')").first()
     const totalProjects = await env.DB.prepare('SELECT COUNT(*) as count FROM projects').first()
-    const totalRevenue = await env.DB.prepare("SELECT COALESCE(SUM(amount * 10000), 0) as total FROM credit_transactions WHERE type = 'purchase'").first()
+
     return json({
       totalUsers: totalUsers.count,
       pendingUsers: pendingUsers.count,
-      totalProjects: totalProjects.count,
-      totalRevenue: totalRevenue.total
+      todaySignups: todaySignups.count,
+      totalCreditsUsed: totalCreditsUsed.total,
+      monthlyCreditsUsed: monthlyCreditsUsed.total,
+      todayRevenue: todayRevenue.credits * 10000,
+      monthlyRevenue: monthlyRevenue.credits * 10000,
+      todayPurchases: todayRevenue.count,
+      monthlyPurchases: monthlyRevenue.count,
+      totalProjects: totalProjects.count
     })
   }
 

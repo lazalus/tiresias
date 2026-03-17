@@ -22,6 +22,13 @@ export function logout() {
   localStorage.removeItem('tiresias_token')
 }
 
+export function updateUser(updates) {
+  if (state.user) {
+    state.user = { ...state.user, ...updates }
+    localStorage.setItem('tiresias_user', JSON.stringify(state.user))
+  }
+}
+
 export function getToken() {
   return state.token
 }

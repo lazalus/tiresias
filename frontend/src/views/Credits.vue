@@ -72,20 +72,44 @@
         </div>
       </section>
     </main>
+
+    <!-- 결제 위젯 모달 -->
+    <div v-if="showPaymentWidget" class="payment-overlay" @click.self="cancelPayment">
+      <div class="payment-modal">
+        <div class="payment-header">
+          <h3>{{ selectedPlan?.name }} 결제</h3>
+          <span class="payment-amount">{{ selectedPlan?.price?.toLocaleString() }}원</span>
+          <button class="payment-close" @click="cancelPayment">×</button>
+        </div>
+        <div id="payment-method" class="payment-widget-area"></div>
+        <div id="agreement" class="payment-agreement-area"></div>
+        <button class="payment-submit" @click="submitPayment" :disabled="purchaseLoading">
+          <span v-if="!purchaseLoading">결제하기</span>
+          <span v-else>처리 중...</span>
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getToken } from '../store/auth.js'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { getToken, currentUser } from '../store/auth.js'
 import axios from 'axios'
 
+const TOSS_CLIENT_KEY = 'live_gck_LlDJaYngroy4XnkKKwGK3ezGdRpX'
+const TOSS_CUSTOMER_KEY = 'tiresias'
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 const credits = ref(null)
 const plans = ref([])
 const history = ref([])
 const purchaseLoading = ref(false)
+const showPaymentWidget = ref(false)
+const selectedPlan = ref(null)
+let paymentWidget = null
+let paymentMethodsWidget = null
+let agreementWidget = null
 
 function authHeaders() {
   return { headers: { Authorization: `Bearer ${getToken()}` } }
@@ -93,7 +117,26 @@ function authHeaders() {
 
 onMounted(async () => {
   await Promise.all([fetchCredits(), fetchPlans(), fetchHistory()])
+  await loadTossSDK()
+  checkRedirectResult()
 })
+
+onUnmounted(() => {
+  showPaymentWidget.value = false
+  paymentWidget = null
+})
+
+// 토스 결제위젯 SDK 로드
+async function loadTossSDK() {
+  if (window.PaymentWidget) return
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://js.tosspayments.com/v2/standard'
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
 
 async function fetchCredits() {
   try {
@@ -109,7 +152,6 @@ async function fetchPlans() {
     const res = await axios.get(`${API_BASE}/api/payments/plans`, authHeaders())
     plans.value = res.data.plans || res.data || defaultPlans()
   } catch (e) {
-    console.error('Failed to fetch plans, using defaults:', e)
     plans.value = defaultPlans()
   }
 }
@@ -132,57 +174,108 @@ async function fetchHistory() {
 }
 
 async function handlePurchase(plan) {
+  selectedPlan.value = plan
+  showPaymentWidget.value = true
   purchaseLoading.value = true
-  try {
-    // TODO: Toss Payments SDK integration
-    // 1. Load Toss Payments SDK with client key
-    // 2. Call tossPayments.requestPayment('카드', {
-    //      amount: plan.price,
-    //      orderId: `order_${Date.now()}`,
-    //      orderName: `Tiresias ${plan.name} (${plan.credits} 크레딧)`,
-    //      successUrl: `${window.location.origin}/credits?success=true`,
-    //      failUrl: `${window.location.origin}/credits?fail=true`,
-    //    })
-    // 3. On redirect back with success, extract paymentKey, orderId, amount from URL
-    // 4. Call confirmPayment() below
 
-    // For now, placeholder alert
-    alert(`Toss Payments SDK 연동이 필요합니다.\n플랜: ${plan.name}\n금액: ${plan.price.toLocaleString()}원`)
+  try {
+    await loadTossSDK()
+
+    const customerKey = `${TOSS_CUSTOMER_KEY}_${currentUser.value?.id || 'guest'}`
+    paymentWidget = window.PaymentWidget(TOSS_CLIENT_KEY, customerKey)
+
+    // 위젯 렌더링 대기
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    paymentMethodsWidget = paymentWidget.renderPaymentMethods(
+      '#payment-method',
+      { value: plan.price },
+      { variantKey: 'tiresias' }
+    )
+
+    agreementWidget = paymentWidget.renderAgreement('#agreement', {
+      variantKey: 'tiresias'
+    })
   } catch (e) {
-    alert('결제 요청 실패: ' + (e.message || e))
+    showPaymentWidget.value = false
+    alert('결제 위젯 로드 실패: ' + (e.message || e))
   } finally {
     purchaseLoading.value = false
   }
 }
 
+async function submitPayment() {
+  if (!paymentWidget || !selectedPlan.value) return
+  purchaseLoading.value = true
+
+  try {
+    const orderId = `tiresias_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+    await paymentWidget.requestPayment({
+      orderId,
+      orderName: `Tiresias ${selectedPlan.value.name} (${selectedPlan.value.credits} 크레딧)`,
+      successUrl: `${window.location.origin}/credits?planId=${selectedPlan.value.id}`,
+      failUrl: `${window.location.origin}/credits?fail=true`,
+      customerEmail: currentUser.value?.email,
+      customerName: currentUser.value?.name,
+    })
+  } catch (e) {
+    if (e.code === 'USER_CANCEL') {
+      showPaymentWidget.value = false
+    } else {
+      alert('결제 요청 실패: ' + (e.message || e))
+    }
+  } finally {
+    purchaseLoading.value = false
+  }
+}
+
+function cancelPayment() {
+  showPaymentWidget.value = false
+  selectedPlan.value = null
+}
+
 async function confirmPayment(paymentKey, orderId, amount, planId) {
+  purchaseLoading.value = true
   try {
     await axios.post(`${API_BASE}/api/payments/confirm`, {
       paymentKey,
       orderId,
-      amount,
+      amount: Number(amount),
       planId
     }, authHeaders())
     await fetchCredits()
     await fetchHistory()
+    alert('결제가 완료되었습니다!')
   } catch (e) {
-    alert('결제 확인 실패: ' + (e.response?.data?.message || e.message))
+    alert('결제 확인 실패: ' + (e.response?.data?.error || e.message))
+  } finally {
+    purchaseLoading.value = false
   }
 }
 
-// Check for Toss redirect params on mount
-onMounted(() => {
+function checkRedirectResult() {
   const params = new URLSearchParams(window.location.search)
   const paymentKey = params.get('paymentKey')
   const orderId = params.get('orderId')
   const amount = params.get('amount')
   const planId = params.get('planId')
+
+  if (params.get('fail') === 'true') {
+    const code = params.get('code')
+    const message = params.get('message')
+    if (code !== 'USER_CANCEL') {
+      alert(`결제 실패: ${message || '알 수 없는 오류'}`)
+    }
+    window.history.replaceState({}, '', window.location.pathname)
+    return
+  }
+
   if (paymentKey && orderId && amount) {
-    confirmPayment(paymentKey, orderId, Number(amount), planId)
-    // Clean URL
+    confirmPayment(paymentKey, orderId, amount, planId)
     window.history.replaceState({}, '', window.location.pathname)
   }
-})
+}
 
 function formatDate(d) {
   if (!d) return '-'
@@ -544,6 +637,98 @@ function formatDate(d) {
   color: rgba(255, 255, 255, 0.25);
   min-width: 120px;
   text-align: right;
+}
+
+/* Payment Modal */
+.payment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.payment-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: #111;
+}
+
+.payment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.payment-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.payment-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.payment-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #999;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.payment-close:hover {
+  color: #333;
+}
+
+.payment-widget-area {
+  padding: 0 24px;
+  min-height: 200px;
+}
+
+.payment-agreement-area {
+  padding: 0 24px;
+}
+
+.payment-submit {
+  width: calc(100% - 48px);
+  margin: 16px 24px 24px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payment-submit:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.payment-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Responsive */

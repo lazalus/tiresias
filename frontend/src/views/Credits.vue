@@ -293,8 +293,8 @@ function formatDate(d) {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -304,10 +304,10 @@ function formatDate(d) {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
@@ -355,7 +355,7 @@ function formatDate(d) {
 }
 
 .header-link {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 500;
@@ -366,7 +366,7 @@ function formatDate(d) {
 
 .header-link:hover {
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
 }
 
 /* Main */
@@ -381,8 +381,8 @@ function formatDate(d) {
   text-align: center;
   margin-bottom: 48px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -398,7 +398,7 @@ function formatDate(d) {
 
 .credits-label {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 8px;
   position: relative;
@@ -443,8 +443,8 @@ function formatDate(d) {
 
 .plan-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 28px 24px;
   display: flex;
@@ -500,7 +500,7 @@ function formatDate(d) {
 
 .plan-credits-label {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -547,7 +547,7 @@ function formatDate(d) {
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   font-size: 0.88rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -558,7 +558,7 @@ function formatDate(d) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.02);
@@ -569,7 +569,7 @@ function formatDate(d) {
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--bg-secondary);
   transition: background 0.15s;
 }
 
@@ -639,7 +639,7 @@ function formatDate(d) {
 .history-date {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   min-width: 120px;
   text-align: right;
 }

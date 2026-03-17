@@ -345,8 +345,8 @@ function formatShortDate(d) {
 .app-screen {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -356,10 +356,10 @@ function formatShortDate(d) {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
@@ -418,7 +418,7 @@ function formatShortDate(d) {
 }
 
 .header-link {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 500;
@@ -429,7 +429,7 @@ function formatShortDate(d) {
 
 .header-link:hover {
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
 }
 
 /* Main */
@@ -451,8 +451,8 @@ function formatShortDate(d) {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
   transition: border-color 0.3s;
@@ -502,7 +502,7 @@ function formatShortDate(d) {
 .kpi-label {
   font-size: 0.7rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   letter-spacing: 0.01em;
 }
 
@@ -560,8 +560,8 @@ function formatShortDate(d) {
 }
 
 .user-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
   transition: border-color 0.2s, background 0.2s;
@@ -643,7 +643,7 @@ function formatShortDate(d) {
 
 .user-card-date {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -665,9 +665,9 @@ function formatShortDate(d) {
 }
 
 .role-badge--user {
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .role-badge--pending {
@@ -765,7 +765,7 @@ function formatShortDate(d) {
 }
 
 .btn--ghost {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   border-color: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.6);
 }
@@ -822,7 +822,7 @@ function formatShortDate(d) {
 
 .modal-sub {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   margin: 0 0 22px;
 }
 
@@ -842,7 +842,7 @@ function formatShortDate(d) {
 .modal-field input {
   width: 100%;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   color: #f4f4f5;

@@ -175,8 +175,8 @@ const startSimulation = () => {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -186,10 +186,10 @@ const startSimulation = () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
@@ -256,8 +256,8 @@ const startSimulation = () => {
 
 /* ── Input Card ── */
 .input-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -307,7 +307,7 @@ const startSimulation = () => {
 
 .card-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
 }
 
 /* ── Upload ── */
@@ -384,7 +384,7 @@ const startSimulation = () => {
 .chip-remove {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 2px;
   display: flex;
@@ -408,7 +408,7 @@ const startSimulation = () => {
   font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.6;
-  color: #fafafa;
+  color: var(--text-primary);
   resize: vertical;
   outline: none;
   min-height: 88px;
@@ -469,7 +469,7 @@ const startSimulation = () => {
 }
 
 .start-btn:disabled {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   color: rgba(255, 255, 255, 0.18);
   cursor: not-allowed;
   box-shadow: none;

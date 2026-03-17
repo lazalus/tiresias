@@ -109,8 +109,8 @@ function formatDate(d) {
 <style scoped>
 .app-screen {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -120,10 +120,10 @@ function formatDate(d) {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
@@ -185,7 +185,7 @@ function formatDate(d) {
   justify-content: center;
   gap: 10px;
   padding: 60px 0;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-size: 0.88rem;
 }
 
@@ -206,7 +206,7 @@ function formatDate(d) {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -242,8 +242,8 @@ function formatDate(d) {
 }
 
 .project-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 18px 20px;
   cursor: pointer;
@@ -297,7 +297,7 @@ function formatDate(d) {
 }
 
 .project-status.unknown {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   color: rgba(255, 255, 255, 0.3);
 }
 
@@ -310,7 +310,7 @@ function formatDate(d) {
 .project-date {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
 }
 
 .project-rounds {

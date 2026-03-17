@@ -77,8 +77,8 @@ function toggleFaq(index) {
 <style scoped>
 .sub-page {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -87,10 +87,10 @@ function toggleFaq(index) {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -113,7 +113,7 @@ function toggleFaq(index) {
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
 }
 
 .sub-title {
@@ -137,8 +137,8 @@ function toggleFaq(index) {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
@@ -158,7 +158,7 @@ function toggleFaq(index) {
 
 .contact-label {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
@@ -177,15 +177,15 @@ function toggleFaq(index) {
 .faq-header {
   font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 12px;
 }
 
 .faq-list {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -212,7 +212,7 @@ function toggleFaq(index) {
 }
 
 .faq-question:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
 }
 
 .faq-toggle {

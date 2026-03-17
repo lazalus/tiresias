@@ -106,7 +106,7 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0c0a15;
+  background: var(--bg-primary);
   position: relative;
   overflow: hidden;
   padding: 24px;
@@ -126,7 +126,7 @@ async function handleLogin() {
   position: relative;
   width: 100%;
   max-width: 400px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   backdrop-filter: blur(40px);
@@ -162,7 +162,7 @@ async function handleLogin() {
 
 .tagline {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   margin: 6px 0 0;
   letter-spacing: 0.02em;
 }
@@ -210,7 +210,7 @@ async function handleLogin() {
 
 .pending-sub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
@@ -231,7 +231,7 @@ async function handleLogin() {
 .field input {
   width: 100%;
   padding: 11px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   color: #f4f4f5;
@@ -247,7 +247,7 @@ async function handleLogin() {
 
 .field input:focus {
   border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 0 20px -4px rgba(99, 102, 241, 0.15);
 }
 
@@ -323,7 +323,7 @@ async function handleLogin() {
   text-align: center;
   padding: 0 0 28px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.15s;
 }

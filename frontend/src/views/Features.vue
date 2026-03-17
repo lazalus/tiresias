@@ -178,8 +178,8 @@ const steps = [
 /* ── Base ── */
 .app-screen {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -190,10 +190,10 @@ const steps = [
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
@@ -224,7 +224,7 @@ const steps = [
   font-weight: 700;
   letter-spacing: 0.08em;
   font-size: 0.9rem;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .header-nav {
@@ -233,7 +233,7 @@ const steps = [
 }
 
 .header-link {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 500;
@@ -245,7 +245,7 @@ const steps = [
 
 .header-link:hover {
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
 }
 
 /* ── Main ── */
@@ -310,7 +310,7 @@ const steps = [
   line-height: 1.2;
   letter-spacing: -0.035em;
   margin: 0 0 24px;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .hero-gradient {
@@ -331,7 +331,7 @@ const steps = [
 
 .hero-subtitle {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   line-height: 1.8;
   margin: 0 auto;
   max-width: 560px;
@@ -361,7 +361,7 @@ const steps = [
   font-weight: 700;
   letter-spacing: -0.025em;
   margin: 0 0 40px;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 /* ── Capabilities ── */
@@ -379,8 +379,8 @@ const steps = [
   position: relative;
   padding: 32px 24px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -422,12 +422,12 @@ const steps = [
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0 0 8px;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .cap-desc {
   font-size: 0.84rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   line-height: 1.65;
   margin: 0;
 }
@@ -504,7 +504,7 @@ const steps = [
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0 0 8px;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .timeline-desc {
@@ -530,13 +530,13 @@ const steps = [
   padding: 28px 24px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
   transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .case-card:hover {
   border-color: rgba(99, 102, 241, 0.25);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
 }
 
 .case-dot {
@@ -553,7 +553,7 @@ const steps = [
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0 0 8px;
-  color: #fafafa;
+  color: var(--text-primary);
 }
 
 .case-desc {
@@ -584,7 +584,7 @@ const steps = [
 
 .cta-lead {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   margin: 0 0 28px;
   font-weight: 400;
 }
@@ -633,18 +633,18 @@ const steps = [
 
 .footer-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
   margin-bottom: 24px;
 }
 
 .footer-text {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
   margin: 0;
 }
 
 .footer-link {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   text-decoration: none;
   transition: color 0.2s;
 }

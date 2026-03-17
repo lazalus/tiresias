@@ -58,8 +58,8 @@
 <style scoped>
 .sub-page {
   min-height: 100vh;
-  background: #0c0a15;
-  color: #fafafa;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -68,10 +68,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(9, 9, 11, 0.72);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,7 +94,7 @@
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
 }
 
 .sub-title {
@@ -134,11 +134,11 @@
 .legal-footer {
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-color);
 }
 
 .legal-footer p {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-muted);
 }
 </style>

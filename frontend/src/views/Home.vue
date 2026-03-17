@@ -149,7 +149,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import BottomNav from '../components/BottomNav.vue'
-import { getToken } from '../store/auth.js'
+import { getToken, refreshProfile } from '../store/auth.js'
 
 const router = useRouter()
 
@@ -241,6 +241,9 @@ const goToProject = (project) => {
 }
 
 onMounted(async () => {
+  // DB에서 최신 프로필 동기화
+  await refreshProfile()
+
   const token = getToken()
   if (token) {
     try {

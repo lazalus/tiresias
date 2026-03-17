@@ -247,10 +247,24 @@ function handlePhotoChange(e) {
   e.target.value = ''
 }
 
-function saveProfile() {
+async function saveProfile() {
   const name = editName.value.trim()
   const nickname = editNickname.value.trim()
   if (!name) return
+
+  // DB에 저장
+  const token = getToken()
+  if (token) {
+    try {
+      await axios.put(`${API_BASE}/api/auth/profile`, {
+        nickname: nickname || name,
+        profile_image: editProfileImage.value
+      }, { headers: { Authorization: `Bearer ${token}` } })
+    } catch (e) {
+      console.warn('프로필 저장 실패:', e)
+    }
+  }
+
   updateUser({
     name,
     nickname,

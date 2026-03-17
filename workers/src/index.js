@@ -3,6 +3,7 @@ import { handleProjects } from './projects.js'
 import { handleFiles } from './files.js'
 import { handleAdmin } from './admin.js'
 import { handlePayments } from './payments.js'
+import { handleReports } from './reports.js'
 import { getUser, json } from './utils.js'
 
 export default {
@@ -32,6 +33,8 @@ export default {
         response = await handleProjects(request, env, url)
       } else if (url.pathname.startsWith('/api/files')) {
         response = await handleFiles(request, env, url)
+      } else if (url.pathname.startsWith('/api/reports')) {
+        response = await handleReports(request, env, url)
 
       // Python 백엔드로 프록시
       } else if (

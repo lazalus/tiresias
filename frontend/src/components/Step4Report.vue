@@ -135,6 +135,14 @@
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
+          <div v-if="isComplete" class="report-action-buttons">
+            <button class="save-report-btn" @click="saveReport" :disabled="savingReport">
+              {{ savingReport ? '저장 중...' : '보고서 저장' }}
+            </button>
+            <button class="pdf-download-btn" @click="downloadPDF" :disabled="downloadingPDF">
+              {{ downloadingPDF ? '생성 중...' : 'PDF 다운로드' }}
+            </button>
+          </div>
 
           <div class="workflow-divider"></div>
         </div>
@@ -411,6 +419,74 @@ const goToInteraction = () => {
   }
 }
 
+async function saveReport() {
+  if (savingReport.value) return
+  savingReport.value = true
+  try {
+    const token = localStorage.getItem('tiresias_token')
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
+    // Collect all generated sections
+    const sections = []
+    if (reportOutline.value?.sections) {
+      reportOutline.value.sections.forEach((s, idx) => {
+        sections.push({
+          title: s.title,
+          content: generatedSections.value[idx + 1] || ''
+        })
+      })
+    }
+
+    await fetch(`${API_BASE}/api/reports`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        simulation_id: props.simulationId,
+        title: reportOutline.value?.title || '',
+        summary: reportOutline.value?.summary || '',
+        content: sections.map(s => `## ${s.title}\n\n${s.content}`).join('\n\n'),
+        sections
+      })
+    })
+
+    alert('보고서가 저장되었습니다.')
+  } catch (e) {
+    alert('저장 실패: ' + e.message)
+  } finally {
+    savingReport.value = false
+  }
+}
+
+async function downloadPDF() {
+  if (downloadingPDF.value) return
+  downloadingPDF.value = true
+  try {
+    const reportEl = document.querySelector('.report-content-wrapper') || document.querySelector('.left-panel')
+    if (!reportEl) {
+      alert('보고서 콘텐츠를 찾을 수 없습니다.')
+      return
+    }
+
+    const opt = {
+      margin: [15, 15, 15, 15],
+      filename: `Tiresias_Report_${new Date().toISOString().slice(0,10)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    await window.html2pdf().set(opt).from(reportEl).save()
+  } catch (e) {
+    // Fallback: use browser print
+    window.print()
+  } finally {
+    downloadingPDF.value = false
+  }
+}
+
 // State
 const agentLogs = ref([])
 const consoleLogs = ref([])
@@ -423,6 +499,8 @@ const expandedContent = ref(new Set())
 const expandedLogs = ref(new Set())
 const collapsedSections = ref(new Set())
 const isComplete = ref(false)
+const savingReport = ref(false)
+const downloadingPDF = ref(false)
 const startTime = ref(null)
 const leftPanel = ref(null)
 const rightPanel = ref(null)
@@ -3425,6 +3503,39 @@ watch(() => props.reportId, (newId) => {
 
 .next-step-btn:hover svg {
   transform: translateX(4px);
+}
+
+.report-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.save-report-btn, .pdf-download-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  background: var(--bg-secondary, #1a1a24);
+  color: var(--text-primary, #e8e8ed);
+}
+.save-report-btn:hover, .pdf-download-btn:hover {
+  background: var(--surface-hover, rgba(255,255,255,0.06));
+}
+.pdf-download-btn {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+.pdf-download-btn:hover {
+  background: #5558e6;
+}
+.save-report-btn:disabled, .pdf-download-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Workflow Empty */

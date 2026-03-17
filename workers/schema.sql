@@ -6,6 +6,8 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   role TEXT DEFAULT 'user',  -- user, admin
   credits INTEGER DEFAULT 0,
+  nickname TEXT,
+  profile_image TEXT,
   theme TEXT DEFAULT 'dark',
   created_at TEXT NOT NULL
 );
@@ -46,14 +48,18 @@ CREATE TABLE IF NOT EXISTS simulations (
   FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
+DROP TABLE IF EXISTS reports;
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT PRIMARY KEY,
-  simulation_id TEXT NOT NULL,
+  simulation_id TEXT,
   user_id TEXT NOT NULL,
+  title TEXT,
+  summary TEXT,
   content TEXT,
+  sections TEXT,  -- JSON array of section objects
   status TEXT DEFAULT 'pending',
   created_at TEXT NOT NULL,
-  FOREIGN KEY (simulation_id) REFERENCES simulations(id)
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- 크레딧 거래 내역
@@ -82,3 +88,7 @@ INSERT OR IGNORE INTO credit_plans (id, name, credits, price) VALUES
   ('plan_1', '시뮬레이션 1회', 1, 9900),
   ('plan_5', '시뮬레이션 5회', 5, 44000),
   ('plan_10', '시뮬레이션 10회', 10, 79000);
+
+-- Migration: ALTER TABLE reports ADD COLUMN title TEXT;
+-- Migration: ALTER TABLE reports ADD COLUMN summary TEXT;
+-- Migration: ALTER TABLE reports ADD COLUMN sections TEXT;

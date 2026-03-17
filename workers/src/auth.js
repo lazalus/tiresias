@@ -55,7 +55,30 @@ export async function handleAuth(request, env, url) {
     const { verifyJWT } = await import('./utils.js')
     try {
       const payload = await verifyJWT(auth.replace('Bearer ', ''), env.JWT_SECRET)
-      const user = await env.DB.prepare('SELECT id, name, email, role, credits, created_at FROM users WHERE id = ?').bind(payload.id).first()
+      const user = await env.DB.prepare('SELECT id, name, email, role, credits, nickname, profile_image, created_at FROM users WHERE id = ?').bind(payload.id).first()
+      return json({ user })
+    } catch {
+      return json({ error: 'Invalid token' }, 401)
+    }
+  }
+
+  // 프로필 업데이트
+  if (path === '/profile' && request.method === 'PUT') {
+    const auth = request.headers.get('Authorization')
+    if (!auth) return json({ error: 'Unauthorized' }, 401)
+    const { verifyJWT } = await import('./utils.js')
+    try {
+      const payload = await verifyJWT(auth.replace('Bearer ', ''), env.JWT_SECRET)
+      const { nickname, profile_image } = await request.json()
+
+      await env.DB.prepare(
+        'UPDATE users SET nickname = ?, profile_image = ? WHERE id = ?'
+      ).bind(nickname || null, profile_image || null, payload.id).run()
+
+      const user = await env.DB.prepare(
+        'SELECT id, name, email, role, credits, nickname, profile_image, created_at FROM users WHERE id = ?'
+      ).bind(payload.id).first()
+
       return json({ user })
     } catch {
       return json({ error: 'Invalid token' }, 401)

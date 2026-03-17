@@ -1,8 +1,11 @@
-CREATE TABLE IF NOT EXISTS users (
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'user',  -- user, admin
+  credits INTEGER DEFAULT 0,
   created_at TEXT NOT NULL
 );
 
@@ -51,3 +54,30 @@ CREATE TABLE IF NOT EXISTS reports (
   created_at TEXT NOT NULL,
   FOREIGN KEY (simulation_id) REFERENCES simulations(id)
 );
+
+-- 크레딧 거래 내역
+CREATE TABLE IF NOT EXISTS credit_transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  type TEXT NOT NULL,  -- purchase, usage, admin_grant
+  description TEXT,
+  payment_key TEXT,  -- 토스페이먼츠 결제키
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 이용권 상품
+CREATE TABLE IF NOT EXISTS credit_plans (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  credits INTEGER NOT NULL,
+  price INTEGER NOT NULL,  -- KRW
+  active INTEGER DEFAULT 1
+);
+
+-- 기본 이용권 상품 삽입
+INSERT OR IGNORE INTO credit_plans (id, name, credits, price) VALUES
+  ('plan_1', '시뮬레이션 1회', 1, 10000),
+  ('plan_5', '시뮬레이션 5회', 5, 45000),
+  ('plan_10', '시뮬레이션 10회', 10, 80000);

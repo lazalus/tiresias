@@ -83,7 +83,6 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
-
 async function handleLogin() {
   error.value = ''
   loading.value = true
@@ -93,7 +92,7 @@ async function handleLogin() {
     login(user, token)
     router.push('/')
   } catch (err) {
-    error.value = err.message || '로그인에 실패했습니다. 다시 시도해주세요.'
+    error.value = err.response?.data?.error || err.message || '로그인에 실패했습니다. 다시 시도해주세요.'
   } finally {
     loading.value = false
   }
@@ -190,6 +189,29 @@ async function handleLogin() {
 .error-message svg {
   flex-shrink: 0;
   color: #f87171;
+}
+
+.pending-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 0;
+  gap: 12px;
+}
+
+.pending-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f4f4f5;
+  margin: 0;
+}
+
+.pending-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  line-height: 1.5;
 }
 
 .field {

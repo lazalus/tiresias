@@ -17,11 +17,14 @@ export async function handleAuth(request, env, url) {
     const id = crypto.randomUUID()
     const passwordHash = await hashPassword(password)
     await env.DB.prepare(
-      'INSERT INTO users (id, name, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)'
-    ).bind(id, name, email, passwordHash, new Date().toISOString()).run()
+      'INSERT INTO users (id, name, email, password_hash, role, credits, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id, name, email, passwordHash, 'user', 0, new Date().toISOString()).run()
 
-    const token = await createJWT({ id, email, name }, env.JWT_SECRET)
-    return json({ user: { id, name, email }, token })
+    const token = await createJWT(
+      { id, email, name, role: 'user', credits: 0 },
+      env.JWT_SECRET
+    )
+    return json({ user: { id, name, email, role: 'user', credits: 0 }, token })
   }
 
   if (path === '/login' && request.method === 'POST') {
@@ -32,25 +35,27 @@ export async function handleAuth(request, env, url) {
 
     const passwordHash = await hashPassword(password)
     const user = await env.DB.prepare(
-      'SELECT id, name, email FROM users WHERE email = ? AND password_hash = ?'
+      'SELECT id, name, email, role, credits FROM users WHERE email = ? AND password_hash = ?'
     ).bind(email, passwordHash).first()
 
     if (!user) {
       return json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401)
     }
 
-    const token = await createJWT({ id: user.id, email: user.email, name: user.name }, env.JWT_SECRET)
-    return json({ user, token })
+    const token = await createJWT(
+      { id: user.id, email: user.email, name: user.name, role: user.role, credits: user.credits },
+      env.JWT_SECRET
+    )
+    return json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, credits: user.credits }, token })
   }
 
   if (path === '/me' && request.method === 'GET') {
     const auth = request.headers.get('Authorization')
     if (!auth) return json({ error: 'Unauthorized' }, 401)
-    // Verify token and return user
     const { verifyJWT } = await import('./utils.js')
     try {
       const payload = await verifyJWT(auth.replace('Bearer ', ''), env.JWT_SECRET)
-      const user = await env.DB.prepare('SELECT id, name, email, created_at FROM users WHERE id = ?').bind(payload.id).first()
+      const user = await env.DB.prepare('SELECT id, name, email, role, credits, created_at FROM users WHERE id = ?').bind(payload.id).first()
       return json({ user })
     } catch {
       return json({ error: 'Invalid token' }, 401)

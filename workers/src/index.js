@@ -1,6 +1,9 @@
 import { handleAuth } from './auth.js'
 import { handleProjects } from './projects.js'
 import { handleFiles } from './files.js'
+import { handleAdmin } from './admin.js'
+import { handlePayments } from './payments.js'
+import { getUser, json } from './utils.js'
 
 export default {
   async fetch(request, env) {
@@ -21,6 +24,10 @@ export default {
       // CF Worker가 직접 처리 (D1 + R2)
       if (url.pathname.startsWith('/api/auth')) {
         response = await handleAuth(request, env, url)
+      } else if (url.pathname.startsWith('/api/admin')) {
+        response = await handleAdmin(request, env, url)
+      } else if (url.pathname.startsWith('/api/payments')) {
+        response = await handlePayments(request, env, url)
       } else if (url.pathname.startsWith('/api/projects')) {
         response = await handleProjects(request, env, url)
       } else if (url.pathname.startsWith('/api/files')) {
@@ -32,7 +39,18 @@ export default {
         url.pathname.startsWith('/api/simulation') ||
         url.pathname.startsWith('/api/report')
       ) {
-        response = await proxyToBackend(request, env, url)
+        // Verify authenticated user with credits before proxying
+        const user = await getUser(request, env)
+        if (!user) {
+          response = json({ error: 'Unauthorized' }, 401)
+        } else {
+          const dbUser = await env.DB.prepare('SELECT credits FROM users WHERE id = ?').bind(user.id).first()
+          if (!dbUser || dbUser.credits <= 0) {
+            response = json({ error: '크레딧이 부족합니다. 이용권을 구매해주세요.' }, 403)
+          } else {
+            response = await proxyToBackend(request, env, url)
+          }
+        }
 
       // 나머지 → Vue SPA
       } else {
@@ -57,6 +75,7 @@ async function proxyToBackend(request, env, url) {
 
   const headers = new Headers(request.headers)
   headers.set('Host', new URL(backendUrl).host)
+  headers.set('X-Internal-Key', env.INTERNAL_API_KEY)
 
   return fetch(target.toString(), {
     method: request.method,

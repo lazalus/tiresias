@@ -8,7 +8,20 @@
         <p class="tagline">Tiresias에 오신 것을 환영합니다</p>
       </div>
 
-      <form class="card-body" @submit.prevent="handleSignup">
+      <!-- Success state after signup -->
+      <div v-if="signupSuccess" class="card-body">
+        <div class="success-message">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <p class="success-title">회원가입이 완료되었습니다</p>
+          <p class="success-sub">관리자 승인 후 로그인할 수 있습니다.</p>
+          <router-link to="/login" class="back-to-login">로그인으로 돌아가기</router-link>
+        </div>
+      </div>
+
+      <form v-else class="card-body" @submit.prevent="handleSignup">
         <div v-if="error" class="error-message">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
@@ -93,7 +106,7 @@
         </button>
       </form>
 
-      <div class="card-footer">
+      <div v-if="!signupSuccess" class="card-footer">
         <span class="footer-text">이미 계정이 있으신가요?</span>
         <router-link to="/login" class="footer-link">로그인</router-link>
       </div>
@@ -115,6 +128,7 @@ const password = ref('')
 const passwordConfirm = ref('')
 const loading = ref(false)
 const error = ref('')
+const signupSuccess = ref(false)
 
 const passwordMismatch = computed(() => {
   return passwordConfirm.value.length > 0 && password.value !== passwordConfirm.value
@@ -140,7 +154,7 @@ async function handleSignup() {
     login(user, token)
     router.push('/')
   } catch (err) {
-    error.value = err.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
+    error.value = err.response?.data?.message || err.message || '회원가입에 실패했습니다. 다시 시도해주세요.'
   } finally {
     loading.value = false
   }
@@ -360,5 +374,46 @@ async function handleSignup() {
 
 .footer-link:hover {
   color: #a5b4fc;
+}
+
+.success-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 0;
+  gap: 12px;
+}
+
+.success-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f4f4f5;
+  margin: 0;
+}
+
+.success-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.back-to-login {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: #6366f1;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.back-to-login:hover {
+  background: #5558e6;
+  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.4);
 }
 </style>

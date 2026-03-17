@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isAuthenticated } from '../store/auth.js'
+import { isAuthenticated, currentUser } from '../store/auth.js'
 import Home from '../views/Home.vue'
 import Features from '../views/Features.vue'
 import Login from '../views/Login.vue'
@@ -9,6 +9,8 @@ import SimulationView from '../views/SimulationView.vue'
 import SimulationRunView from '../views/SimulationRunView.vue'
 import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
+import Admin from '../views/Admin.vue'
+import Credits from '../views/Credits.vue'
 
 const routes = [
   {
@@ -68,6 +70,18 @@ const routes = [
     component: InteractionView,
     props: true,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/credits',
+    name: 'Credits',
+    component: Credits,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -80,6 +94,8 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated.value) {
     next({ name: 'Login' })
+  } else if (to.meta.requiresAdmin && (!currentUser.value || currentUser.value.role !== 'admin')) {
+    next({ name: 'Home' })
   } else if (to.meta.guest && isAuthenticated.value) {
     next({ name: 'Home' })
   } else {

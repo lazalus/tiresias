@@ -9,12 +9,22 @@
         </div>
         <div class="header-right">
           <router-link to="/features" class="header-link">기능 소개</router-link>
+          <router-link v-if="user?.role === 'admin'" to="/admin" class="header-link">어드민</router-link>
+          <div class="credits-display" v-if="userCredits !== null">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+              <path d="M12 18V6"/>
+            </svg>
+            <span>크레딧: {{ userCredits }}</span>
+          </div>
           <div class="user-menu" @click="showMenu = !showMenu">
             <div class="avatar">{{ userInitial }}</div>
             <div v-if="showMenu" class="dropdown">
               <div class="dropdown-user">{{ user?.name || user?.email }}</div>
               <div class="dropdown-email">{{ user?.email }}</div>
               <div class="dropdown-divider"></div>
+              <router-link to="/credits" class="dropdown-item" @click.stop>이용권 구매</router-link>
               <button class="dropdown-item" @click.stop="handleLogout">로그아웃</button>
             </div>
           </div>
@@ -123,14 +133,28 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
-import { currentUser, logout } from '../store/auth.js'
+import { currentUser, logout, getToken } from '../store/auth.js'
 
 const router = useRouter()
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 const user = currentUser
+const userCredits = ref(null)
+
+onMounted(async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/api/payments/credits`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    })
+    userCredits.value = res.data.credits ?? res.data
+  } catch (e) {
+    // Credits fetch failed silently
+  }
+})
 const userInitial = computed(() => {
   const name = user.value?.name || user.value?.email || '?'
   return name.charAt(0).toUpperCase()
@@ -263,6 +287,21 @@ const startSimulation = () => {
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Credits Display */
+.credits-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* User Menu */
 .user-menu {
   position: relative;
@@ -320,16 +359,19 @@ const startSimulation = () => {
 }
 
 .dropdown-item {
+  display: block;
   width: 100%;
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.82rem;
   text-align: left;
+  text-decoration: none;
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s;
+  box-sizing: border-box;
 }
 
 .dropdown-item:hover {

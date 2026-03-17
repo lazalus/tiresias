@@ -45,7 +45,7 @@
               </svg>
             </div>
             <h3 class="cap-title">저비용 시뮬레이션</h3>
-            <p class="cap-desc">일반 시뮬레이션 평균 $5/회의 비용으로 대규모 예측을 실행할 수 있습니다.</p>
+            <p class="cap-desc">일반 시뮬레이션 1회 9,900원으로 대규모 예측을 실행할 수 있습니다.</p>
           </div>
           <div class="cap-card">
             <div class="cap-icon">
@@ -244,7 +244,7 @@ const steps = [
 }
 
 .header-link:hover {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   background: var(--border-color);
 }
 
@@ -509,7 +509,7 @@ const steps = [
 
 .timeline-desc {
   font-size: 0.84rem;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-muted);
   line-height: 1.7;
   margin: 0;
 }
@@ -529,7 +529,7 @@ const steps = [
   position: relative;
   padding: 28px 24px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   transition: border-color 0.3s ease, background 0.3s ease;
 }
@@ -558,7 +558,7 @@ const steps = [
 
 .case-desc {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-muted);
   line-height: 1.65;
   margin: 0;
 }

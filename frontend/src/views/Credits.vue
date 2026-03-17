@@ -161,9 +161,9 @@ async function fetchPlans() {
 
 function defaultPlans() {
   return [
-    { id: 'plan_1', name: '기본', credits: 1, price: 10000, savings: null, featured: false },
-    { id: 'plan_5', name: '스탠다드', credits: 5, price: 45000, savings: '10% 할인', featured: true },
-    { id: 'plan_10', name: '프로', credits: 10, price: 80000, savings: '20% 할인', featured: false }
+    { id: 'plan_1', name: '기본', credits: 1, price: 9900, savings: null, featured: false },
+    { id: 'plan_5', name: '스탠다드', credits: 5, price: 44000, savings: '11% 할인', featured: true },
+    { id: 'plan_10', name: '프로', credits: 10, price: 79000, savings: '20% 할인', featured: false }
   ]
 }
 
@@ -365,7 +365,7 @@ function formatDate(d) {
 }
 
 .header-link:hover {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   background: var(--border-color);
 }
 
@@ -417,7 +417,7 @@ function formatDate(d) {
 
 .credits-sub {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
   margin-top: 8px;
   position: relative;
 }
@@ -455,7 +455,7 @@ function formatDate(d) {
 }
 
 .plan-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-color);
   transform: translateY(-2px);
 }
 
@@ -481,7 +481,7 @@ function formatDate(d) {
 .plan-name {
   font-size: 0.85rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   margin-bottom: 16px;
 }
 
@@ -507,7 +507,7 @@ function formatDate(d) {
 .plan-price {
   font-size: 1rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
@@ -549,8 +549,8 @@ function formatDate(d) {
   padding: 40px;
   color: var(--text-muted);
   font-size: 0.88rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
 }
 
@@ -561,7 +561,7 @@ function formatDate(d) {
   border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-surface);
 }
 
 .history-item {
@@ -578,7 +578,7 @@ function formatDate(d) {
 }
 
 .history-item:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-surface);
 }
 
 .history-left {
@@ -613,7 +613,7 @@ function formatDate(d) {
 
 .history-desc {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 
 .history-right {

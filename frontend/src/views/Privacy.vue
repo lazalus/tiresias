@@ -101,7 +101,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
   text-decoration: none;
   border-radius: 10px;
   transition: background 0.15s;
@@ -134,13 +134,13 @@
 .legal-section h2 {
   font-size: 0.95rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-primary);
   margin: 0 0 12px;
 }
 
 .legal-section p {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   line-height: 1.7;
   margin: 0 0 6px;
 }
@@ -152,7 +152,7 @@
 
 .legal-section li {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-secondary);
   line-height: 1.8;
 }
 

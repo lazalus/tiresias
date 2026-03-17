@@ -371,11 +371,11 @@ function handleLogout() {
   height: 28px;
   border-radius: 50%;
   background: #1a1828;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 
 .photo-file-input {
@@ -402,14 +402,14 @@ function handleLogout() {
 
 .profile-email {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
 }
 
 .edit-profile-btn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 10px;
   border-radius: 10px;
   font-size: 0.85rem;
@@ -419,7 +419,8 @@ function handleLogout() {
 }
 
 .edit-profile-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  opacity: 0.8;
 }
 
 /* Credits Card */
@@ -474,7 +475,7 @@ function handleLogout() {
   justify-content: space-between;
   padding: 16px 20px;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 0.92rem;
   transition: background 0.15s;
   cursor: pointer;
@@ -489,7 +490,7 @@ function handleLogout() {
 }
 
 .menu-arrow {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   font-size: 1.3rem;
   font-weight: 300;
 }
@@ -549,7 +550,7 @@ function handleLogout() {
   padding: 16px 20px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 0.92rem;
   font-weight: 450;
   cursor: pointer;
@@ -563,7 +564,7 @@ function handleLogout() {
 }
 
 .accordion-chevron {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   font-size: 1.3rem;
   font-weight: 300;
   transition: transform 0.25s ease;
@@ -575,6 +576,37 @@ function handleLogout() {
 
 .accordion-body {
   padding: 0 20px 20px;
+}
+
+.support-links {
+  display: flex;
+  flex-direction: column;
+}
+
+.support-link-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-color);
+  transition: opacity 0.15s;
+}
+
+.support-link-item:last-child {
+  border-bottom: none;
+}
+
+.support-link-item:hover {
+  opacity: 0.7;
+}
+
+.support-link-item .menu-arrow {
+  color: var(--text-muted);
+  font-size: 1.1rem;
 }
 
 /* Accordion transition */
@@ -640,14 +672,14 @@ function handleLogout() {
 .faq-title {
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 14px 16px 8px;
 }
 
 .faq-item + .faq-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--border-color);
 }
 
 .faq-question {
@@ -658,7 +690,7 @@ function handleLogout() {
   padding: 14px 16px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
   font-size: 0.85rem;
   font-weight: 450;
   text-align: left;
@@ -672,7 +704,7 @@ function handleLogout() {
 }
 
 .faq-toggle {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   font-size: 1.2rem;
   font-weight: 300;
   transition: transform 0.2s;
@@ -714,7 +746,7 @@ function handleLogout() {
 .legal-block-title {
   font-size: 0.88rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-primary);
   margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-color);
@@ -722,7 +754,7 @@ function handleLogout() {
 
 .legal-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-color);
   margin: 24px 0;
 }
 
@@ -733,7 +765,7 @@ function handleLogout() {
 .legal-section h3 {
   font-size: 0.82rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   margin: 0 0 8px;
 }
 
@@ -751,13 +783,13 @@ function handleLogout() {
 
 .legal-section li {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-muted);
   line-height: 1.8;
 }
 
 .legal-date {
   font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   margin-top: 12px;
 }
 
@@ -773,7 +805,7 @@ function handleLogout() {
 .logout-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 450;
   cursor: pointer;
@@ -782,12 +814,12 @@ function handleLogout() {
 }
 
 .logout-btn:hover {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-secondary);
 }
 
 .app-version {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
 }
 
 /* Modal */
@@ -870,7 +902,7 @@ function handleLogout() {
 .photo-remove-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
   font-size: 0.78rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -922,9 +954,9 @@ function handleLogout() {
 
 .modal-cancel {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.6);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
   padding: 12px;
   border-radius: 10px;
   font-size: 0.88rem;
@@ -934,7 +966,8 @@ function handleLogout() {
 }
 
 .modal-cancel:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  opacity: 0.8;
 }
 
 .modal-save {

@@ -249,7 +249,7 @@ const startSimulation = () => {
 
 .greeting-sub {
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--text-muted);
   line-height: 1.6;
   margin: 0;
 }
@@ -268,7 +268,7 @@ const startSimulation = () => {
 }
 
 .input-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-color);
 }
 
 .card-section {
@@ -294,7 +294,7 @@ const startSimulation = () => {
 .section-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
@@ -302,7 +302,7 @@ const startSimulation = () => {
   margin-left: auto;
   font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
 }
 
 .card-divider {
@@ -312,7 +312,7 @@ const startSimulation = () => {
 
 /* ── Upload ── */
 .upload-area {
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border: 1px dashed var(--border-color);
   border-radius: 12px;
   min-height: 96px;
   display: flex;
@@ -320,7 +320,7 @@ const startSimulation = () => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.25s ease;
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-surface);
 }
 
 .upload-area.has-files {
@@ -344,7 +344,7 @@ const startSimulation = () => {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: rgba(255, 255, 255, 0.22);
+  color: var(--text-muted);
   font-size: 0.82rem;
   padding: 20px;
 }
@@ -360,18 +360,18 @@ const startSimulation = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   font-family: 'JetBrains Mono', monospace;
   transition: border-color 0.2s;
 }
 
 .file-chip:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-color);
 }
 
 .chip-name {
@@ -401,8 +401,8 @@ const startSimulation = () => {
 /* ── Prompt ── */
 .prompt-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 14px 16px;
   font-family: inherit;
@@ -421,7 +421,7 @@ const startSimulation = () => {
 }
 
 .prompt-input::placeholder {
-  color: rgba(255, 255, 255, 0.18);
+  color: var(--text-muted);
 }
 
 /* ── Start Button ── */
@@ -470,7 +470,7 @@ const startSimulation = () => {
 
 .start-btn:disabled {
   background: var(--bg-surface);
-  color: rgba(255, 255, 255, 0.18);
+  color: var(--text-muted);
   cursor: not-allowed;
   box-shadow: none;
 }

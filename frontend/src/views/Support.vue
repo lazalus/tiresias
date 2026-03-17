@@ -92,7 +92,7 @@ function toggleFaq(index) {
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary);
   text-decoration: none;
   border-radius: 10px;
   transition: background 0.15s;
@@ -177,7 +177,7 @@ function toggleFaq(index) {
 }
 
 .faq-item + .faq-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--border-color);
 }
 
 .faq-question {
@@ -188,7 +188,7 @@ function toggleFaq(index) {
   padding: 18px 20px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
   text-align: left;
@@ -202,7 +202,7 @@ function toggleFaq(index) {
 }
 
 .faq-toggle {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
   font-size: 1.4rem;
   font-weight: 300;
   transition: transform 0.2s;
@@ -221,7 +221,7 @@ function toggleFaq(index) {
 
 .faq-answer p {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
 }

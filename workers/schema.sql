@@ -79,6 +79,6 @@ CREATE TABLE IF NOT EXISTS credit_plans (
 
 -- 기본 이용권 상품 삽입
 INSERT OR IGNORE INTO credit_plans (id, name, credits, price) VALUES
-  ('plan_1', '시뮬레이션 1회', 1, 10000),
-  ('plan_5', '시뮬레이션 5회', 5, 45000),
-  ('plan_10', '시뮬레이션 10회', 10, 80000);
+  ('plan_1', '시뮬레이션 1회', 1, 9900),
+  ('plan_5', '시뮬레이션 5회', 5, 44000),
+  ('plan_10', '시뮬레이션 10회', 10, 79000);

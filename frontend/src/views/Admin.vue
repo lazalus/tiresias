@@ -428,7 +428,7 @@ function formatShortDate(d) {
 }
 
 .header-link:hover {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
   background: var(--border-color);
 }
 
@@ -459,7 +459,7 @@ function formatShortDate(d) {
 }
 
 .kpi-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-color);
 }
 
 .kpi-icon {
@@ -517,7 +517,7 @@ function formatShortDate(d) {
 
 .kpi-sub {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
 }
 
 /* Section */
@@ -570,7 +570,7 @@ function formatShortDate(d) {
 }
 
 .user-card:active {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
 }
 
 .user-card--pending {
@@ -608,7 +608,7 @@ function formatShortDate(d) {
 
 .user-card-email {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -637,7 +637,7 @@ function formatShortDate(d) {
 
 .credits-label {
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -682,7 +682,7 @@ function formatShortDate(d) {
   gap: 8px;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   overflow: hidden;
 }
 
@@ -766,12 +766,13 @@ function formatShortDate(d) {
 
 .btn--ghost {
   background: var(--bg-surface);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.6);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
 }
 
 .btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-surface);
+  opacity: 0.8;
 }
 
 .btn--primary {
@@ -806,7 +807,7 @@ function formatShortDate(d) {
 
 .modal-card {
   background: #151419;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: 20px 20px 0 0;
   padding: 28px 20px 32px;
   width: 100%;
@@ -836,14 +837,14 @@ function formatShortDate(d) {
 .modal-field label {
   font-size: 0.78rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
 }
 
 .modal-field input {
   width: 100%;
   padding: 12px 14px;
   background: var(--bg-surface);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 0.9rem;

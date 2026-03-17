@@ -78,7 +78,7 @@ const isAdmin = computed(() => currentUser.value?.role === 'admin')
 }
 
 .nav-item:hover {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 
 .nav-item.active {

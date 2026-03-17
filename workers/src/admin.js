@@ -79,8 +79,8 @@ export async function handleAdmin(request, env, url) {
       todaySignups: todaySignups.count,
       totalCreditsUsed: totalCreditsUsed.total,
       monthlyCreditsUsed: monthlyCreditsUsed.total,
-      todayRevenue: todayRevenue.credits * 10000,
-      monthlyRevenue: monthlyRevenue.credits * 10000,
+      todayRevenue: todayRevenue.credits * 9900,
+      monthlyRevenue: monthlyRevenue.credits * 9900,
       todayPurchases: todayRevenue.count,
       monthlyPurchases: monthlyRevenue.count,
       totalProjects: totalProjects.count

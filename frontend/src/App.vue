@@ -10,32 +10,41 @@ useTheme()
 </script>
 
 <style>
-/* Theme Variables */
+/* Theme Variables - Dark (default) */
 html[data-theme="dark"] {
-  --bg-primary: #0c0a15;
-  --bg-secondary: rgba(255, 255, 255, 0.03);
-  --bg-surface: rgba(255, 255, 255, 0.04);
+  --bg-primary: #111118;
+  --bg-secondary: #1a1a24;
+  --bg-tertiary: #22222e;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
   --border-color: rgba(255, 255, 255, 0.06);
-  --text-primary: #f0f0f5;
-  --text-secondary: rgba(255, 255, 255, 0.4);
-  --text-muted: rgba(255, 255, 255, 0.25);
-  --header-bg: rgba(12, 10, 21, 0.72);
-  --nav-bg: rgba(12, 10, 21, 0.92);
+  --text-primary: #e8e8ed;
+  --text-secondary: #8888a0;
+  --text-muted: #55556a;
+  --accent-color: #6366f1;
+  --accent-hover: #5558e6;
+  --header-bg: rgba(17, 17, 24, 0.85);
+  --nav-bg: rgba(17, 17, 24, 0.92);
 }
 
+/* Theme Variables - Light */
 html[data-theme="light"] {
-  --bg-primary: #f8f9fa;
+  --bg-primary: #fafafa;
   --bg-secondary: #ffffff;
-  --bg-surface: #ffffff;
-  --border-color: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --header-bg: rgba(255, 255, 255, 0.85);
-  --nav-bg: rgba(255, 255, 255, 0.92);
+  --bg-tertiary: #f4f4f5;
+  --bg-surface: rgba(0, 0, 0, 0.02);
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-muted: #a1a1aa;
+  --accent-color: #6366f1;
+  --accent-hover: #5558e6;
+  --header-bg: rgba(250, 250, 250, 0.85);
+  --nav-bg: rgba(250, 250, 250, 0.92);
 }
 
-/* 전역 스타일 리셋 */
+/* Global reset */
 * {
   margin: 0;
   padding: 0;
@@ -43,6 +52,7 @@ html[data-theme="light"] {
 }
 
 html {
+  font-size: 14px;
   background: var(--bg-primary);
 }
 
@@ -53,22 +63,11 @@ html {
   color: var(--text-primary);
   background: var(--bg-primary);
   min-height: 100vh;
-  position: relative;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
-/* 미세한 배경 그라디언트 */
-#app::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(129, 140, 248, 0.04) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* 스크롤바 스타일 */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -87,14 +86,30 @@ html {
   background: var(--text-secondary);
 }
 
-/* 전역 버튼 스타일 */
+/* Global button reset */
 button {
   font-family: inherit;
 }
 
-/* 전역 텍스트 선택 색상 */
+/* Global link reset */
+a {
+  transition: color 0.15s ease;
+}
+
+/* Text selection */
 ::selection {
-  background: rgba(99, 102, 241, 0.3);
-  color: #fff;
+  background: rgba(99, 102, 241, 0.25);
+  color: var(--text-primary);
+}
+
+/* Global transition speed */
+*, *::before, *::after {
+  transition-timing-function: ease;
+  transition-duration: 0.15s;
+}
+
+/* Opt out elements that shouldn't auto-transition */
+input, textarea, button, a, [class*="router"] {
+  transition: none;
 }
 </style>

@@ -2,7 +2,10 @@
   <div class="process-page">
     <!-- 상단 내비게이션 바 -->
     <nav class="navbar">
-      <div class="nav-brand" @click="goHome">TIRESIAS</div>
+      <div class="nav-brand" @click="goHome" style="display:flex;align-items:center;gap:8px;">
+        <img src="/logoss.png" alt="Tiresias View" style="width:28px;height:28px;border-radius:6px;" />
+        TIRESIAS
+      </div>
       
       <!-- 중앙 단계 표시기 -->
       <div class="nav-center">
@@ -19,7 +22,7 @@
     <!-- 메인 콘텐츠 영역 -->
     <div class="main-content">
       <!-- 좌측: 실시간 그래프 표시 -->
-      <div class="left-panel" :class="{ 'full-screen': isFullScreen }">
+      <div class="left-panel" v-show="processTab === 'ontology'" :class="{ 'full-screen': isFullScreen }">
         <div class="panel-header">
           <div class="header-left">
             <span class="header-deco">◆</span>
@@ -222,7 +225,7 @@
       </div>
 
       <!-- 우측: 구축 프로세스 상세 -->
-      <div class="right-panel" :class="{ 'hidden': isFullScreen }">
+      <div class="right-panel" v-show="processTab === 'workbench'" :class="{ 'hidden': isFullScreen }">
         <div class="panel-header dark-header">
           <span class="header-icon">▣</span>
           <span class="header-title">구축 프로세스</span>
@@ -408,6 +411,50 @@
         </div>
       </div>
     </div>
+
+    <!-- 하단 탭 -->
+    <nav class="process-bottom-nav">
+      <button class="pnav-item" :class="{ active: processTab === 'ontology' }" @click="processTab = 'ontology'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/>
+          <line x1="6" y1="7" x2="10" y2="10"/><line x1="14" y1="10" x2="18" y2="7"/><line x1="6" y1="17" x2="10" y2="14"/><line x1="14" y1="14" x2="18" y2="17"/>
+        </svg>
+        <span>온톨로지</span>
+      </button>
+      <button class="pnav-item" :class="{ active: processTab === 'workbench' }" @click="processTab = 'workbench'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+        <span>워크벤치</span>
+      </button>
+      <button class="pnav-item" @click="goHome">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>홈</span>
+      </button>
+    </nav>
+
+    <!-- 나가기 확인 팝업 -->
+    <Teleport to="body">
+      <div v-if="showExitConfirm" class="exit-overlay" @click.self="cancelExit">
+        <div class="exit-modal">
+          <div class="exit-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="exit-title">시뮬레이션 진행 중</h3>
+          <p class="exit-desc">지금 나가도 시뮬레이션은 서버에서 계속 진행됩니다.<br>이용권은 이미 차감되었습니다.</p>
+          <p class="exit-hint">보고서 탭에서 다시 확인할 수 있습니다.</p>
+          <div class="exit-actions">
+            <button class="exit-cancel" @click="cancelExit">계속 보기</button>
+            <button class="exit-confirm" @click="confirmExit">홈으로 나가기</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -435,6 +482,7 @@ const ontologyProgress = ref(null) // 온톨로지 생성 진행률
 const currentPhase = ref(-1) // -1: 업로드 중, 0: 온톨로지 생성 중, 1: 그래프 구축, 2: 완료
 const selectedItem = ref(null) // 선택된 노드 또는 엣지
 const isFullScreen = ref(false)
+const processTab = ref('ontology')
 
 // DOM 참조
 const graphContainer = ref(null)
@@ -476,8 +524,24 @@ const entityTypes = computed(() => {
 })
 
 // 메서드
+const showExitConfirm = ref(false)
+
 const goHome = () => {
+  // 시뮬레이션 진행 중이면 확인 팝업
+  if (currentPhase.value > 0 && currentPhase.value < 5) {
+    showExitConfirm.value = true
+  } else {
+    router.push('/')
+  }
+}
+
+const confirmExit = () => {
+  showExitConfirm.value = false
   router.push('/')
+}
+
+const cancelExit = () => {
+  showExitConfirm.value = false
 }
 
 const goToNextStep = () => {
@@ -1102,10 +1166,12 @@ onUnmounted(() => {
 }
 
 .process-page {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--white);
   font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
-  overflow: hidden; /* Prevent body scroll in fullscreen */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 내비게이션 바 */
@@ -1197,8 +1263,10 @@ onUnmounted(() => {
 /* 메인 콘텐츠 영역 */
 .main-content {
   display: flex;
-  height: calc(100vh - 56px);
+  flex: 1;
+  min-height: 0;
   position: relative;
+  overflow: hidden;
 }
 
 /* 좌측 패널 - 50% default */
@@ -1680,7 +1748,7 @@ onUnmounted(() => {
   flex-direction: column;
   background: #fff;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
-  overflow: hidden;
+  overflow-y: auto;
   opacity: 1;
 }
 
@@ -2041,28 +2109,176 @@ onUnmounted(() => {
   color: #666;
 }
 
-/* 반응형 */
-@media (max-width: 1024px) {
+/* 나가기 확인 모달 */
+.exit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.exit-modal {
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+.exit-icon { margin-bottom: 16px; }
+.exit-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+.exit-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.exit-hint {
+  font-size: 0.8rem;
+  color: var(--accent-color, #818cf8);
+  margin-bottom: 20px;
+}
+.exit-actions {
+  display: flex;
+  gap: 10px;
+}
+.exit-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.exit-confirm {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--border-color, rgba(255,255,255,0.08));
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* 하단 탭 네비게이션 */
+.process-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-primary, #09090b);
+  border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100;
+}
+.pnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #888);
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 6px 16px;
+  transition: color 0.2s;
+}
+.pnav-item.active {
+  color: var(--accent-color, #6366f1);
+}
+.pnav-item svg {
+  transition: color 0.2s;
+}
+
+/* 반응형 - 모바일 */
+@media (max-width: 768px) {
+  .navbar {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .nav-center {
+    display: none;
+  }
+
   .main-content {
     flex-direction: column;
+    padding-bottom: 80px;
   }
-  
-  .left-panel {
-    width: 100% !important;
-    border-right: none;
-    border-bottom: 1px solid #E0E0E0;
-    height: 50vh;
-  }
-  
+
+  .left-panel,
   .right-panel {
     width: 100% !important;
-    height: 50vh;
+    height: calc(100vh - 56px - 64px) !important;
+    overflow-y: auto;
+    border-right: none;
+    border-bottom: none;
+    min-height: 0;
+    flex: none;
     opacity: 1 !important;
     transform: none !important;
   }
-  
+
   .right-panel.hidden {
-      display: none;
+    display: none;
+  }
+
+  .panel-header {
+    padding: 8px 12px;
+    height: 40px;
+  }
+
+  .header-title {
+    font-size: 0.75rem;
+  }
+
+  .phase-header {
+    padding: 10px 12px;
+  }
+
+  .phase-detail {
+    padding: 0 12px 12px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+    padding-bottom: 80px;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+    height: calc(100vh - 56px - 64px) !important;
+    overflow-y: auto;
+    border-right: none;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .right-panel.hidden {
+    display: none;
   }
 }
 </style>

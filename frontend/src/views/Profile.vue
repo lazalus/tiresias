@@ -1,30 +1,19 @@
 <template>
   <div class="app-screen">
-    <!-- App Header -->
+    <!-- Header -->
     <header class="app-header">
       <div class="header-inner">
-        <div class="header-left">
-          <router-link to="/" class="header-home">
-            <img src="/logoss.png" alt="TIRESIAS VIEW" class="app-logo" />
-            <span class="app-name">TIRESIAS VIEW</span>
-          </router-link>
-        </div>
+        <h1 class="header-title">내 정보</h1>
       </div>
     </header>
 
-    <main class="profile-main">
+    <main class="settings-main">
       <!-- Profile Card -->
-      <div class="section-card profile-card">
-        <div class="profile-top">
+      <div class="settings-card profile-card">
+        <div class="profile-row">
           <div class="avatar-wrap" @click="triggerPhotoUpload">
             <img v-if="user?.profileImage" :src="user.profileImage" class="avatar-img" alt="프로필" />
             <div v-else class="avatar-placeholder">{{ userInitial }}</div>
-            <div class="avatar-edit-badge">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
             <input
               ref="photoInput"
               type="file"
@@ -35,57 +24,84 @@
           </div>
           <div class="profile-info">
             <div class="profile-name">{{ user?.name || '-' }}</div>
-            <div class="profile-nickname">{{ user?.nickname ? `@${user.nickname}` : '' }}</div>
             <div class="profile-email">{{ user?.email || '-' }}</div>
           </div>
+          <button class="edit-btn" @click="openEditModal">프로필 수정</button>
         </div>
-        <button class="edit-profile-btn" @click="openEditModal">프로필 수정</button>
       </div>
 
-      <!-- Credits Card -->
-      <div class="section-card credits-card">
+      <!-- Account Info -->
+      <div class="settings-card">
+        <div class="list-item">
+          <span class="list-label">이메일</span>
+          <span class="list-value">{{ user?.email || '-' }}</span>
+        </div>
+        <div class="list-divider"></div>
+        <div class="list-item">
+          <span class="list-label">가입일</span>
+          <span class="list-value">{{ formatJoinDate(user?.createdAt) }}</span>
+        </div>
+        <div class="list-divider"></div>
+        <div class="list-item">
+          <span class="list-label">역할</span>
+          <span class="list-value">{{ user?.role === 'admin' ? '관리자' : '일반' }}</span>
+        </div>
+      </div>
+
+      <!-- Credits -->
+      <router-link to="/credits" class="settings-card credits-row">
         <div class="credits-left">
-          <div class="credits-label">보유 크레딧</div>
-          <div class="credits-value">{{ credits ?? '-' }}</div>
+          <span class="list-label">크레딧 잔여</span>
+          <span class="credits-num">{{ credits ?? '-' }}</span>
         </div>
-        <router-link to="/credits" class="credits-link">이용권 구매</router-link>
+        <span class="row-link">이용권 관리 <span class="row-arrow">&rsaquo;</span></span>
+      </router-link>
+
+      <!-- Settings -->
+      <div class="settings-card">
+        <div class="list-item">
+          <span class="list-label">테마</span>
+          <div class="theme-toggle" @click="toggleTheme">
+            <span class="theme-mode-label">{{ theme === 'dark' ? '다크' : '라이트' }}</span>
+            <div class="toggle-switch" :class="{ light: theme === 'light' }">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- 고객센터 (모든 서비스 메뉴 포함) -->
-      <div class="section-card accordion-group">
+      <!-- 고객센터 -->
+      <div class="settings-card accordion-card">
         <button class="accordion-header" @click="toggleAccordion('support')">
-          <span class="accordion-title">고객센터</span>
-          <span class="accordion-chevron" :class="{ open: openAccordion === 'support' }">›</span>
+          <span class="list-label" style="font-weight:500;">고객센터</span>
+          <span class="accordion-chevron" :class="{ open: openAccordion === 'support' }">&rsaquo;</span>
         </button>
         <Transition name="accordion">
           <div v-if="openAccordion === 'support'" class="accordion-body">
-            <div class="support-links">
-              <router-link to="/support" class="support-link-item">
-                <span>자주 묻는 질문</span>
-                <span class="menu-arrow">›</span>
-              </router-link>
-              <router-link to="/features" class="support-link-item">
-                <span>서비스 소개</span>
-                <span class="menu-arrow">›</span>
-              </router-link>
-              <router-link to="/terms" class="support-link-item">
-                <span>서비스 이용약관</span>
-                <span class="menu-arrow">›</span>
-              </router-link>
-              <router-link to="/privacy" class="support-link-item">
-                <span>개인정보 처리방침</span>
-                <span class="menu-arrow">›</span>
-              </router-link>
-            </div>
+            <router-link to="/support" class="support-link-item">
+              <span>자주 묻는 질문</span>
+              <span class="row-arrow">&rsaquo;</span>
+            </router-link>
+            <router-link to="/features?from=profile" class="support-link-item">
+              <span>서비스 소개</span>
+              <span class="row-arrow">&rsaquo;</span>
+            </router-link>
+            <router-link to="/terms" class="support-link-item">
+              <span>서비스 이용약관</span>
+              <span class="row-arrow">&rsaquo;</span>
+            </router-link>
+            <router-link to="/privacy" class="support-link-item">
+              <span>개인정보 처리방침</span>
+              <span class="row-arrow">&rsaquo;</span>
+            </router-link>
           </div>
         </Transition>
       </div>
 
-
       <!-- Footer -->
-      <div class="profile-footer">
+      <div class="settings-footer">
         <button class="logout-btn" @click="handleLogout">로그아웃</button>
-        <div class="app-version">앱 버전 v1.0.0</div>
+        <div class="app-version">v1.0.0</div>
       </div>
     </main>
 
@@ -119,16 +135,6 @@
             placeholder="이름 또는 닉네임"
           />
 
-          <div class="modal-theme-row">
-            <span class="modal-label">화면 모드</span>
-            <div class="theme-toggle" @click="toggleTheme">
-              <span class="theme-label">{{ theme === 'dark' ? '다크' : '라이트' }}</span>
-              <div class="toggle-switch" :class="{ light: theme === 'light' }">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-          </div>
-
           <div class="modal-actions">
             <button class="modal-cancel" @click="showEditModal = false">취소</button>
             <button class="modal-save" @click="saveProfile">저장</button>
@@ -141,7 +147,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { currentUser, logout, getToken, updateUser } from '../store/auth.js'
 import { useTheme } from '../store/theme.js'
@@ -150,6 +156,7 @@ import BottomNav from '../components/BottomNav.vue'
 const { theme, toggleTheme } = useTheme()
 
 const router = useRouter()
+const route = useRoute()
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 const user = currentUser
@@ -160,7 +167,8 @@ const editNickname = ref('')
 const editProfileImage = ref(null)
 const photoInput = ref(null)
 
-const openAccordion = ref(null)
+// 고객센터 서브페이지에서 돌아왔을 때 아코디언 열기
+const openAccordion = ref(route.query.from === 'support' ? 'support' : null)
 const openFaq = ref(null)
 
 const userInitial = computed(() => {
@@ -204,6 +212,13 @@ function toggleAccordion(key) {
 
 function toggleFaq(index) {
   openFaq.value = openFaq.value === index ? null : index
+}
+
+function formatJoinDate(d) {
+  if (!d) return '-'
+  return new Date(d).toLocaleDateString('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  })
 }
 
 function openEditModal() {
@@ -273,109 +288,73 @@ function handleLogout() {
 .header-inner {
   max-width: 680px;
   margin: 0 auto;
-  height: 56px;
+  height: 52px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-home {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.app-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.app-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 0.9rem;
+.header-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 /* Main */
-.profile-main {
+.settings-main {
   max-width: 680px;
   margin: 0 auto;
-  padding: 24px 16px 100px;
+  padding: 16px 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Section Card */
-.section-card {
+/* Settings Card */
+.settings-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  margin-bottom: 16px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 /* Profile Card */
 .profile-card {
-  padding: 24px;
+  padding: 16px;
 }
 
-.profile-top {
+.profile-row {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: 14px;
 }
 
 .avatar-wrap {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   cursor: pointer;
 }
 
 .avatar-img {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .avatar-placeholder {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: #6366f1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #fff;
-}
-
-.avatar-edit-badge {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #1a1828;
-  border: 2px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
 }
 
 .photo-file-input {
@@ -383,149 +362,132 @@ function handleLogout() {
 }
 
 .profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex: 1;
   min-width: 0;
 }
 
 .profile-name {
-  font-size: 1.15rem;
+  font-size: 0.9rem;
   font-weight: 600;
-}
-
-.profile-nickname {
-  font-size: 0.85rem;
-  color: #818cf8;
-  font-weight: 500;
+  line-height: 1.3;
 }
 
 .profile-email {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
+  margin-top: 1px;
 }
 
-.edit-profile-btn {
-  width: 100%;
+.edit-btn {
+  flex-shrink: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.edit-profile-btn:hover {
-  background: var(--bg-surface);
-  opacity: 0.8;
+.edit-btn:hover {
+  border-color: var(--text-muted);
 }
 
-/* Credits Card */
-.credits-card {
+/* List Items */
+.list-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  height: 44px;
+  padding: 0 16px;
 }
 
-.credits-label {
+.list-label {
   font-size: 0.82rem;
   color: var(--text-secondary);
+}
+
+.list-value {
+  font-size: 0.82rem;
+  color: var(--text-primary);
   font-weight: 500;
-  margin-bottom: 6px;
 }
 
-.credits-value {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #818cf8, #6366f1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.list-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0 16px;
 }
 
-.credits-link {
-  color: #818cf8;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 8px 20px;
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 10px;
-  transition: all 0.2s;
-}
-
-.credits-link:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.5);
-}
-
-/* Menu Group */
-.menu-group {
-  overflow: hidden;
-}
-
-.menu-item {
+/* Credits Row */
+.credits-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 16px;
   text-decoration: none;
-  color: var(--text-primary);
-  font-size: 0.92rem;
-  transition: background 0.15s;
-  cursor: pointer;
+  color: inherit;
+  transition: background 0.1s;
 }
 
-.menu-item:hover {
+.credits-row:hover {
   background: var(--bg-surface);
 }
 
-.menu-label {
-  font-weight: 450;
+.credits-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.menu-arrow {
-  color: var(--text-muted);
-  font-size: 1.3rem;
-  font-weight: 300;
+.credits-num {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #6366f1;
 }
 
-.menu-divider {
-  height: 1px;
-  background: var(--bg-surface);
-  margin: 0 20px;
+.row-link {
+  font-size: 0.78rem;
+  color: #6366f1;
+  font-weight: 500;
+}
+
+.row-arrow {
+  font-size: 1rem;
+  margin-left: 2px;
 }
 
 /* Theme Toggle */
 .theme-toggle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  cursor: pointer;
 }
-.theme-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+
+.theme-mode-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
+
 .toggle-switch {
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
   background: #6366f1;
   position: relative;
-  cursor: pointer;
   transition: background 0.2s;
 }
+
 .toggle-switch.light {
   background: #d1d5db;
 }
+
 .toggle-knob {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #fff;
   position: absolute;
@@ -533,12 +495,13 @@ function handleLogout() {
   left: 2px;
   transition: transform 0.2s;
 }
+
 .toggle-switch.light .toggle-knob {
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
 /* Accordion */
-.accordion-group {
+.accordion-card {
   overflow: hidden;
 }
 
@@ -547,14 +510,13 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  height: 44px;
+  padding: 0 16px;
   background: none;
   border: none;
   color: var(--text-primary);
-  font-size: 0.92rem;
-  font-weight: 450;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.1s;
   font-family: inherit;
   text-align: left;
 }
@@ -565,9 +527,9 @@ function handleLogout() {
 
 .accordion-chevron {
   color: var(--text-muted);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 300;
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 
 .accordion-chevron.open {
@@ -575,25 +537,20 @@ function handleLogout() {
 }
 
 .accordion-body {
-  padding: 0 20px 20px;
-}
-
-.support-links {
-  display: flex;
-  flex-direction: column;
+  padding: 0 16px 12px;
 }
 
 .support-link-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  height: 40px;
   color: var(--text-primary);
   text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 450;
   border-bottom: 1px solid var(--border-color);
-  transition: opacity 0.15s;
+  transition: opacity 0.1s;
 }
 
 .support-link-item:last-child {
@@ -604,213 +561,42 @@ function handleLogout() {
   opacity: 0.7;
 }
 
-.support-link-item .menu-arrow {
+.support-link-item .row-arrow {
   color: var(--text-muted);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
-/* Accordion transition */
+/* Accordion transitions */
 .accordion-enter-active,
 .accordion-leave-active {
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
   overflow: hidden;
 }
 
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
-}
-
-/* Support inside accordion */
-.support-contact {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-
-.support-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(99, 102, 241, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #818cf8;
-  flex-shrink: 0;
-}
-
-.support-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-bottom: 2px;
-}
-
-.support-email {
-  color: #818cf8;
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.support-email:hover {
-  text-decoration: underline;
-}
-
-.faq-section {
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.faq-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 14px 16px 8px;
-}
-
-.faq-item + .faq-item {
-  border-top: 1px solid var(--border-color);
-}
-
-.faq-question {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 0.85rem;
-  font-weight: 450;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s;
-  font-family: inherit;
-}
-
-.faq-question:hover {
-  background: var(--bg-secondary);
-}
-
-.faq-toggle {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  font-weight: 300;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-  margin-left: 12px;
-}
-
-.faq-toggle.open {
-  transform: rotate(90deg);
-}
-
-.faq-answer {
-  padding: 0 16px 14px;
-}
-
-.faq-answer p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin: 0;
-}
-
-.faq-enter-active,
-.faq-leave-active {
-  transition: all 0.2s ease;
-}
-
-.faq-enter-from,
-.faq-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-/* Legal inside accordion */
-.legal-block {
-  margin-bottom: 8px;
-}
-
-.legal-block-title {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.legal-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 24px 0;
-}
-
-.legal-section {
-  margin-bottom: 16px;
-}
-
-.legal-section h3 {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin: 0 0 8px;
-}
-
-.legal-section p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin: 0 0 4px;
-}
-
-.legal-section ul {
-  margin: 6px 0 0;
-  padding-left: 18px;
-}
-
-.legal-section li {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.8;
-}
-
-.legal-date {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 12px;
+  transform: translateY(-6px);
 }
 
 /* Footer */
-.profile-footer {
-  margin-top: 32px;
+.settings-footer {
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .logout-btn {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 450;
+  font-size: 0.78rem;
+  font-weight: 400;
   cursor: pointer;
-  padding: 8px 16px;
-  transition: color 0.2s;
+  padding: 6px 12px;
+  transition: color 0.15s;
 }
 
 .logout-btn:hover {
@@ -818,7 +604,7 @@ function handleLogout() {
 }
 
 .app-version {
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
@@ -838,49 +624,49 @@ function handleLogout() {
 .modal-content {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 28px 24px;
+  border-radius: 14px;
+  padding: 24px 20px;
   width: 100%;
-  max-width: 360px;
+  max-width: 340px;
 }
 
 .modal-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .modal-avatar-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .modal-avatar-wrap {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   cursor: pointer;
 }
 
 .modal-avatar-img {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .modal-avatar-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: #6366f1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #fff;
 }
@@ -889,8 +675,8 @@ function handleLogout() {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #6366f1;
   display: flex;
@@ -903,10 +689,10 @@ function handleLogout() {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s;
+  padding: 2px 6px;
+  transition: color 0.15s;
 }
 
 .photo-remove-btn:hover {
@@ -914,10 +700,10 @@ function handleLogout() {
 }
 
 .modal-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   display: block;
 }
 
@@ -925,12 +711,12 @@ function handleLogout() {
   width: 100%;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 10px 12px;
   color: var(--text-primary);
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s;
   box-sizing: border-box;
 }
 
@@ -938,18 +724,10 @@ function handleLogout() {
   border-color: rgba(99, 102, 241, 0.5);
 }
 
-.modal-theme-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding: 12px 0;
-}
-
 .modal-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 .modal-cancel {
@@ -957,16 +735,15 @@ function handleLogout() {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .modal-cancel:hover {
-  background: var(--bg-surface);
   opacity: 0.8;
 }
 
@@ -975,22 +752,15 @@ function handleLogout() {
   background: #6366f1;
   border: none;
   color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
 }
 
 .modal-save:hover {
   background: #5558e6;
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .profile-main {
-    padding: 20px 16px 100px;
-  }
 }
 </style>

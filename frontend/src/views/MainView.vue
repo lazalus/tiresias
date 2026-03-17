@@ -2,8 +2,9 @@
   <div class="main-view">
     <!-- Header -->
     <header class="app-header">
-      <div class="header-left">
-        <div class="brand" @click="router.push('/')">TIRESIAS</div>
+      <div class="header-left" @click="confirmGoHome" style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+        <img src="/logoss.png" alt="Tiresias View" style="width:28px;height:28px;border-radius:6px;" />
+        <div class="brand">TIRESIAS</div>
       </div>
       
       <div class="header-center">
@@ -21,11 +22,6 @@
       </div>
 
       <div class="header-right">
-        <div class="workflow-step">
-          <span class="step-num">Step {{ currentStep }}/5</span>
-          <span class="step-name">{{ stepNames[currentStep - 1] }}</span>
-        </div>
-        <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
@@ -36,8 +32,8 @@
     <!-- Main Content Area -->
     <main class="content-area">
       <!-- Left Panel: Graph -->
-      <div class="panel-wrapper left" :style="leftPanelStyle">
-        <GraphPanel 
+      <div class="panel-wrapper left" :style="isMobile ? {} : leftPanelStyle" :class="{ 'mobile-hidden': isMobile && viewMode !== 'graph' }">
+        <GraphPanel
           :graphData="graphData"
           :loading="graphLoading"
           :currentPhase="currentPhase"
@@ -47,7 +43,7 @@
       </div>
 
       <!-- Right Panel: Step Components -->
-      <div class="panel-wrapper right" :style="rightPanelStyle">
+      <div class="panel-wrapper right" :style="isMobile ? {} : rightPanelStyle" :class="{ 'mobile-hidden': isMobile && viewMode !== 'workbench' }">
         <!-- Step 1: 그래프 구축 -->
         <Step1GraphBuild 
           v-if="currentStep === 1"
@@ -71,6 +67,22 @@
         />
       </div>
     </main>
+
+    <!-- 모바일 하단 뷰 탭 -->
+    <div class="mobile-bottom-tabs">
+      <button class="mobile-tab" :class="{ active: viewMode === 'graph' }" @click="viewMode = 'graph'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><line x1="7" y1="7" x2="10" y2="10"/><line x1="14" y1="10" x2="17" y2="7"/><line x1="7" y1="17" x2="10" y2="14"/><line x1="14" y1="14" x2="17" y2="17"/></svg>
+        온톨로지
+      </button>
+      <button class="mobile-tab" :class="{ active: viewMode === 'workbench' }" @click="viewMode = 'workbench'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="9" y1="4" x2="9" y2="9"/></svg>
+        워크벤치
+      </button>
+      <button class="mobile-tab" @click="confirmGoHome">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        홈
+      </button>
+    </div>
   </div>
 </template>
 
@@ -87,7 +99,8 @@ const route = useRoute()
 const router = useRouter()
 
 // Layout State
-const viewMode = ref('split') // graph | split | workbench
+const isMobile = ref(window.innerWidth <= 768)
+const viewMode = ref(isMobile.value ? 'graph' : 'split') // graph | split | workbench
 
 // Step State
 const currentStep = ref(1) // 1: 그래프 구축, 2: 환경 설정, 3: 시뮬레이션 시작, 4: 보고서 생성, 5: 심층 상호작용
@@ -394,11 +407,21 @@ const stopGraphPolling = () => {
   }
 }
 
+const handleResize = () => { isMobile.value = window.innerWidth <= 768 }
+
+const confirmGoHome = () => {
+  if (confirm('시뮬레이션을 종료하고 홈으로 돌아가시겠습니까?\n진행 중인 작업은 저장됩니다.')) {
+    router.push('/')
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('resize', handleResize)
   initProject()
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
   stopPolling()
   stopGraphPolling()
 })
@@ -536,5 +559,130 @@ onUnmounted(() => {
 
 .panel-wrapper.left {
   border-right: 1px solid #EAEAEA;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+  .app-header {
+    height: 48px;
+    padding: 0 12px;
+  }
+
+  .header-center {
+    display: none;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .workflow-step {
+    font-size: 12px;
+  }
+
+  .step-divider {
+    display: none;
+  }
+
+  .main-view {
+    height: calc(100vh - 56px);
+  }
+
+  .content-area {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-wrapper {
+    transition: none;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panel-wrapper.left {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0;
+    border-right: none;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .panel-wrapper.right {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0;
+    opacity: 1 !important;
+    transform: none !important;
+    overflow-y: auto;
+  }
+
+  /* 하단 뷰 스위처 */
+  .main-view::after {
+    content: '';
+    display: block;
+  }
+
+  .main-view {
+    position: relative;
+  }
+
+}
+
+/* 모바일 하단 탭 */
+.mobile-bottom-tabs {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #fff;
+  border-top: 1px solid #EAEAEA;
+  z-index: 200;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-tabs {
+    display: flex;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .panel-wrapper.left,
+  .panel-wrapper.right {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+  }
+}
+
+.mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  padding: 6px 16px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.mobile-tab.active {
+  color: #6366f1;
+}
+
+.mobile-tab svg {
+  width: 20px;
+  height: 20px;
 }
 </style>

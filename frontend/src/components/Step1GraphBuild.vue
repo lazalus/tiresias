@@ -6,19 +6,18 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">01</span>
-            <span class="step-title">온톨로지 생성</span>
+            <span class="step-title">문서 분석</span>
           </div>
           <div class="step-status">
             <span v-if="currentPhase > 0" class="badge success">완료</span>
-            <span v-else-if="currentPhase === 0" class="badge processing">생성 중</span>
+            <span v-else-if="currentPhase === 0" class="badge processing">분석 중</span>
             <span v-else class="badge pending">대기</span>
           </div>
         </div>
-        
+
         <div class="card-content">
-          <p class="api-note">POST /api/graph/ontology/generate</p>
           <p class="description">
-            LLM이 문서 내용과 시뮬레이션 요구사항을 분석하고, 현실 시드를 추출하여 적합한 온톨로지 구조를 자동 생성합니다
+            업로드한 문서를 AI가 읽고, 등장하는 인물·조직·사건 등의 관계를 자동으로 파악합니다
           </p>
 
           <!-- Loading / Progress -->
@@ -31,7 +30,7 @@
           <div v-if="selectedOntologyItem" class="ontology-detail-overlay">
             <div class="detail-header">
                <div class="detail-title-group">
-                  <span class="detail-type-badge">{{ selectedOntologyItem.itemType === 'entity' ? 'ENTITY' : 'RELATION' }}</span>
+                  <span class="detail-type-badge">{{ selectedOntologyItem.itemType === 'entity' ? '항목' : '관계' }}</span>
                   <span class="detail-name">{{ selectedOntologyItem.name }}</span>
                </div>
                <button class="close-btn" @click="selectedOntologyItem = null">×</button>
@@ -41,7 +40,7 @@
                
                <!-- Attributes -->
                <div class="detail-section" v-if="selectedOntologyItem.attributes?.length">
-                  <span class="section-label">ATTRIBUTES</span>
+                  <span class="section-label">속성</span>
                   <div class="attr-list">
                      <div v-for="attr in selectedOntologyItem.attributes" :key="attr.name" class="attr-item">
                         <span class="attr-name">{{ attr.name }}</span>
@@ -53,7 +52,7 @@
 
                <!-- Examples (Entity) -->
                <div class="detail-section" v-if="selectedOntologyItem.examples?.length">
-                  <span class="section-label">EXAMPLES</span>
+                  <span class="section-label">예시</span>
                   <div class="example-list">
                      <span v-for="ex in selectedOntologyItem.examples" :key="ex" class="example-tag">{{ ex }}</span>
                   </div>
@@ -61,7 +60,7 @@
 
                <!-- Source/Target (Relation) -->
                <div class="detail-section" v-if="selectedOntologyItem.source_targets?.length">
-                  <span class="section-label">CONNECTIONS</span>
+                  <span class="section-label">연결 관계</span>
                   <div class="conn-list">
                      <div v-for="(conn, idx) in selectedOntologyItem.source_targets" :key="idx" class="conn-item">
                         <span class="conn-node">{{ conn.source }}</span>
@@ -75,7 +74,7 @@
 
           <!-- Generated Entity Tags -->
           <div v-if="projectData?.ontology?.entity_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">GENERATED ENTITY TYPES</span>
+            <span class="tag-label">발견된 항목 유형</span>
             <div class="tags-list">
               <span 
                 v-for="entity in projectData.ontology.entity_types" 
@@ -90,7 +89,7 @@
 
           <!-- Generated Relation Tags -->
           <div v-if="projectData?.ontology?.edge_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">GENERATED RELATION TYPES</span>
+            <span class="tag-label">발견된 관계 유형</span>
             <div class="tags-list">
               <span 
                 v-for="rel in projectData.ontology.edge_types" 
@@ -110,7 +109,7 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">GraphRAG 구축</span>
+            <span class="step-title">지식 그래프 구축</span>
           </div>
           <div class="step-status">
             <span v-if="currentPhase > 1" class="badge success">완료</span>
@@ -120,24 +119,23 @@
         </div>
 
         <div class="card-content">
-          <p class="api-note">POST /api/graph/build</p>
           <p class="description">
-            생성된 온톨로지를 기반으로 문서를 자동 분할한 후 Zep을 호출하여 지식 그래프를 구축하고, 엔티티와 관계를 추출하며 시계열 메모리와 커뮤니티 요약을 생성합니다
+            분석된 내용을 바탕으로 인물·조직·사건 간의 관계 지도를 만듭니다
           </p>
-          
+
           <!-- Stats Cards -->
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.nodes }}</span>
-              <span class="stat-label">엔티티 노드</span>
+              <span class="stat-label">항목 수</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.edges }}</span>
-              <span class="stat-label">관계 엣지</span>
+              <span class="stat-label">관계 수</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.types }}</span>
-              <span class="stat-label">SCHEMA 유형</span>
+              <span class="stat-label">유형 수</span>
             </div>
           </div>
         </div>
@@ -156,8 +154,7 @@
         </div>
         
         <div class="card-content">
-          <p class="api-note">POST /api/simulation/create</p>
-          <p class="description">그래프 구축이 완료되었습니다. 다음 단계로 진행하여 시뮬레이션 환경을 설정하세요</p>
+          <p class="description">관계 지도 구축이 완료되었습니다. 다음 단계에서 시뮬레이션 환경을 설정합니다</p>
           <button 
             class="action-btn" 
             :disabled="currentPhase < 2 || creatingSimulation"
@@ -649,6 +646,12 @@ watch(() => props.systemLogs.length, () => {
   font-family: 'JetBrains Mono', monospace;
   border-top: 1px solid #222;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .system-logs {
+    display: none;
+  }
 }
 
 .log-header {

@@ -287,6 +287,14 @@
             </div>
           </div>
 
+          <!-- Question Counter -->
+          <div class="question-counter" v-if="questionCount > 0">
+            <span>{{ MAX_QUESTIONS - questionCount }}회 남음</span>
+            <span class="counter-bar">
+              <span class="counter-fill" :style="{ width: (questionCount / MAX_QUESTIONS * 100) + '%' }"></span>
+            </span>
+          </div>
+
           <!-- Chat Input -->
           <div class="chat-input-area">
             <textarea 
@@ -639,9 +647,25 @@ const renderMarkdown = (content) => {
 }
 
 // Chat Methods
+const MAX_QUESTIONS = 50
+const questionCount = ref(0)
+
 const sendMessage = async () => {
   if (!chatInput.value.trim() || isSending.value) return
-  
+
+  // 질문 횟수 제한 체크
+  if (questionCount.value >= MAX_QUESTIONS) {
+    chatHistory.value.push({
+      role: 'assistant',
+      content: `이 시뮬레이션의 무료 질문 ${MAX_QUESTIONS}회를 모두 사용하셨습니다. 추가 분석이 필요하시면 새 시뮬레이션을 시작해주세요.`,
+      timestamp: new Date().toISOString()
+    })
+    scrollToBottom()
+    return
+  }
+
+  questionCount.value++
+
   const message = chatInput.value.trim()
   chatInput.value = ''
   
@@ -2092,6 +2116,29 @@ watch(() => props.simulationId, (newId) => {
 }
 
 /* Chat Input */
+.question-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 24px;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #888);
+}
+.counter-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 2px;
+  overflow: hidden;
+}
+.counter-fill {
+  display: block;
+  height: 100%;
+  background: #6366f1;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
 .chat-input-area {
   padding: 16px 24px;
   border-top: 1px solid #E5E7EB;

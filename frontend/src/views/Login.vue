@@ -1,22 +1,11 @@
 <template>
   <div class="login-page">
-    <div class="login-bg"></div>
-    <div class="login-card">
-      <div class="card-header">
-        <img src="/logoss.png" alt="TIRESIAS VIEW" class="logo" />
-        <h1 class="title">TIRESIAS VIEW</h1>
-        <p class="tagline">집단 지능 예측 엔진</p>
-      </div>
+    <div class="login-container">
+      <img src="/logoss.png" alt="Tiresias View" class="logo" />
+      <h1>Tiresias View에 로그인</h1>
 
-      <form class="card-body" @submit.prevent="handleLogin">
-        <div v-if="error" class="error-message">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 4.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="8" cy="11.5" r="0.75" fill="currentColor"/>
-          </svg>
-          <span>{{ error }}</span>
-        </div>
+      <form @submit.prevent="handleLogin">
+        <p v-if="error" class="error">{{ error }}</p>
 
         <div class="field">
           <label for="email">이메일</label>
@@ -42,32 +31,20 @@
           />
         </div>
 
-        <button type="submit" class="submit-btn" :disabled="loading">
-          <svg
-            v-if="loading"
-            class="spinner"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-          >
-            <circle cx="9" cy="9" r="7.5" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-            <path
-              d="M16.5 9a7.5 7.5 0 0 0-7.5-7.5"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
+        <button type="submit" class="btn-primary" :disabled="loading">
+          <svg v-if="loading" class="spinner" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <path d="M14.5 8a6.5 6.5 0 0 0-6.5-6.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span v-else>로그인</span>
         </button>
       </form>
 
-      <div class="card-footer">
-        <span class="footer-text">계정이 없으신가요?</span>
-        <router-link to="/signup" class="footer-link">회원가입</router-link>
-      </div>
-      <router-link to="/features" class="features-link">서비스 소개 →</router-link>
+      <p class="footer-text">
+        계정이 없으신가요?
+        <router-link to="/signup">회원가입</router-link>
+      </p>
+      <router-link to="/features" class="features-link">서비스 소개 &rarr;</router-link>
     </div>
   </div>
 </template>
@@ -84,6 +61,7 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+
 async function handleLogin() {
   error.value = ''
   loading.value = true
@@ -107,112 +85,40 @@ async function handleLogin() {
   align-items: center;
   justify-content: center;
   background: var(--bg-primary);
-  position: relative;
-  overflow: hidden;
   padding: 24px;
 }
 
-.login-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 600px 400px at 50% 0%, rgba(99, 102, 241, 0.12), transparent),
-    radial-gradient(ellipse 400px 300px at 20% 80%, rgba(129, 140, 248, 0.06), transparent),
-    radial-gradient(ellipse 400px 300px at 80% 60%, rgba(99, 102, 241, 0.04), transparent);
-  pointer-events: none;
-}
-
-.login-card {
-  position: relative;
+.login-container {
   width: 100%;
-  max-width: 400px;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 20px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 80px -20px rgba(99, 102, 241, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 40px 0;
+  max-width: 360px;
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
 
-.title {
-  font-size: 22px;
+h1 {
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  margin: 0;
+  margin: 0 0 32px;
 }
 
-.tagline {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 6px 0 0;
-  letter-spacing: 0.02em;
-}
-
-.card-body {
-  padding: 32px 40px 24px;
+form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
-  color: #fca5a5;
+.error {
   font-size: 13px;
+  color: #ef4444;
+  margin: 0;
   line-height: 1.4;
-}
-
-.error-message svg {
-  flex-shrink: 0;
-  color: #f87171;
-}
-
-.pending-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 12px 0;
-  gap: 12px;
-}
-
-.pending-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.pending-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
 }
 
 .field {
@@ -224,111 +130,94 @@ async function handleLogin() {
 .field label {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  padding-left: 2px;
+  color: var(--text-secondary);
 }
 
 .field input {
   width: 100%;
-  padding: 11px 14px;
-  background: var(--bg-surface);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   color: var(--text-primary);
   font-size: 14px;
+  font-family: inherit;
   outline: none;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .field input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
 }
 
 .field input:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  background: var(--border-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 0 20px -4px rgba(99, 102, 241, 0.15);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.submit-btn {
+.btn-primary {
   width: 100%;
-  padding: 12px;
-  background: #6366f1;
+  height: 40px;
+  background: var(--accent-color);
   border: none;
-  border-radius: 10px;
-  color: white;
+  border-radius: 8px;
+  color: #fff;
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
   margin-top: 4px;
+  transition: background 0.15s ease;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #5558e6;
-  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.4);
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
-.submit-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.submit-btn:disabled {
-  opacity: 0.7;
+.btn-primary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .spinner {
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 20px 40px 32px;
+  to { transform: rotate(360deg); }
 }
 
 .footer-text {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
+  text-align: center;
+  margin: 24px 0 0;
 }
 
-.footer-link {
-  font-size: 13px;
-  color: #818cf8;
+.footer-text a {
+  color: var(--accent-color);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.15s ease;
 }
 
-.footer-link:hover {
-  color: #a5b4fc;
+.footer-text a:hover {
+  text-decoration: underline;
 }
 
 .features-link {
   display: block;
   text-align: center;
-  padding: 0 0 28px;
-  font-size: 12px;
+  margin-top: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   text-decoration: none;
-  transition: color 0.15s;
 }
 
 .features-link:hover {
-  color: #818cf8;
+  color: var(--text-secondary);
 }
 </style>

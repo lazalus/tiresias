@@ -1,32 +1,64 @@
 <template>
-  <div class="app-screen">
-    <!-- App Header -->
-    <header class="app-header">
-      <div class="header-inner">
-        <div class="header-left">
-          <router-link to="/" class="header-home">
-            <img src="/logoss.png" alt="TIRESIAS VIEW" class="app-logo" />
-            <span class="app-name">TIRESIAS VIEW</span>
-          </router-link>
-        </div>
-        <div class="header-right">
-          <router-link to="/" class="header-link">홈</router-link>
-        </div>
-      </div>
+  <div class="sub-page">
+    <!-- Sub Header -->
+    <header class="sub-header">
+      <router-link to="/profile" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </router-link>
+      <h1 class="sub-title">이용권 관리</h1>
+      <div class="spacer"></div>
     </header>
 
-    <main class="credits-main">
-      <!-- Current Credits -->
-      <div class="credits-hero">
-        <div class="credits-label">보유 크레딧</div>
-        <div class="credits-number">{{ credits ?? '-' }}</div>
-        <div class="credits-sub">시뮬레이션 1회 실행에 1 크레딧이 소모됩니다</div>
+    <main class="billing-main">
+      <!-- Usage Summary -->
+      <div class="usage-card">
+        <div class="usage-row">
+          <div class="usage-item">
+            <div class="usage-label">보유 크레딧</div>
+            <div class="usage-number">{{ credits ?? '-' }}</div>
+          </div>
+          <div class="usage-divider"></div>
+          <div class="usage-item">
+            <div class="usage-label">이번 달 사용량</div>
+            <div class="usage-number usage-secondary">{{ monthlyUsage }}</div>
+          </div>
+        </div>
+        <div class="usage-note">시뮬레이션 1회 실행에 1 크레딧이 소모됩니다</div>
       </div>
 
-      <!-- Plans Grid -->
-      <section class="section-block">
-        <h2 class="section-title">이용권 구매</h2>
-        <div class="plans-grid">
+      <!-- Value Info Box -->
+      <div class="info-box">
+        <div class="info-title">1회 시뮬레이션에 포함된 것</div>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-check">&#10003;</span>
+            <span>수천 개 AI 에이전트가 가상 세계를 구축하고 상호작용</span>
+          </div>
+          <div class="info-row">
+            <span class="info-check">&#10003;</span>
+            <span>2개 병렬 세계 동시 비교 시뮬레이션</span>
+          </div>
+          <div class="info-row">
+            <span class="info-check">&#10003;</span>
+            <span>지식 그래프 자동 구축 + 시계열 분석</span>
+          </div>
+          <div class="info-row">
+            <span class="info-check">&#10003;</span>
+            <span>전문 분석 보고서 자동 생성</span>
+          </div>
+          <div class="info-row">
+            <span class="info-check">&#10003;</span>
+            <span>AI와 심층 대화로 추가 인사이트 획득</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plans -->
+      <section class="billing-section">
+        <h2 class="billing-section-title">이용권 구매</h2>
+        <div class="plans-row">
           <div
             v-for="plan in plans"
             :key="plan.id"
@@ -37,11 +69,11 @@
             <div class="plan-name">{{ plan.name }}</div>
             <div class="plan-credits">
               <span class="plan-credits-num">{{ plan.credits }}</span>
-              <span class="plan-credits-label">크레딧</span>
+              <span class="plan-credits-unit">크레딧</span>
             </div>
             <div class="plan-price">{{ plan.price.toLocaleString() }}원</div>
             <div v-if="plan.savings" class="plan-savings">{{ plan.savings }}</div>
-            <button class="plan-btn" @click="handlePurchase(plan)" :disabled="purchaseLoading">
+            <button class="plan-btn" :class="{ 'plan-btn-featured': plan.featured }" @click="handlePurchase(plan)" :disabled="purchaseLoading">
               구매
             </button>
           </div>
@@ -49,25 +81,29 @@
       </section>
 
       <!-- Transaction History -->
-      <section class="section-block">
-        <h2 class="section-title">거래 내역</h2>
+      <section class="billing-section">
+        <h2 class="billing-section-title">거래 내역</h2>
         <div v-if="history.length === 0" class="empty-state">
           거래 내역이 없습니다
         </div>
-        <div v-else class="history-list">
-          <div v-for="tx in history" :key="tx.id" class="history-item">
-            <div class="history-left">
-              <span class="history-type" :class="tx.type">
+        <div v-else class="tx-table">
+          <div class="tx-header">
+            <span class="tx-col tx-col-date">날짜</span>
+            <span class="tx-col tx-col-type">유형</span>
+            <span class="tx-col tx-col-amount">수량</span>
+            <span class="tx-col tx-col-desc">설명</span>
+          </div>
+          <div v-for="tx in history" :key="tx.id" class="tx-row">
+            <span class="tx-col tx-col-date">{{ formatDate(tx.created_at) }}</span>
+            <span class="tx-col tx-col-type">
+              <span class="tx-badge" :class="tx.type">
                 {{ tx.type === 'purchase' ? '구매' : tx.type === 'usage' ? '사용' : tx.type === 'grant' ? '지급' : tx.type }}
               </span>
-              <span class="history-desc">{{ tx.description }}</span>
-            </div>
-            <div class="history-right">
-              <span class="history-amount" :class="{ positive: tx.amount > 0, negative: tx.amount < 0 }">
-                {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
-              </span>
-              <span class="history-date">{{ formatDate(tx.created_at) }}</span>
-            </div>
+            </span>
+            <span class="tx-col tx-col-amount" :class="{ positive: tx.amount > 0, negative: tx.amount < 0 }">
+              {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
+            </span>
+            <span class="tx-col tx-col-desc">{{ tx.description }}</span>
           </div>
         </div>
       </section>
@@ -81,7 +117,7 @@
         <div class="payment-header">
           <h3>{{ selectedPlan?.name }} 결제</h3>
           <span class="payment-amount">{{ selectedPlan?.price?.toLocaleString() }}원</span>
-          <button class="payment-close" @click="cancelPayment">×</button>
+          <button class="payment-close" @click="cancelPayment">&times;</button>
         </div>
         <div id="payment-method" class="payment-widget-area"></div>
         <div id="agreement" class="payment-agreement-area"></div>
@@ -95,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getToken, currentUser } from '../store/auth.js'
 import axios from 'axios'
 import BottomNav from '../components/BottomNav.vue'
@@ -113,6 +149,16 @@ const selectedPlan = ref(null)
 let paymentWidget = null
 let paymentMethodsWidget = null
 let agreementWidget = null
+
+const monthlyUsage = computed(() => {
+  const now = new Date()
+  const thisMonth = history.value.filter(tx => {
+    if (tx.type !== 'usage') return false
+    const d = new Date(tx.created_at)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  })
+  return thisMonth.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+})
 
 function authHeaders() {
   return { headers: { Authorization: `Bearer ${getToken()}` } }
@@ -291,7 +337,7 @@ function formatDate(d) {
 </script>
 
 <style scoped>
-.app-screen {
+.sub-page {
   min-height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -299,243 +345,262 @@ function formatDate(d) {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
-.app-header {
+/* Sub Header */
+.sub-header {
   position: sticky;
   top: 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 16px;
   background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border-color);
 }
 
-.header-inner {
-  max-width: 780px;
-  margin: 0 auto;
-  height: 56px;
+.back-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-home {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  color: inherit;
-}
-
-.app-logo {
-  width: 30px;
-  height: 30px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
-  object-fit: cover;
-}
-
-.app-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 0.9rem;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 6px 14px;
-  border-radius: 8px;
-  transition: color 0.2s, background 0.2s;
-}
-
-.header-link:hover {
   color: var(--text-primary);
-  background: var(--border-color);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.back-btn:hover {
+  background: var(--bg-secondary);
+}
+
+.sub-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.spacer {
+  width: 36px;
 }
 
 /* Main */
-.credits-main {
-  max-width: 780px;
+.billing-main {
+  max-width: 680px;
   margin: 0 auto;
-  padding: 48px 24px 80px;
+  padding: 20px 16px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Credits Hero */
-.credits-hero {
-  text-align: center;
-  margin-bottom: 48px;
-  padding: 40px;
+/* Usage Summary Card */
+.usage-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  position: relative;
-  overflow: hidden;
+  border-radius: 10px;
+  padding: 16px;
 }
 
-.credits-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 300px 200px at 50% 0%, rgba(99, 102, 241, 0.08), transparent);
-  pointer-events: none;
+.usage-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.credits-label {
-  font-size: 0.85rem;
+.usage-item {
+  flex: 1;
+}
+
+.usage-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border-color);
+  flex-shrink: 0;
+}
+
+.usage-label {
+  font-size: 0.75rem;
   color: var(--text-secondary);
   font-weight: 500;
-  margin-bottom: 8px;
-  position: relative;
+  margin-bottom: 4px;
 }
 
-.credits-number {
-  font-size: 3.5rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #818cf8, #6366f1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  position: relative;
+.usage-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #6366f1;
 }
 
-.credits-sub {
-  font-size: 0.8rem;
+.usage-number.usage-secondary {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+}
+
+.usage-note {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 8px;
-  position: relative;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
 }
 
-/* Section */
-.section-block {
-  margin-bottom: 48px;
+/* Info Box */
+.info-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
 }
 
-.section-title {
-  font-size: 1rem;
+.info-title {
+  font-size: 0.78rem;
   font-weight: 600;
-  margin: 0 0 20px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.info-check {
+  color: #6366f1;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  margin-top: 1px;
+}
+
+/* Billing Section */
+.billing-section {
+  margin-top: 8px;
+}
+
+.billing-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 12px;
   letter-spacing: -0.01em;
 }
 
-/* Plans Grid */
-.plans-grid {
+/* Plans Row */
+.plans-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 10px;
 }
 
 .plan-card {
   position: relative;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 28px 24px;
+  border-radius: 10px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  transition: all 0.3s;
-}
-
-.plan-card:hover {
-  border-color: var(--border-color);
-  transform: translateY(-2px);
+  transition: border-color 0.2s;
 }
 
 .plan-card.featured {
-  border-color: rgba(99, 102, 241, 0.3);
-  background: rgba(99, 102, 241, 0.04);
-  box-shadow: 0 0 40px -10px rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
 }
 
 .plan-badge {
   position: absolute;
   top: -1px;
-  right: 20px;
+  right: 12px;
   background: #6366f1;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 0 0 8px 8px;
+  padding: 2px 8px;
+  border-radius: 0 0 6px 6px;
   letter-spacing: 0.02em;
 }
 
 .plan-name {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .plan-credits {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 3px;
+  margin-bottom: 4px;
 }
 
 .plan-credits-num {
-  font-size: 2.2rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-.plan-credits-label {
-  font-size: 0.82rem;
+.plan-credits-unit {
+  font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: 500;
 }
 
 .plan-price {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .plan-savings {
-  font-size: 0.75rem;
-  color: #4ade80;
+  font-size: 0.68rem;
+  color: #22c55e;
   font-weight: 500;
-  margin-bottom: 4px;
 }
 
 .plan-btn {
   width: 100%;
-  margin-top: 20px;
-  background: #6366f1;
-  border: none;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  margin-top: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .plan-btn:hover:not(:disabled) {
+  background: var(--border-color);
+}
+
+.plan-btn-featured {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.plan-btn-featured:hover:not(:disabled) {
   background: #5558e6;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-  transform: translateY(-1px);
 }
 
 .plan-btn:disabled {
@@ -543,105 +608,123 @@ function formatDate(d) {
   cursor: not-allowed;
 }
 
-/* History */
+/* Transaction Table */
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: 32px 16px;
   color: var(--text-muted);
-  font-size: 0.88rem;
-  background: var(--bg-surface);
+  font-size: 0.8rem;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.tx-table {
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
+  border-radius: 10px;
   overflow: hidden;
-  background: var(--bg-surface);
 }
 
-.history-item {
+.tx-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--bg-secondary);
-  transition: background 0.15s;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-surface);
 }
 
-.history-item:last-child {
+.tx-header .tx-col {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tx-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.1s;
+}
+
+.tx-row:last-child {
   border-bottom: none;
 }
 
-.history-item:hover {
+.tx-row:hover {
   background: var(--bg-surface);
 }
 
-.history-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.tx-col {
+  font-size: 0.78rem;
 }
 
-.history-type {
+.tx-col-date {
+  width: 130px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: var(--text-muted);
 }
 
-.history-type.purchase {
+.tx-col-type {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.tx-col-amount {
+  width: 60px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.tx-col-amount.positive {
+  color: #22c55e;
+}
+
+.tx-col-amount.negative {
+  color: var(--text-muted);
+}
+
+.tx-col-desc {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.tx-badge.purchase {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
 }
 
-.history-type.usage {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
-}
-
-.history-type.grant {
-  background: rgba(34, 197, 94, 0.1);
-  color: #4ade80;
-}
-
-.history-desc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.history-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.history-amount {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.history-amount.positive {
-  color: #4ade80;
-}
-
-.history-amount.negative {
-  color: #f87171;
-}
-
-.history-date {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
+.tx-badge.usage {
+  background: rgba(156, 163, 175, 0.15);
   color: var(--text-muted);
-  min-width: 120px;
-  text-align: right;
+}
+
+.tx-badge.grant {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
 }
 
 /* Payment Modal */
@@ -659,7 +742,7 @@ function formatDate(d) {
 
 .payment-modal {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
@@ -671,30 +754,30 @@ function formatDate(d) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid #eee;
   position: relative;
 }
 
 .payment-header h3 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   margin: 0;
 }
 
 .payment-amount {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #6366f1;
 }
 
 .payment-close {
   position: absolute;
-  right: 16px;
-  top: 16px;
+  right: 14px;
+  top: 14px;
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: #999;
   cursor: pointer;
   line-height: 1;
@@ -705,23 +788,23 @@ function formatDate(d) {
 }
 
 .payment-widget-area {
-  padding: 0 24px;
+  padding: 0 20px;
   min-height: 200px;
 }
 
 .payment-agreement-area {
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .payment-submit {
-  width: calc(100% - 48px);
-  margin: 16px 24px 24px;
+  width: calc(100% - 40px);
+  margin: 14px 20px 20px;
   background: #6366f1;
   color: #fff;
   border: none;
-  padding: 14px;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
@@ -738,24 +821,39 @@ function formatDate(d) {
 
 /* Responsive */
 @media (max-width: 640px) {
-  .credits-main {
-    padding: 32px 16px 80px;
-  }
-  .plans-grid {
+  .plans-row {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
-  .credits-number {
-    font-size: 2.5rem;
+  .plan-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: 14px 16px;
+    gap: 12px;
   }
-  .history-left {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .plan-card.featured {
+    border-color: #6366f1;
   }
-  .history-right {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
+  .plan-badge {
+    top: -1px;
+    right: 10px;
+  }
+  .plan-credits {
+    margin-bottom: 0;
+  }
+  .plan-btn {
+    width: auto;
+    margin-top: 0;
+    padding: 7px 18px;
+  }
+  .tx-col-date {
+    width: 90px;
+    font-size: 0.65rem;
+  }
+  .tx-col-desc {
+    display: none;
   }
 }
 </style>

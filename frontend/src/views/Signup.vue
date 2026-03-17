@@ -1,35 +1,11 @@
 <template>
   <div class="signup-page">
-    <div class="signup-bg"></div>
-    <div class="signup-card">
-      <div class="card-header">
-        <img src="/logoss.png" alt="TIRESIAS VIEW" class="logo" />
-        <h1 class="title">회원가입</h1>
-        <p class="tagline">TIRESIAS VIEW에 오신 것을 환영합니다</p>
-      </div>
+    <div class="signup-container">
+      <img src="/logoss.png" alt="Tiresias View" class="logo" />
+      <h1>회원가입</h1>
 
-      <!-- Success state after signup -->
-      <div v-if="signupSuccess" class="card-body">
-        <div class="success-message">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <p class="success-title">회원가입이 완료되었습니다</p>
-          <p class="success-sub">관리자 승인 후 로그인할 수 있습니다.</p>
-          <router-link to="/login" class="back-to-login">로그인으로 돌아가기</router-link>
-        </div>
-      </div>
-
-      <form v-else class="card-body" @submit.prevent="handleSignup">
-        <div v-if="error" class="error-message">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 4.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="8" cy="11.5" r="0.75" fill="currentColor"/>
-          </svg>
-          <span>{{ error }}</span>
-        </div>
+      <form @submit.prevent="handleSignup">
+        <p v-if="error" class="error">{{ error }}</p>
 
         <div class="field">
           <label for="name">이름</label>
@@ -56,10 +32,7 @@
         </div>
 
         <div class="field">
-          <label for="password">
-            비밀번호
-            <span class="hint">6자 이상</span>
-          </label>
+          <label for="password">비밀번호</label>
           <input
             id="password"
             v-model="password"
@@ -69,6 +42,7 @@
             required
             minlength="6"
           />
+          <span class="hint">6자 이상</span>
         </div>
 
         <div class="field">
@@ -85,31 +59,19 @@
           <span v-if="passwordMismatch" class="field-error">비밀번호가 일치하지 않습니다</span>
         </div>
 
-        <button type="submit" class="submit-btn" :disabled="loading">
-          <svg
-            v-if="loading"
-            class="spinner"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-          >
-            <circle cx="9" cy="9" r="7.5" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-            <path
-              d="M16.5 9a7.5 7.5 0 0 0-7.5-7.5"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
+        <button type="submit" class="btn-primary" :disabled="loading">
+          <svg v-if="loading" class="spinner" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            <path d="M14.5 8a6.5 6.5 0 0 0-6.5-6.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span v-else>회원가입</span>
         </button>
       </form>
 
-      <div v-if="!signupSuccess" class="card-footer">
-        <span class="footer-text">이미 계정이 있으신가요?</span>
-        <router-link to="/login" class="footer-link">로그인</router-link>
-      </div>
+      <p class="footer-text">
+        이미 계정이 있으신가요?
+        <router-link to="/login">로그인</router-link>
+      </p>
     </div>
   </div>
 </template>
@@ -128,7 +90,6 @@ const password = ref('')
 const passwordConfirm = ref('')
 const loading = ref(false)
 const error = ref('')
-const signupSuccess = ref(false)
 
 const passwordMismatch = computed(() => {
   return passwordConfirm.value.length > 0 && password.value !== passwordConfirm.value
@@ -168,89 +129,40 @@ async function handleSignup() {
   align-items: center;
   justify-content: center;
   background: var(--bg-primary);
-  position: relative;
-  overflow: hidden;
   padding: 24px;
 }
 
-.signup-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 600px 400px at 50% 0%, rgba(99, 102, 241, 0.12), transparent),
-    radial-gradient(ellipse 400px 300px at 80% 80%, rgba(129, 140, 248, 0.06), transparent),
-    radial-gradient(ellipse 400px 300px at 20% 60%, rgba(99, 102, 241, 0.04), transparent);
-  pointer-events: none;
-}
-
-.signup-card {
-  position: relative;
+.signup-container {
   width: 100%;
-  max-width: 400px;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 20px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 80px -20px rgba(99, 102, 241, 0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 40px 0;
+  max-width: 360px;
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  margin-bottom: 24px;
 }
 
-.title {
-  font-size: 22px;
+h1 {
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  margin: 0;
+  margin: 0 0 32px;
 }
 
-.tagline {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 6px 0 0;
-  letter-spacing: 0.02em;
-}
-
-.card-body {
-  padding: 32px 40px 24px;
+form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
-  color: #fca5a5;
+.error {
   font-size: 13px;
+  color: #ef4444;
+  margin: 0;
   line-height: 1.4;
-}
-
-.error-message svg {
-  flex-shrink: 0;
-  color: #f87171;
 }
 
 .field {
@@ -262,158 +174,95 @@ async function handleSignup() {
 .field label {
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  padding-left: 2px;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+  color: var(--text-secondary);
 }
 
 .hint {
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
 .field input {
   width: 100%;
-  padding: 11px 14px;
-  background: var(--bg-surface);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   color: var(--text-primary);
   font-size: 14px;
+  font-family: inherit;
   outline: none;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .field input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
 }
 
 .field input:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  background: var(--border-color);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), 0 0 20px -4px rgba(99, 102, 241, 0.15);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .field input.input-error {
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
 }
 
 .field-error {
   font-size: 12px;
-  color: #f87171;
-  padding-left: 2px;
+  color: #ef4444;
 }
 
-.submit-btn {
+.btn-primary {
   width: 100%;
-  padding: 12px;
-  background: #6366f1;
+  height: 40px;
+  background: var(--accent-color);
   border: none;
-  border-radius: 10px;
-  color: white;
+  border-radius: 8px;
+  color: #fff;
   font-size: 14px;
   font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
   margin-top: 4px;
+  transition: background 0.15s ease;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #5558e6;
-  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.4);
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
-.submit-btn:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.submit-btn:disabled {
-  opacity: 0.7;
+.btn-primary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .spinner {
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 20px 40px 32px;
+  to { transform: rotate(360deg); }
 }
 
 .footer-text {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.footer-link {
-  font-size: 13px;
-  color: #818cf8;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.15s ease;
-}
-
-.footer-link:hover {
-  color: #a5b4fc;
-}
-
-.success-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  color: var(--text-muted);
   text-align: center;
-  padding: 12px 0;
-  gap: 12px;
+  margin: 24px 0 0;
 }
 
-.success-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.success-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.back-to-login {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 10px 24px;
-  background: #6366f1;
-  color: #fff;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
+.footer-text a {
+  color: var(--accent-color);
   text-decoration: none;
-  transition: all 0.2s;
+  font-weight: 500;
 }
 
-.back-to-login:hover {
-  background: #5558e6;
-  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.4);
+.footer-text a:hover {
+  text-decoration: underline;
 }
 </style>

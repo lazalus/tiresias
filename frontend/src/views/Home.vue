@@ -1,6 +1,6 @@
 <template>
   <div class="app-screen">
-    <!-- App Header -->
+    <!-- Header -->
     <header class="app-header">
       <div class="header-inner">
         <div class="header-left">
@@ -8,25 +8,39 @@
           <span class="app-name">TIRESIAS VIEW</span>
         </div>
         <div class="header-right">
+          <span v-if="credits !== null" class="header-credits">
+            크레딧: {{ credits }}
+          </span>
+          <span class="header-status-dot"></span>
         </div>
       </div>
     </header>
 
     <main class="app-main">
-      <!-- Greeting -->
-      <div class="greeting">
-        <h1 class="greeting-title">
-          새로운 시뮬레이션
-        </h1>
-        <p class="greeting-sub">데이터를 업로드하고 예측 요구사항을 입력하면 AI 에이전트가 병렬 세계를 구축합니다.</p>
+      <!-- KPI Strip -->
+      <div class="kpi-strip">
+        <div class="kpi-item">
+          <span class="kpi-value">{{ credits ?? '—' }}</span>
+          <span class="kpi-label">잔여 크레딧</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-value">{{ totalCompleted }}</span>
+          <span class="kpi-label">완료</span>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-item">
+          <span class="kpi-value">{{ totalInProgress }}</span>
+          <span class="kpi-label">진행중</span>
+        </div>
       </div>
 
-      <!-- Input Card -->
-      <div class="input-card">
+      <!-- New Simulation Card -->
+      <div class="section-label">새 시뮬레이션</div>
+      <div class="sim-card">
         <!-- File Upload -->
         <div class="card-section">
           <div class="section-header">
-            <span class="section-num">01</span>
             <span class="section-title">분석 자료</span>
             <span class="section-meta">PDF, MD, TXT</span>
           </div>
@@ -48,22 +62,22 @@
               :disabled="loading"
             />
             <div v-if="files.length === 0" class="upload-empty">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <span>보고서, 기사, 논문 등 분석할 문서를 업로드하세요</span>
+              <span>문서를 업로드하세요</span>
             </div>
             <div v-else class="file-chips">
               <div v-for="(file, index) in files" :key="index" class="file-chip">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <span class="chip-name">{{ file.name }}</span>
                 <button @click.stop="removeFile(index)" class="chip-remove">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                 </button>
@@ -72,18 +86,15 @@
           </div>
         </div>
 
-        <div class="card-divider"></div>
-
         <!-- Prompt -->
         <div class="card-section">
           <div class="section-header">
-            <span class="section-num">02</span>
             <span class="section-title">예측 질문</span>
           </div>
           <textarea
             v-model="formData.simulationRequirement"
             class="prompt-input"
-            placeholder="어떤 상황을 예측하고 싶으신가요? (예: A 기업이 신제품을 출시하면 시장 반응은 어떨까요?)"
+            placeholder="어떤 상황을 예측하고 싶으신가요?"
             rows="3"
             :disabled="loading"
           ></textarea>
@@ -100,14 +111,33 @@
             <span class="spinner"></span>
             초기화 중...
           </span>
-          <svg v-if="!loading" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-if="!loading" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
       </div>
 
-      <!-- History -->
-      <HistoryDatabase />
+      <!-- Recent Simulations -->
+      <div v-if="recentProjects.length > 0" class="recent-section">
+        <div class="section-label">최근 시뮬레이션</div>
+        <div class="recent-list">
+          <div
+            v-for="project in recentProjects"
+            :key="project.id"
+            class="recent-item"
+            @click="goToProject(project)"
+          >
+            <div class="recent-item-left">
+              <span class="recent-item-title">{{ project.title || project.simulation_requirement?.slice(0, 30) || '제목 없음' }}</span>
+              <span class="recent-item-date">{{ formatDate(project.created_at) }}</span>
+            </div>
+            <span
+              class="status-badge"
+              :class="statusClass(project.status)"
+            >{{ statusLabel(project.status) }}</span>
+          </div>
+        </div>
+      </div>
     </main>
 
     <BottomNav />
@@ -115,10 +145,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import HistoryDatabase from '../components/HistoryDatabase.vue'
+import axios from 'axios'
 import BottomNav from '../components/BottomNav.vue'
+import { getToken } from '../store/auth.js'
 
 const router = useRouter()
 
@@ -127,6 +158,18 @@ const files = ref([])
 const loading = ref(false)
 const isDragOver = ref(false)
 const fileInput = ref(null)
+const credits = ref(null)
+const recentProjects = ref([])
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
+const totalCompleted = computed(() =>
+  recentProjects.value.filter(p => p.status === 'completed' || p.status === 'done').length
+)
+
+const totalInProgress = computed(() =>
+  recentProjects.value.filter(p => p.status === 'processing' || p.status === 'in_progress' || p.status === 'pending').length
+)
 
 const canSubmit = computed(() => {
   return formData.value.simulationRequirement.trim() !== '' && files.value.length > 0
@@ -170,6 +213,47 @@ const startSimulation = () => {
     router.push({ name: 'Process', params: { projectId: 'new' } })
   })
 }
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+const statusClass = (status) => {
+  if (status === 'completed' || status === 'done') return 'badge-done'
+  if (status === 'processing' || status === 'in_progress' || status === 'pending') return 'badge-progress'
+  if (status === 'error' || status === 'failed') return 'badge-error'
+  return 'badge-progress'
+}
+
+const statusLabel = (status) => {
+  if (status === 'completed' || status === 'done') return '완료'
+  if (status === 'processing' || status === 'in_progress' || status === 'pending') return '진행중'
+  if (status === 'error' || status === 'failed') return '에러'
+  return status || '—'
+}
+
+const goToProject = (project) => {
+  if (project.id) {
+    router.push({ name: 'Process', params: { projectId: project.id } })
+  }
+}
+
+onMounted(async () => {
+  const token = getToken()
+  if (token) {
+    try {
+      const res = await axios.get(`${API_BASE}/api/payments/credits`, { headers: { Authorization: `Bearer ${token}` } })
+      credits.value = res.data.credits
+    } catch(e) {}
+
+    try {
+      const res = await axios.get(`${API_BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } })
+      recentProjects.value = (res.data.projects || []).slice(0, 5)
+    } catch(e) {}
+  }
+})
 </script>
 
 <style scoped>
@@ -186,16 +270,14 @@ const startSimulation = () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--header-bg);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
 }
 
 .header-inner {
   max-width: 680px;
   margin: 0 auto;
-  height: 56px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -205,13 +287,13 @@ const startSimulation = () => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .app-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   object-fit: cover;
 }
 
@@ -219,163 +301,184 @@ const startSimulation = () => {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   letter-spacing: 0.08em;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  color: var(--text-primary);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.header-credits {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.header-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
 }
 
 /* ── Main ── */
 .app-main {
   max-width: 680px;
   margin: 0 auto;
-  padding: 48px 24px 80px;
+  padding: 24px 24px 100px;
 }
 
-/* ── Greeting ── */
-.greeting {
-  margin-bottom: 32px;
+/* ── Section Label ── */
+.section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary, var(--text-muted));
+  margin-bottom: 10px;
 }
 
-.greeting-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin: 0 0 8px;
-}
-
-.greeting-sub {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* ── Input Card ── */
-.input-card {
+/* ── KPI Strip ── */
+.kpi-strip {
+  display: flex;
+  align-items: center;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 48px;
-  transition: border-color 0.3s;
+  border-radius: 12px;
+  padding: 14px 0;
+  margin-bottom: 28px;
 }
 
-.input-card:hover {
-  border-color: var(--border-color);
+.kpi-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.kpi-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border-color);
+}
+
+/* ── Simulation Card ── */
+.sim-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .card-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .section-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.section-num {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #818cf8;
-  letter-spacing: 0.02em;
+  gap: 8px;
 }
 
 .section-title {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+  color: var(--text-secondary);
 }
 
 .section-meta {
   margin-left: auto;
   font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
-}
-
-.card-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
 }
 
 /* ── Upload ── */
 .upload-area {
   border: 1px dashed var(--border-color);
-  border-radius: 12px;
-  min-height: 96px;
+  border-radius: 10px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.25s ease;
-  background: var(--bg-surface);
+  transition: border-color 0.2s;
+  background: transparent;
 }
 
 .upload-area.has-files {
   align-items: flex-start;
-  padding: 12px;
+  padding: 10px;
 }
 
 .upload-area:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  background: rgba(99, 102, 241, 0.03);
+  border-color: var(--accent-color, #6366f1);
 }
 
 .upload-area.drag-over {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.06);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--accent-color, #6366f1);
+  background: rgba(99, 102, 241, 0.04);
 }
 
 .upload-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   color: var(--text-muted);
-  font-size: 0.82rem;
-  padding: 20px;
+  font-size: 0.78rem;
+  padding: 16px;
 }
 
 .file-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
 .file-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--bg-surface);
+  gap: 6px;
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   font-family: 'JetBrains Mono', monospace;
-  transition: border-color 0.2s;
-}
-
-.file-chip:hover {
-  border-color: var(--border-color);
+  max-width: 100%;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .chip-name {
-  max-width: 200px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -386,38 +489,36 @@ const startSimulation = () => {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 2px;
+  padding: 1px;
   display: flex;
   align-items: center;
-  border-radius: 4px;
-  transition: all 0.15s;
+  border-radius: 3px;
+  transition: color 0.15s;
 }
 
 .chip-remove:hover {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
+  color: #ef4444;
 }
 
 /* ── Prompt ── */
 .prompt-input {
   width: 100%;
-  background: var(--bg-surface);
+  background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-family: inherit;
-  font-size: 0.88rem;
-  line-height: 1.6;
+  font-size: 0.85rem;
+  line-height: 1.5;
   color: var(--text-primary);
   resize: vertical;
   outline: none;
-  min-height: 88px;
-  transition: border-color 0.25s, box-shadow 0.25s;
+  min-height: 72px;
+  transition: border-color 0.2s;
 }
 
 .prompt-input:focus {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+  border-color: var(--accent-color, #6366f1);
 }
 
 .prompt-input::placeholder {
@@ -427,63 +528,40 @@ const startSimulation = () => {
 /* ── Start Button ── */
 .start-btn {
   width: 100%;
-  background: #6366f1;
+  height: 40px;
+  background: var(--accent-color, #6366f1);
   color: #fff;
   border: none;
-  padding: 14px 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: -0.01em;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.start-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.25s;
+  transition: opacity 0.15s;
 }
 
 .start-btn:hover:not(:disabled) {
-  background: #5558e6;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.3);
-}
-
-.start-btn:hover:not(:disabled)::before {
-  opacity: 1;
-}
-
-.start-btn:active:not(:disabled) {
-  transform: translateY(0);
+  opacity: 0.9;
 }
 
 .start-btn:disabled {
-  background: var(--bg-surface);
+  background: var(--bg-surface, var(--bg-secondary));
   color: var(--text-muted);
   cursor: not-allowed;
-  box-shadow: none;
 }
 
 .loading-state {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .spinner {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border: 2px solid rgba(255, 255, 255, 0.25);
   border-top-color: #fff;
   border-radius: 50%;
@@ -494,14 +572,85 @@ const startSimulation = () => {
   to { transform: rotate(360deg); }
 }
 
+/* ── Recent Simulations ── */
+.recent-section {
+  margin-top: 4px;
+}
+
+.recent-list {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.recent-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recent-item:hover {
+  background: var(--bg-surface, rgba(0,0,0,0.02));
+}
+
+.recent-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recent-item-title {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-item-date {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ── Status Badges ── */
+.status-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-done {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.badge-progress {
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.badge-error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .app-main {
-    padding: 32px 16px 80px;
-  }
-
-  .greeting-title {
-    font-size: 1.3rem;
+    padding: 20px 16px 100px;
   }
 
   .header-inner {

@@ -1,7 +1,17 @@
 <template>
-  <div class="app-screen">
-    <!-- App Header -->
-    <header class="app-header">
+  <div :class="fromProfile ? 'sub-page' : 'app-screen'">
+    <!-- Sub Header (from profile) -->
+    <header v-if="fromProfile" class="sub-header">
+      <router-link to="/profile?from=support" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </router-link>
+      <h1 class="sub-title">서비스 소개</h1>
+      <div class="spacer"></div>
+    </header>
+    <!-- App Header (standalone) -->
+    <header v-else class="app-header">
       <div class="header-inner">
         <div class="header-left">
           <img src="/logoss.png" alt="TIRESIAS VIEW" class="app-logo" />
@@ -16,13 +26,8 @@
     <main class="features-main">
       <!-- Hero -->
       <section class="hero">
-        <div class="hero-pill">
-          <span class="pill-dot"></span>
-          집단 지능 예측 엔진
-        </div>
         <h1 class="hero-title">
-          AI 에이전트가 구축하는
-          <span class="hero-gradient">병렬 세계 시뮬레이션</span>
+          AI 에이전트가 구축하는<br>병렬 세계 시뮬레이션
         </h1>
         <p class="hero-subtitle">
           비정형 데이터에서 현실 시드를 추출하고, 수천 개의 독립적인 AI 에이전트가
@@ -31,12 +36,12 @@
         </p>
       </section>
 
-      <!-- Section Divider -->
+      <!-- Divider -->
       <div class="section-divider"></div>
 
       <!-- Core Capabilities -->
       <section class="capabilities">
-        <div class="section-label">Core Capabilities</div>
+        <div class="section-label">CORE CAPABILITIES</div>
         <div class="cap-grid">
           <div class="cap-card">
             <div class="cap-icon">
@@ -70,19 +75,17 @@
         </div>
       </section>
 
-      <!-- Section Divider -->
+      <!-- Divider -->
       <div class="section-divider"></div>
 
       <!-- Workflow Timeline -->
       <section class="workflow">
-        <div class="section-label">Workflow</div>
+        <div class="section-label">WORKFLOW</div>
         <h2 class="section-heading">워크플로우</h2>
         <div class="timeline">
           <div class="timeline-line"></div>
           <div v-for="(step, i) in steps" :key="i" class="timeline-item">
-            <div class="timeline-dot">
-              <span class="dot-inner"></span>
-            </div>
+            <div class="timeline-dot"></div>
             <div class="timeline-content">
               <div class="timeline-num">{{ String(i + 1).padStart(2, '0') }}</div>
               <h3 class="timeline-title">{{ step.name }}</h3>
@@ -92,38 +95,34 @@
         </div>
       </section>
 
-      <!-- Section Divider -->
+      <!-- Divider -->
       <div class="section-divider"></div>
 
       <!-- Use Cases -->
       <section class="use-cases">
-        <div class="section-label">Use Cases</div>
+        <div class="section-label">USE CASES</div>
         <h2 class="section-heading">활용 사례</h2>
-        <div class="cases-grid">
-          <div class="case-card">
-            <div class="case-dot" style="--dot-color: #6366f1"></div>
+        <div class="cases-list">
+          <div class="case-card" style="--accent: #6366f1">
             <h3 class="case-title">여론 예측</h3>
             <p class="case-desc">정책 발표, 기업 PR 등의 여론 반응을 사전에 시뮬레이션하여 리스크를 최소화합니다.</p>
           </div>
-          <div class="case-card">
-            <div class="case-dot" style="--dot-color: #818cf8"></div>
+          <div class="case-card" style="--accent: #818cf8">
             <h3 class="case-title">금융 시나리오</h3>
             <p class="case-desc">시장 변동, 정책 변화에 따른 투자자 행동 패턴을 다차원적으로 분석합니다.</p>
           </div>
-          <div class="case-card">
-            <div class="case-dot" style="--dot-color: #a78bfa"></div>
+          <div class="case-card" style="--accent: #a78bfa">
             <h3 class="case-title">정책 시뮬레이션</h3>
             <p class="case-desc">정책 시행 전 사회적 반응과 영향을 제로 리스크 환경에서 테스트합니다.</p>
           </div>
-          <div class="case-card">
-            <div class="case-dot" style="--dot-color: #c4b5fd"></div>
+          <div class="case-card" style="--accent: #c4b5fd">
             <h3 class="case-title">창작 시뮬레이션</h3>
             <p class="case-desc">소설 결말 추론, 시나리오 분기점 탐색 등 창작 활동을 지원합니다.</p>
           </div>
         </div>
       </section>
 
-      <!-- Section Divider -->
+      <!-- Divider -->
       <div class="section-divider"></div>
 
       <!-- CTA -->
@@ -139,7 +138,6 @@
 
       <!-- Footer -->
       <footer class="footer">
-        <div class="footer-line"></div>
         <p class="footer-text">
           TIRESIAS VIEW is open source (AGPL-3.0) based on <a href="https://github.com/666ghj/MiroFish" target="_blank" class="footer-link">MiroFish</a>.
           <a href="https://github.com/lazalus/tiresias" target="_blank" class="footer-link">Source Code</a>
@@ -150,6 +148,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const fromProfile = computed(() => route.query.from === 'profile')
+
 const steps = [
   {
     name: '그래프 구축',
@@ -175,6 +179,44 @@ const steps = [
 </script>
 
 <style scoped>
+/* ── Sub Page (from profile) ── */
+.sub-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+}
+.sub-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.back-btn:hover { background: var(--border-color); }
+.sub-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+.spacer { width: 36px; }
+
 /* ── Base ── */
 .app-screen {
   min-height: 100vh;
@@ -182,7 +224,6 @@ const steps = [
   color: var(--text-primary);
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── Header ── */
@@ -197,7 +238,7 @@ const steps = [
 }
 
 .header-inner {
-  max-width: 1080px;
+  max-width: 680px;
   margin: 0 auto;
   height: 56px;
   display: flex;
@@ -240,7 +281,7 @@ const steps = [
   letter-spacing: 0.01em;
   padding: 6px 14px;
   border-radius: 8px;
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.15s, background 0.15s;
 }
 
 .header-link:hover {
@@ -250,7 +291,7 @@ const steps = [
 
 /* ── Main ── */
 .features-main {
-  max-width: 800px;
+  max-width: 680px;
   margin: 0 auto;
   padding: 0 24px 120px;
 }
@@ -258,202 +299,124 @@ const steps = [
 /* ── Hero ── */
 .hero {
   text-align: center;
-  padding: 100px 0 80px;
-  position: relative;
-}
-
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #818cf8;
-  background: rgba(129, 140, 248, 0.08);
-  border: 1px solid rgba(129, 140, 248, 0.15);
-  border-radius: 100px;
-  padding: 6px 18px 6px 14px;
-  margin-bottom: 32px;
-}
-
-.pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #818cf8;
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.6);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  padding: 80px 0 64px;
 }
 
 .hero-title {
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
-  margin: 0 0 24px;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  margin: 0 0 20px;
   color: var(--text-primary);
 }
 
-.hero-gradient {
-  display: block;
-  background: linear-gradient(135deg, #6366f1 0%, #818cf8 40%, #a78bfa 60%, #6366f1 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-shift 6s ease infinite;
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 .hero-subtitle {
-  font-size: 1rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
   line-height: 1.8;
   margin: 0 auto;
-  max-width: 560px;
+  max-width: 520px;
   font-weight: 400;
 }
 
 /* ── Section Divider ── */
 .section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.2) 50%, transparent 100%);
-  margin: 0 auto;
-  max-width: 400px;
+  background: var(--border-color);
+  margin: 0;
 }
 
 /* ── Section Labels ── */
 .section-label {
   font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: var(--text-tertiary, var(--text-muted));
   margin-bottom: 12px;
 }
 
 .section-heading {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.025em;
-  margin: 0 0 40px;
+  margin: 0 0 32px;
   color: var(--text-primary);
 }
 
 /* ── Capabilities ── */
 .capabilities {
-  padding: 80px 0;
+  padding: 64px 0;
 }
 
 .cap-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 14px;
 }
 
 .cap-card {
-  position: relative;
-  padding: 32px 24px;
-  border-radius: 16px;
+  padding: 28px 22px;
+  border-radius: 10px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.cap-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+  transition: border-color 0.15s;
 }
 
 .cap-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.2);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1);
-}
-
-.cap-card:hover::before {
-  opacity: 1;
+  border-color: rgba(99, 102, 241, 0.25);
 }
 
 .cap-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
-  margin-bottom: 20px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366f1;
+  margin-bottom: 16px;
 }
 
 .cap-title {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--text-primary);
 }
 
 .cap-desc {
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  line-height: 1.65;
+  line-height: 1.6;
   margin: 0;
 }
 
 /* ── Workflow Timeline ── */
 .workflow {
-  padding: 80px 0;
+  padding: 64px 0;
 }
 
 .timeline {
   position: relative;
-  padding-left: 32px;
+  padding-left: 24px;
 }
 
 .timeline-line {
   position: absolute;
-  left: 7px;
-  top: 8px;
-  bottom: 8px;
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
   width: 1px;
-  background: linear-gradient(180deg, #6366f1 0%, rgba(99, 102, 241, 0.15) 100%);
+  background: var(--border-color);
 }
 
 .timeline-item {
   position: relative;
-  padding-bottom: 40px;
+  padding-bottom: 32px;
   display: flex;
   align-items: flex-start;
 }
@@ -464,26 +427,14 @@ const steps = [
 
 .timeline-dot {
   position: absolute;
-  left: -32px;
-  top: 4px;
-  width: 15px;
-  height: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dot-inner {
-  width: 7px;
-  height: 7px;
+  left: -24px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  transition: box-shadow 0.2s ease;
-}
-
-.timeline-item:hover .dot-inner {
-  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.2), 0 0 12px rgba(99, 102, 241, 0.3);
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 0 1px var(--border-color);
 }
 
 .timeline-content {
@@ -494,151 +445,106 @@ const steps = [
   font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-size: 0.68rem;
   font-weight: 500;
-  color: rgba(99, 102, 241, 0.6);
+  color: var(--text-muted);
   letter-spacing: 0.05em;
   margin-bottom: 4px;
 }
 
 .timeline-title {
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--text-primary);
 }
 
 .timeline-desc {
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.65;
   margin: 0;
 }
 
 /* ── Use Cases ── */
 .use-cases {
-  padding: 80px 0;
+  padding: 64px 0;
 }
 
-.cases-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+.cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .case-card {
-  position: relative;
-  padding: 28px 24px;
-  border-radius: 16px;
-  background: var(--bg-surface);
+  padding: 22px 22px 22px 26px;
+  border-radius: 10px;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  transition: border-color 0.3s ease, background 0.3s ease;
+  border-left: 3px solid var(--accent, #6366f1);
+  transition: border-color 0.15s;
 }
 
 .case-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
-  background: var(--bg-surface);
-}
-
-.case-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--dot-color, #6366f1);
-  margin-bottom: 16px;
-  opacity: 0.8;
+  border-color: var(--border-color);
+  border-left-color: var(--accent, #6366f1);
 }
 
 .case-title {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--text-primary);
 }
 
 .case-desc {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  line-height: 1.65;
+  line-height: 1.6;
   margin: 0;
 }
 
 /* ── CTA ── */
 .cta {
   text-align: center;
-  padding: 80px 0 0;
-  position: relative;
-}
-
-.cta::before {
-  content: '';
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 500px;
-  height: 300px;
-  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
-  pointer-events: none;
+  padding: 64px 0 0;
 }
 
 .cta-lead {
-  font-size: 1rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
-  margin: 0 0 28px;
+  margin: 0 0 20px;
   font-weight: 400;
 }
 
 .cta-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #6366f1;
   color: #fff;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   letter-spacing: -0.01em;
-  padding: 14px 32px;
-  border-radius: 12px;
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.cta-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  padding: 12px 28px;
+  border-radius: 10px;
+  transition: background 0.15s;
 }
 
 .cta-btn:hover {
   background: #5558e6;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.3);
-}
-
-.cta-btn:hover::before {
-  opacity: 1;
 }
 
 /* ── Footer ── */
 .footer {
-  padding-top: 60px;
+  padding-top: 48px;
   text-align: center;
 }
 
-.footer-line {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-  margin-bottom: 24px;
-}
-
 .footer-text {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin: 0;
 }
@@ -646,27 +552,22 @@ const steps = [
 .footer-link {
   color: var(--text-secondary);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .footer-link:hover {
-  color: #818cf8;
+  color: #6366f1;
 }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 2.2rem;
+    font-size: 1.7rem;
   }
 
   .cap-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .cases-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 
   .features-main {
@@ -674,31 +575,31 @@ const steps = [
   }
 
   .hero {
-    padding: 72px 0 60px;
+    padding: 56px 0 48px;
   }
 
   .capabilities,
   .workflow,
   .use-cases {
-    padding: 60px 0;
+    padding: 48px 0;
   }
 
   .cta {
-    padding: 60px 0 0;
+    padding: 48px 0 0;
   }
 }
 
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .section-heading {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
   }
 
   .hero-subtitle {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 }
 </style>

@@ -2058,6 +2058,12 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .system-logs {
+    display: none;
+  }
+}
+
 .log-header {
   display: flex;
   justify-content: space-between;

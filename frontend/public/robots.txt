@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /login
+Allow: /signup
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://tiresiasview.com/sitemap.xml

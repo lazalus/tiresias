@@ -1,19 +1,67 @@
 <!doctype html>
 <html lang="ko">
   <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+SC:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logoss.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Tiresias View - AI 에이전트 기반 집단 지능 예측 엔진" />
+
+    <!-- SEO 기본 -->
+    <title>Tiresias View - AI 에이전트 기반 미래 예측 시뮬레이션 플랫폼</title>
+    <meta name="description" content="Tiresias View는 AI 에이전트가 병렬 세계를 구축하여 여론, 시장, 정책의 미래를 예측하는 시뮬레이션 플랫폼입니다. 보고서를 업로드하면 자동으로 예측 결과를 생성합니다." />
+    <meta name="keywords" content="AI 예측, 시뮬레이션, 에이전트, 집단 지능, 여론 예측, 미래 예측, Tiresias View, 멀티에이전트" />
+    <meta name="author" content="Tiresias View" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tiresiasview.com" />
+
+    <!-- Open Graph (SNS 공유) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tiresias View - AI 미래 예측 시뮬레이션" />
+    <meta property="og:description" content="AI 에이전트가 병렬 세계를 구축하여 미래를 예측합니다. 보고서를 업로드하고 즉시 시뮬레이션을 시작하세요." />
+    <meta property="og:url" content="https://tiresiasview.com" />
+    <meta property="og:image" content="https://tiresiasview.com/logoss.png" />
+    <meta property="og:site_name" content="Tiresias View" />
+    <meta property="og:locale" content="ko_KR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Tiresias View - AI 미래 예측 시뮬레이션" />
+    <meta name="twitter:description" content="AI 에이전트가 병렬 세계를 구축하여 미래를 예측합니다." />
+    <meta name="twitter:image" content="https://tiresiasview.com/logoss.png" />
+
+    <!-- PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#0c0a15" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/logoss.png" />
-    <title>Tiresias View</title>
+    <link rel="icon" type="image/png" href="/logoss.png" />
+
+    <!-- 구조화 데이터 (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Tiresias View",
+      "url": "https://tiresiasview.com",
+      "description": "AI 에이전트 기반 집단 지능 예측 시뮬레이션 플랫폼. 보고서를 업로드하면 수천 개의 에이전트가 병렬 세계를 구축하여 미래를 예측합니다.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "10000",
+        "priceCurrency": "KRW",
+        "description": "시뮬레이션 1회 이용권"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Tiresias View"
+      }
+    }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@100..800&family=Noto+Sans+SC:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="app"></div>

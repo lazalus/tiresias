@@ -11,6 +11,8 @@ import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
 import Admin from '../views/Admin.vue'
 import Credits from '../views/Credits.vue'
+import History from '../views/History.vue'
+import Profile from '../views/Profile.vue'
 
 const routes = [
   {
@@ -81,6 +83,18 @@ const routes = [
     path: '/credits',
     name: 'Credits',
     component: Credits,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/history',
+    name: 'History',
+    component: History,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
     meta: { requiresAuth: true }
   }
 ]

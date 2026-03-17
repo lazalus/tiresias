@@ -73,6 +73,8 @@
       </section>
     </main>
 
+    <BottomNav />
+
     <!-- 결제 위젯 모달 -->
     <div v-if="showPaymentWidget" class="payment-overlay" @click.self="cancelPayment">
       <div class="payment-modal">
@@ -96,6 +98,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { getToken, currentUser } from '../store/auth.js'
 import axios from 'axios'
+import BottomNav from '../components/BottomNav.vue'
 
 const TOSS_CLIENT_KEY = 'live_gck_LlDJaYngroy4XnkKKwGK3ezGdRpX'
 const TOSS_CUSTOMER_KEY = 'tiresias'
@@ -369,7 +372,7 @@ function formatDate(d) {
 .credits-main {
   max-width: 780px;
   margin: 0 auto;
-  padding: 48px 24px 100px;
+  padding: 48px 24px 80px;
 }
 
 /* Credits Hero */

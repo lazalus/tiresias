@@ -8,25 +8,6 @@
           <span class="app-name">Tiresias View</span>
         </div>
         <div class="header-right">
-          <router-link v-if="user?.role === 'admin'" to="/admin" class="header-link">어드민</router-link>
-          <div class="credits-display" v-if="userCredits !== null">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-              <path d="M12 18V6"/>
-            </svg>
-            <span>크레딧: {{ userCredits }}</span>
-          </div>
-          <div class="user-menu" @click="showMenu = !showMenu">
-            <div class="avatar">{{ userInitial }}</div>
-            <div v-if="showMenu" class="dropdown">
-              <div class="dropdown-user">{{ user?.name || user?.email }}</div>
-              <div class="dropdown-email">{{ user?.email }}</div>
-              <div class="dropdown-divider"></div>
-              <router-link to="/credits" class="dropdown-item" @click.stop>이용권 구매</router-link>
-              <button class="dropdown-item" @click.stop="handleLogout">로그아웃</button>
-            </div>
-          </div>
         </div>
       </div>
     </header>
@@ -46,7 +27,7 @@
         <div class="card-section">
           <div class="section-header">
             <span class="section-num">01</span>
-            <span class="section-title">현실 시드</span>
+            <span class="section-title">분석 자료</span>
             <span class="section-meta">PDF, MD, TXT</span>
           </div>
           <div
@@ -72,7 +53,7 @@
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <span>파일을 드래그하거나 클릭하여 업로드</span>
+              <span>보고서, 기사, 논문 등 분석할 문서를 업로드하세요</span>
             </div>
             <div v-else class="file-chips">
               <div v-for="(file, index) in files" :key="index" class="file-chip">
@@ -97,12 +78,12 @@
         <div class="card-section">
           <div class="section-header">
             <span class="section-num">02</span>
-            <span class="section-title">시뮬레이션 프롬프트</span>
+            <span class="section-title">예측 질문</span>
           </div>
           <textarea
             v-model="formData.simulationRequirement"
             class="prompt-input"
-            placeholder="예측 요구사항을 자연어로 입력하세요..."
+            placeholder="어떤 상황을 예측하고 싶으신가요? (예: A 기업이 신제품을 출시하면 시장 반응은 어떨까요?)"
             rows="3"
             :disabled="loading"
           ></textarea>
@@ -128,43 +109,18 @@
       <!-- History -->
       <HistoryDatabase />
     </main>
+
+    <BottomNav />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
-import { currentUser, logout, getToken } from '../store/auth.js'
+import BottomNav from '../components/BottomNav.vue'
 
 const router = useRouter()
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
-
-const user = currentUser
-const userCredits = ref(null)
-
-onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_BASE}/api/payments/credits`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    })
-    userCredits.value = res.data.credits ?? res.data
-  } catch (e) {
-    // Credits fetch failed silently
-  }
-})
-const userInitial = computed(() => {
-  const name = user.value?.name || user.value?.email || '?'
-  return name.charAt(0).toUpperCase()
-})
-
-const showMenu = ref(false)
-
-const handleLogout = () => {
-  logout()
-  router.push({ name: 'Login' })
-}
 
 const formData = ref({ simulationRequirement: '' })
 const files = ref([])
@@ -271,118 +227,11 @@ const startSimulation = () => {
   gap: 12px;
 }
 
-.header-link {
-  color: rgba(255, 255, 255, 0.4);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 6px 14px;
-  border-radius: 8px;
-  transition: color 0.2s, background 0.2s;
-}
-
-.header-link:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-/* Credits Display */
-.credits-display {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.12);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* User Menu */
-.user-menu {
-  position: relative;
-  cursor: pointer;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #fff;
-  transition: box-shadow 0.2s;
-}
-
-.avatar:hover {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
-}
-
-.dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 220px;
-  background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-  z-index: 200;
-}
-
-.dropdown-user {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #fafafa;
-  margin-bottom: 2px;
-}
-
-.dropdown-email {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.35);
-  margin-bottom: 8px;
-}
-
-.dropdown-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 8px 0;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.82rem;
-  text-align: left;
-  text-decoration: none;
-  padding: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-sizing: border-box;
-}
-
-.dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fafafa;
-}
-
 /* ── Main ── */
 .app-main {
   max-width: 680px;
   margin: 0 auto;
-  padding: 48px 24px 100px;
+  padding: 48px 24px 80px;
 }
 
 /* ── Greeting ── */
@@ -656,10 +505,6 @@ const startSimulation = () => {
 
   .header-inner {
     padding: 0 16px;
-  }
-
-  .header-link {
-    display: none;
   }
 }
 </style>

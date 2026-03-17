@@ -1,21 +1,24 @@
 import axios from 'axios'
+import { getToken } from '../store/auth.js'
 
-// 创建axios实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
-  timeout: 300000, // 5分钟超时（本体生成可能需要较长时间）
+  timeout: 300000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// 请求拦截器
+// 요청 인터셉터: 자동으로 인증 헤더 추가
 service.interceptors.request.use(
   config => {
+    const token = getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   error => {
-    console.error('Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -41,11 +44,19 @@ service.interceptors.response.use(
       console.error('Request timeout')
     }
     
-    // 处理网络错误
-    if (error.message === 'Network Error') {
-      console.error('Network error - please check your connection')
+    // 크레딧 부족 시 이용권 구매 페이지로 자동 이동
+    if (error.response?.status === 403 && error.response?.data?.error?.includes('크레딧')) {
+      const confirmed = confirm('크레딧이 부족합니다. 이용권을 구매하시겠습니까?')
+      if (confirmed) {
+        window.location.href = '/credits'
+      }
+      return Promise.reject(error)
     }
-    
+
+    if (error.message === 'Network Error') {
+      console.error('네트워크 오류')
+    }
+
     return Promise.reject(error)
   }
 )

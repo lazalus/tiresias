@@ -93,6 +93,8 @@
       </section>
     </main>
 
+    <BottomNav />
+
     <!-- Grant Credits Modal -->
     <div v-if="creditModal.show" class="modal-overlay" @click.self="closeCreditModal">
       <div class="modal-card">
@@ -122,6 +124,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { currentUser, getToken } from '../store/auth.js'
 import axios from 'axios'
+import BottomNav from '../components/BottomNav.vue'
 
 const router = useRouter()
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
@@ -347,7 +350,7 @@ function formatDate(d) {
 .admin-main {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 24px 100px;
+  padding: 32px 24px 80px;
 }
 
 /* Stats */

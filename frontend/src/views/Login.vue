@@ -3,8 +3,8 @@
     <div class="login-bg"></div>
     <div class="login-card">
       <div class="card-header">
-        <img src="/logoss.png" alt="Tiresias View" class="logo" />
-        <h1 class="title">Tiresias View</h1>
+        <img src="/logoss.png" alt="TIRESIAS VIEW" class="logo" />
+        <h1 class="title">TIRESIAS VIEW</h1>
         <p class="tagline">집단 지능 예측 엔진</p>
       </div>
 

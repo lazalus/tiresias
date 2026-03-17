@@ -1,6 +1,6 @@
 {
-  "name": "Tiresias View",
-  "short_name": "Tiresias View",
+  "name": "TIRESIAS VIEW",
+  "short_name": "TIRESIAS VIEW",
   "description": "AI 에이전트 기반 집단 지능 예측 엔진",
   "start_url": "/",
   "display": "standalone",

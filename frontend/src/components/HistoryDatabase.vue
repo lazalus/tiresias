@@ -200,7 +200,7 @@ const route = useRoute()
 
 // 상태
 const projects = ref([])
-const loading = ref(true)
+const loading = ref(false)
 const isExpanded = ref(false)
 const hoveringCard = ref(null)
 const historyContainer = ref(null)
@@ -443,7 +443,7 @@ const loadHistory = async () => {
       projects.value = response.data || []
     }
   } catch (error) {
-    console.error('히스토리 프로젝트 로드 실패:', error)
+    // 인증 실패나 네트워크 오류 시 조용히 빈 목록 표시
     projects.value = []
   } finally {
     loading.value = false

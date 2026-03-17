@@ -3,9 +3,9 @@
     <div class="signup-bg"></div>
     <div class="signup-card">
       <div class="card-header">
-        <img src="/logoss.png" alt="Tiresias View" class="logo" />
+        <img src="/logoss.png" alt="TIRESIAS VIEW" class="logo" />
         <h1 class="title">회원가입</h1>
-        <p class="tagline">Tiresias View에 오신 것을 환영합니다</p>
+        <p class="tagline">TIRESIAS VIEW에 오신 것을 환영합니다</p>
       </div>
 
       <!-- Success state after signup -->

@@ -6,6 +6,7 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   role TEXT DEFAULT 'user',  -- user, admin
   credits INTEGER DEFAULT 0,
+  theme TEXT DEFAULT 'dark',
   created_at TEXT NOT NULL
 );
 

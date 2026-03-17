@@ -3,10 +3,38 @@
 </template>
 
 <script setup>
-// Vue Router로 페이지 관리
+import { useTheme } from './store/theme.js'
+
+// Apply theme on app load
+useTheme()
 </script>
 
 <style>
+/* Theme Variables */
+html[data-theme="dark"] {
+  --bg-primary: #0c0a15;
+  --bg-secondary: rgba(255, 255, 255, 0.03);
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --text-primary: #f0f0f5;
+  --text-secondary: rgba(255, 255, 255, 0.4);
+  --text-muted: rgba(255, 255, 255, 0.25);
+  --header-bg: rgba(12, 10, 21, 0.72);
+  --nav-bg: rgba(12, 10, 21, 0.92);
+}
+
+html[data-theme="light"] {
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-surface: #ffffff;
+  --border-color: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --nav-bg: rgba(255, 255, 255, 0.92);
+}
+
 /* 전역 스타일 리셋 */
 * {
   margin: 0;
@@ -15,15 +43,15 @@
 }
 
 html {
-  background: #0c0a15;
+  background: var(--bg-primary);
 }
 
 #app {
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #f0f0f5;
-  background: #0c0a15;
+  color: var(--text-primary);
+  background: var(--bg-primary);
   min-height: 100vh;
   position: relative;
 }
@@ -51,12 +79,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--text-muted);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--text-secondary);
 }
 
 /* 전역 버튼 스타일 */

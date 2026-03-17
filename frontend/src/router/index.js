@@ -13,6 +13,9 @@ import Admin from '../views/Admin.vue'
 import Credits from '../views/Credits.vue'
 import History from '../views/History.vue'
 import Profile from '../views/Profile.vue'
+import Terms from '../views/Terms.vue'
+import Privacy from '../views/Privacy.vue'
+import Support from '../views/Support.vue'
 
 const routes = [
   {
@@ -87,7 +90,7 @@ const routes = [
   },
   {
     path: '/history',
-    name: 'History',
+    name: 'Reports',
     component: History,
     meta: { requiresAuth: true }
   },
@@ -96,6 +99,21 @@ const routes = [
     name: 'Profile',
     component: Profile,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: Terms
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: Privacy
+  },
+  {
+    path: '/support',
+    name: 'Support',
+    component: Support
   }
 ]
 

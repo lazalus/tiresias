@@ -4,8 +4,8 @@
     <header class="app-header">
       <div class="header-inner">
         <div class="header-left">
-          <img src="/logoss.png" alt="Tiresias View" class="app-logo" />
-          <span class="app-name">Tiresias View</span>
+          <img src="/logoss.png" alt="TIRESIAS VIEW" class="app-logo" />
+          <span class="app-name">TIRESIAS VIEW</span>
         </div>
         <div class="header-right">
         </div>
@@ -216,9 +216,10 @@ const startSimulation = () => {
 }
 
 .app-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
 }
 
 .header-right {

@@ -136,6 +136,15 @@
           </svg>
         </router-link>
       </section>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-line"></div>
+        <p class="footer-text">
+          Tiresias is open source (AGPL-3.0) based on <a href="https://github.com/666ghj/MiroFish" target="_blank" class="footer-link">MiroFish</a>.
+          <a href="https://github.com/lazalus/tiresias" target="_blank" class="footer-link">Source Code</a>
+        </p>
+      </footer>
     </main>
   </div>
 </template>
@@ -613,6 +622,34 @@ const steps = [
 
 .cta-btn:hover::before {
   opacity: 1;
+}
+
+/* ── Footer ── */
+.footer {
+  padding-top: 60px;
+  text-align: center;
+}
+
+.footer-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  margin-bottom: 24px;
+}
+
+.footer-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #818cf8;
 }
 
 /* ── Responsive ── */

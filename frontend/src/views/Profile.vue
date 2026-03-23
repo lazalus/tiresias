@@ -4,6 +4,7 @@
     <header class="app-header">
       <div class="header-inner">
         <h1 class="header-title">내 정보</h1>
+        <HeaderNav />
       </div>
     </header>
 
@@ -23,7 +24,7 @@
             />
           </div>
           <div class="profile-info">
-            <div class="profile-name">{{ user?.name || '-' }}</div>
+            <div class="profile-name">{{ user?.nickname || user?.name || '-' }}</div>
             <div class="profile-email">{{ user?.email || '-' }}</div>
           </div>
           <button class="edit-btn" @click="openEditModal">프로필 수정</button>
@@ -39,7 +40,7 @@
         <div class="list-divider"></div>
         <div class="list-item">
           <span class="list-label">가입일</span>
-          <span class="list-value">{{ formatJoinDate(user?.createdAt) }}</span>
+          <span class="list-value">{{ formatJoinDate(user?.createdAt || user?.created_at) }}</span>
         </div>
         <div class="list-divider"></div>
         <div class="list-item">
@@ -51,10 +52,9 @@
       <!-- Credits -->
       <router-link to="/credits" class="settings-card credits-row">
         <div class="credits-left">
-          <span class="list-label">크레딧 잔여</span>
-          <span class="credits-num">{{ credits ?? '-' }}</span>
+          <span class="list-label">결제 내역</span>
         </div>
-        <span class="row-link">이용권 관리 <span class="row-arrow">&rsaquo;</span></span>
+        <span class="row-link">결제 내역 보기 <span class="row-arrow">&rsaquo;</span></span>
       </router-link>
 
       <!-- Settings -->
@@ -70,6 +70,14 @@
         </div>
       </div>
 
+      <!-- 샘플 보고서 -->
+      <div class="settings-card accordion-card">
+        <button class="accordion-header" @click="openSampleReport">
+          <span class="list-label" style="font-weight:500;">샘플 보고서</span>
+          <span class="row-arrow">&rsaquo;</span>
+        </button>
+      </div>
+
       <!-- 고객센터 -->
       <div class="settings-card accordion-card">
         <button class="accordion-header" @click="toggleAccordion('support')">
@@ -80,6 +88,10 @@
           <div v-if="openAccordion === 'support'" class="accordion-body">
             <router-link to="/support" class="support-link-item">
               <span>자주 묻는 질문</span>
+              <span class="row-arrow">&rsaquo;</span>
+            </router-link>
+            <router-link to="/support?tab=feedback" class="support-link-item">
+              <span>고객 의견</span>
               <span class="row-arrow">&rsaquo;</span>
             </router-link>
             <router-link to="/features?from=profile" class="support-link-item">
@@ -100,6 +112,17 @@
 
       <!-- Footer -->
       <div class="settings-footer">
+        <button class="biz-info-btn" @click="showBizInfo = !showBizInfo">사업자정보보기</button>
+        <Transition name="accordion">
+          <div v-if="showBizInfo" class="biz-info">
+            <p class="biz-name">에스아이</p>
+            <p class="biz-detail">대표 정희수 · 서비스명 테이레시아스 뷰</p>
+            <p class="biz-detail">경기도 안양시 동안구 엘에스로116번길91 금정역3차 SKV1센터 지하 1층 B104호</p>
+            <p class="biz-detail">사업자등록번호 111-63-00101</p>
+            <p class="biz-detail">통신판매업신고번호 2024-안양동안-0010</p>
+            <p class="biz-detail">support@tiresiasview.com</p>
+          </div>
+        </Transition>
         <button class="logout-btn" @click="handleLogout">로그아웃</button>
         <div class="app-version">v1.0.0</div>
       </div>
@@ -152,6 +175,7 @@ import axios from 'axios'
 import { currentUser, logout, getToken, updateUser } from '../store/auth.js'
 import { useTheme } from '../store/theme.js'
 import BottomNav from '../components/BottomNav.vue'
+import HeaderNav from '../components/HeaderNav.vue'
 
 const { theme, toggleTheme } = useTheme()
 
@@ -160,7 +184,6 @@ const route = useRoute()
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 const user = currentUser
-const credits = ref(null)
 const showEditModal = ref(false)
 const editName = ref('')
 const editNickname = ref('')
@@ -169,6 +192,11 @@ const photoInput = ref(null)
 
 // 고객센터 서브페이지에서 돌아왔을 때 아코디언 열기
 const openAccordion = ref(route.query.from === 'support' ? 'support' : null)
+
+function openSampleReport() {
+  router.push('/samples')
+}
+const showBizInfo = ref(false)
 const openFaq = ref(null)
 
 const userInitial = computed(() => {
@@ -187,24 +215,15 @@ const faqItems = [
   },
   {
     q: '어떤 파일을 업로드할 수 있나요?',
-    a: 'CSV, Excel(.xlsx) 형식의 데이터 파일을 업로드할 수 있습니다. 파일 크기는 최대 50MB까지 지원됩니다.'
+    a: 'PDF, Markdown, TXT, CSV 형식의 파일을 업로드할 수 있습니다. 파일 크기는 최대 50MB까지 지원됩니다.'
   },
   {
     q: '시뮬레이션 결과는 얼마나 보관되나요?',
-    a: '시뮬레이션 결과 및 보고서는 계정이 유지되는 동안 무기한 보관됩니다.'
+    a: '프로젝트와 보고서는 이용자가 삭제하거나 회원 탈퇴를 요청할 때까지 보관됩니다. 다만 결제기록과 접근기록 등 일부 정보는 관계 법령에 따라 별도 보관될 수 있습니다.'
   }
 ]
 
-onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_BASE}/api/payments/credits`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    })
-    credits.value = res.data.credits ?? res.data
-  } catch (e) {
-    // Credits fetch failed silently
-  }
-})
+onMounted(() => {})
 
 function toggleAccordion(key) {
   openAccordion.value = openAccordion.value === key ? null : key
@@ -222,7 +241,7 @@ function formatJoinDate(d) {
 }
 
 function openEditModal() {
-  editName.value = user.value?.name || ''
+  editName.value = user.value?.nickname || user.value?.name || ''
   editNickname.value = user.value?.nickname || ''
   editProfileImage.value = user.value?.profileImage || null
   showEditModal.value = true
@@ -257,6 +276,7 @@ async function saveProfile() {
   if (token) {
     try {
       await axios.put(`${API_BASE}/api/auth/profile`, {
+        name,
         nickname: nickname || name,
         profile_image: editProfileImage.value
       }, { headers: { Authorization: `Bearer ${token}` } })
@@ -267,7 +287,7 @@ async function saveProfile() {
 
   updateUser({
     name,
-    nickname,
+    nickname: nickname || name,
     profileImage: editProfileImage.value
   })
   showEditModal.value = false
@@ -602,6 +622,43 @@ function handleLogout() {
   gap: 8px;
 }
 
+.biz-info-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 6px 4px;
+  transition: color 0.15s;
+  align-self: flex-start;
+}
+
+.biz-info-btn:hover {
+  color: var(--text-secondary);
+}
+
+.biz-info {
+  text-align: left;
+  padding: 4px 4px 8px;
+  align-self: flex-start;
+}
+
+.biz-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+  font-weight: 500;
+}
+
+.biz-detail {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.7;
+}
+
 .logout-btn {
   background: none;
   border: none;
@@ -776,5 +833,30 @@ function handleLogout() {
 
 .modal-save:hover {
   background: #5558e6;
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .app-header {
+    background: var(--header-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    height: 60px;
+    padding: 0 40px;
+    justify-content: space-between;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .settings-main {
+    max-width: 760px;
+    padding: 48px 40px 60px;
+  }
 }
 </style>

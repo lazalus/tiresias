@@ -100,11 +100,14 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { currentUser, getToken } from '../store/auth.js'
 import { sendSupportFeedback } from '../api/support.js'
 
-const faqOpen = ref(false)
-const feedbackOpen = ref(false)
+const route = useRoute()
+const isFeedbackTab = route.query.tab === 'feedback'
+const faqOpen = ref(!isFeedbackTab)
+const feedbackOpen = ref(isFeedbackTab)
 const openFaq = ref(null)
 const submitting = ref(false)
 const submitError = ref('')

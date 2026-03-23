@@ -6,94 +6,78 @@
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </router-link>
-      <h1 class="sub-title">고객센터</h1>
+      <h1 class="sub-title">{{ isFeedbackTab ? '고객 의견' : '자주 묻는 질문' }}</h1>
       <div class="spacer"></div>
     </header>
 
     <main class="sub-content">
       <!-- FAQ 섹션 -->
-      <div class="collapsible-section">
-        <button class="section-toggle" @click="faqOpen = !faqOpen">
-          <span class="section-toggle-label">자주 묻는 질문</span>
-          <span class="section-toggle-icon" :class="{ open: faqOpen }">›</span>
-        </button>
-        <Transition name="section">
-          <div v-if="faqOpen" class="section-body">
-            <div class="faq-list">
-              <div class="faq-item" v-for="(item, i) in faqItems" :key="i">
-                <button class="faq-question" @click="toggleFaq(i)">
-                  <span>{{ item.q }}</span>
-                  <span class="faq-toggle" :class="{ open: openFaq === i }">›</span>
-                </button>
-                <Transition name="faq">
-                  <div v-if="openFaq === i" class="faq-answer">
-                    <p>{{ item.a }}</p>
-                  </div>
-                </Transition>
+      <template v-if="!isFeedbackTab">
+        <div class="faq-list">
+          <div class="faq-item" v-for="(item, i) in faqItems" :key="i">
+            <button class="faq-question" @click="toggleFaq(i)">
+              <span>{{ item.q }}</span>
+              <span class="faq-toggle" :class="{ open: openFaq === i }">›</span>
+            </button>
+            <Transition name="faq">
+              <div v-if="openFaq === i" class="faq-answer">
+                <p>{{ item.a }}</p>
               </div>
-            </div>
+            </Transition>
           </div>
-        </Transition>
-      </div>
+        </div>
+      </template>
 
       <!-- 고객 의견 섹션 -->
-      <div class="collapsible-section">
-        <button class="section-toggle" @click="feedbackOpen = !feedbackOpen">
-          <span class="section-toggle-label">고객 의견</span>
-          <span class="section-toggle-icon" :class="{ open: feedbackOpen }">›</span>
-        </button>
-        <Transition name="section">
-          <div v-if="feedbackOpen" class="section-body">
-            <div class="feedback-card">
-              <div class="feedback-types">
-                <button
-                  v-for="option in feedbackTypes"
-                  :key="option.value"
-                  type="button"
-                  class="feedback-type-chip"
-                  :class="{ active: selectedType === option.value }"
-                  @click="selectedType = option.value"
-                >
-                  {{ option.label }}
-                </button>
-              </div>
-
-              <div class="feedback-grid">
-                <label class="feedback-field">
-                  <span class="feedback-label">이름</span>
-                  <input v-model="form.name" class="feedback-input" type="text" placeholder="이름 또는 닉네임" />
-                </label>
-                <label class="feedback-field">
-                  <span class="feedback-label">이메일</span>
-                  <input v-model="form.email" class="feedback-input" type="email" placeholder="회신 받을 이메일" />
-                </label>
-              </div>
-
-              <label class="feedback-field">
-                <span class="feedback-label">내용</span>
-                <textarea
-                  v-model="form.message"
-                  class="feedback-textarea"
-                  placeholder="서비스를 사용하면서 느낀 점, 문의 사항, 불편했던 점, 개선 아이디어를 자유롭게 적어주세요."
-                />
-              </label>
-
-              <p class="feedback-note">
-                접수된 의견은 고객센터 메일로 전달되며, 필요한 경우 입력하신 이메일로 회신드립니다.
-              </p>
-
-              <div v-if="submitError" class="feedback-error">{{ submitError }}</div>
-              <div v-if="submitSuccess" class="feedback-success">{{ submitSuccess }}</div>
-
-              <div class="feedback-actions">
-                <button class="feedback-submit" :disabled="submitting" @click="handleSubmit">
-                  {{ submitting ? '접수 중...' : '고객 의견 보내기' }}
-                </button>
-              </div>
-            </div>
+      <template v-else>
+        <div class="feedback-card">
+          <div class="feedback-types">
+            <button
+              v-for="option in feedbackTypes"
+              :key="option.value"
+              type="button"
+              class="feedback-type-chip"
+              :class="{ active: selectedType === option.value }"
+              @click="selectedType = option.value"
+            >
+              {{ option.label }}
+            </button>
           </div>
-        </Transition>
-      </div>
+
+          <div class="feedback-grid">
+            <label class="feedback-field">
+              <span class="feedback-label">이름</span>
+              <input v-model="form.name" class="feedback-input" type="text" placeholder="이름 또는 닉네임" />
+            </label>
+            <label class="feedback-field">
+              <span class="feedback-label">이메일</span>
+              <input v-model="form.email" class="feedback-input" type="email" placeholder="회신 받을 이메일" />
+            </label>
+          </div>
+
+          <label class="feedback-field">
+            <span class="feedback-label">내용</span>
+            <textarea
+              v-model="form.message"
+              class="feedback-textarea"
+              placeholder="서비스를 사용하면서 느낀 점, 문의 사항, 불편했던 점, 개선 아이디어를 자유롭게 적어주세요."
+            />
+          </label>
+
+          <p class="feedback-note">
+            접수된 의견은 고객센터 메일로 전달되며, 필요한 경우 입력하신 이메일로 회신드립니다.
+          </p>
+
+          <div v-if="submitError" class="feedback-error">{{ submitError }}</div>
+          <div v-if="submitSuccess" class="feedback-success">{{ submitSuccess }}</div>
+
+          <div class="feedback-actions">
+            <button class="feedback-submit" :disabled="submitting" @click="handleSubmit">
+              {{ submitting ? '접수 중...' : '고객 의견 보내기' }}
+            </button>
+          </div>
+        </div>
+      </template>
     </main>
   </div>
 </template>
@@ -106,8 +90,6 @@ import { sendSupportFeedback } from '../api/support.js'
 
 const route = useRoute()
 const isFeedbackTab = route.query.tab === 'feedback'
-const faqOpen = ref(!isFeedbackTab)
-const feedbackOpen = ref(isFeedbackTab)
 const openFaq = ref(null)
 const submitting = ref(false)
 const submitError = ref('')
@@ -258,69 +240,11 @@ async function handleSubmit() {
   padding: 32px 20px 64px;
 }
 
-.collapsible-section {
+.feedback-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.section-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-}
-
-.section-toggle:hover {
-  background: var(--bg-tertiary, var(--border-color));
-}
-
-.section-toggle-label {
-  letter-spacing: -0.01em;
-}
-
-.section-toggle-icon {
-  color: var(--text-muted);
-  font-size: 1.4rem;
-  font-weight: 300;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-  margin-left: 12px;
-}
-
-.section-toggle-icon.open {
-  transform: rotate(90deg);
-}
-
-.section-body {
-  padding: 0 20px 20px;
-}
-
-.section-enter-active,
-.section-leave-active {
-  transition: all 0.2s ease;
-}
-
-.section-enter-from,
-.section-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-.feedback-card {
-  padding: 0;
+  padding: 20px;
 }
 
 .feedback-types {
@@ -444,6 +368,9 @@ async function handleSubmit() {
 }
 
 .faq-list {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   overflow: hidden;
 }
 

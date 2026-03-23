@@ -207,6 +207,8 @@ function downloadSamplePdf() {
 .report-actions {
   margin-top: 12px;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .download-btn {

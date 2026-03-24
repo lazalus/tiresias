@@ -11,8 +11,7 @@
           <router-link to="/samples">샘플 보고서</router-link>
         </nav>
         <div class="header-actions">
-          <router-link to="/login" class="btn-login">로그인</router-link>
-          <router-link to="/signup" class="btn-start">시작하기</router-link>
+          <router-link to="/login" class="btn-start">로그인</router-link>
         </div>
         <button class="mobile-menu-btn" @click="mobileMenuOpen = !mobileMenuOpen">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -25,8 +24,7 @@
           <router-link to="/pricing" @click="mobileMenuOpen = false">가격</router-link>
           <router-link to="/samples" @click="mobileMenuOpen = false">샘플 보고서</router-link>
           <div class="mobile-menu-actions">
-            <router-link to="/login" class="btn-login">로그인</router-link>
-            <router-link to="/signup" class="btn-start">시작하기</router-link>
+            <router-link to="/login" class="btn-start">로그인</router-link>
           </div>
         </div>
       </Transition>

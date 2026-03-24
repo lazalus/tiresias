@@ -149,11 +149,6 @@
     <section class="mid-cta-section">
       <div class="section-container mid-cta-container">
         <h2 class="mid-cta-title">새로운 시나리오 분석,<br class="desktop-br"/> 시작할 준비 되셨나요?</h2>
-        <p class="mid-cta-desc">자료를 업로드하면 AI가 시나리오를 비교하고 보고서를 만듭니다.</p>
-        <div class="mid-cta-actions">
-          <router-link to="/signup" class="btn-primary">무료로 시작하기</router-link>
-          <router-link to="/pricing" class="btn-outline">가격 안내</router-link>
-        </div>
       </div>
     </section>
 
@@ -566,16 +561,7 @@ onUnmounted(() => {
   font-size: 2rem; font-weight: 800; color: #fff; margin: 0 0 14px;
   letter-spacing: -0.02em; line-height: 1.35;
 }
-.mid-cta-desc { font-size: 1rem; color: rgba(255,255,255,0.75); margin: 0 0 32px; }
-.mid-cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.mid-cta-section .btn-primary {
-  background: #fff; color: #6366f1;
-}
-.mid-cta-section .btn-primary:hover { background: #f0f0ff; }
-.mid-cta-section .btn-outline {
-  color: #fff; border-color: rgba(255,255,255,0.4);
-}
-.mid-cta-section .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+.mid-cta-desc { font-size: 1rem; color: rgba(255,255,255,0.75); margin: 0; }
 
 /* ── Process ── */
 .process-section { background: #ffffff; }
@@ -702,7 +688,6 @@ onUnmounted(() => {
   .feature-title { font-size: 1.25rem; }
 
   .mid-cta-title { font-size: 1.5rem; }
-  .mid-cta-actions { flex-direction: column; gap: 10px; }
 
   .process-steps { flex-direction: column; gap: 0; align-items: stretch; }
   .process-step { text-align: left; padding: 20px 0; display: flex; gap: 16px; align-items: flex-start; max-width: 100%; }

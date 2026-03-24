@@ -6,9 +6,10 @@
           <span class="logo">TIRESIAS VIEW</span>
         </router-link>
         <nav class="header-nav">
-          <router-link to="/features">기능</router-link>
+          <router-link to="/features">기능 소개</router-link>
           <router-link to="/samples">샘플 보고서</router-link>
           <router-link to="/support">FAQ</router-link>
+
         </nav>
         <div class="header-actions">
           <router-link to="/login" class="btn-header">로그인</router-link>

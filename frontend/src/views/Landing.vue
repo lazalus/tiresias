@@ -5,9 +5,8 @@
       <div class="header-container">
         <span class="logo">TIRESIAS VIEW</span>
         <nav class="header-nav">
-          <a href="#features">기능</a>
-          <a href="#process">작동 방식</a>
-          <router-link to="/pricing">가격</router-link>
+          <router-link to="/features">기능 소개</router-link>
+          <router-link to="/pricing">요금 안내</router-link>
           <router-link to="/samples">샘플 보고서</router-link>
         </nav>
         <div class="header-actions">
@@ -19,9 +18,8 @@
       </div>
       <Transition name="menu">
         <div v-if="mobileMenuOpen" class="mobile-menu">
-          <a href="#features" @click="mobileMenuOpen = false">기능</a>
-          <a href="#process" @click="mobileMenuOpen = false">작동 방식</a>
-          <router-link to="/pricing" @click="mobileMenuOpen = false">가격</router-link>
+          <router-link to="/features" @click="mobileMenuOpen = false">기능 소개</router-link>
+          <router-link to="/pricing" @click="mobileMenuOpen = false">요금 안내</router-link>
           <router-link to="/samples" @click="mobileMenuOpen = false">샘플 보고서</router-link>
           <div class="mobile-menu-actions">
             <router-link to="/login" class="btn-start">로그인</router-link>
@@ -260,14 +258,14 @@
             <div class="footer-col">
               <span class="footer-col-title">서비스</span>
               <router-link to="/features">기능 소개</router-link>
-              <router-link to="/pricing">가격 안내</router-link>
+              <router-link to="/pricing">요금 안내</router-link>
               <router-link to="/samples">샘플 보고서</router-link>
             </div>
             <div class="footer-col">
               <span class="footer-col-title">지원</span>
               <router-link to="/support">자주 묻는 질문</router-link>
               <router-link to="/support?tab=feedback">고객 의견</router-link>
-              <a href="mailto:support@TIRESIAS VIEWview.com">문의하기</a>
+              <a href="mailto:support@tiresiasview.com">문의하기</a>
             </div>
             <div class="footer-col">
               <span class="footer-col-title">법적 고지</span>

@@ -1,6 +1,6 @@
 <template>
-  <div :class="fromProfile ? 'sub-page' : 'app-screen'">
-    <!-- Sub Header (from profile) -->
+  <div :class="fromProfile ? 'sub-page' : 'features-page'">
+    <!-- Sub Header (앱 내부에서 접근 시) -->
     <header v-if="fromProfile" class="sub-header">
       <router-link to="/profile?from=support" class="back-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -10,176 +10,228 @@
       <h1 class="sub-title">서비스 소개</h1>
       <div class="spacer"></div>
     </header>
-    <!-- App Header (standalone) -->
-    <header v-else class="app-header">
-      <div class="header-inner">
-        <div class="header-left">
-          <img src="/logoss.png" alt="TIRESIAS VIEW" class="app-logo" />
-          <span class="app-name">TIRESIAS VIEW</span>
-        </div>
+
+    <!-- 독립 페이지 헤더 -->
+    <header v-else class="page-header">
+      <div class="header-container">
+        <router-link to="/" class="logo-link">
+          <span class="logo">TIRESIAS VIEW</span>
+        </router-link>
         <nav class="header-nav">
-          <router-link to="/" class="header-link">홈으로</router-link>
+          <router-link to="/pricing">가격</router-link>
+          <router-link to="/samples">샘플 보고서</router-link>
+          <router-link to="/support">FAQ</router-link>
         </nav>
+        <div class="header-actions">
+          <router-link to="/login" class="btn-header">로그인</router-link>
+        </div>
       </div>
     </header>
 
-    <main class="features-main">
+    <main :class="fromProfile ? 'sub-content' : 'page-main'">
       <!-- Hero -->
-      <section class="hero">
-        <h1 class="hero-title">
-          AI 에이전트가 구축하는<br>병렬 세계 시뮬레이션
-        </h1>
-        <p class="hero-subtitle">
-          비정형 데이터에서 현실 시드를 추출하고, 수천 개의 독립적인 AI 에이전트가
-          상호작용하는 디지털 세계를 자동으로 생성합니다.<br>
-          신의 시점에서 변수를 주입하여 미래의 궤적을 예측합니다.
-        </p>
+      <section class="f-hero">
+        <span class="f-badge">AI 시나리오 분석 플랫폼</span>
+        <h1 class="f-hero-title">자료를 업로드하면<br class="desktop-br"/>시나리오를 비교합니다</h1>
+        <p class="f-hero-desc">정책 문서, 시장 자료, 보도자료를 업로드하면 AI 에이전트가 이해관계자 반응을 시뮬레이션하고, 시나리오별 분석 보고서를 생성합니다.</p>
+        <div class="f-hero-cta">
+          <router-link to="/signup" class="btn-primary">무료로 시작하기</router-link>
+          <router-link to="/samples" class="btn-ghost">샘플 보고서 보기</router-link>
+        </div>
       </section>
 
-      <!-- Divider -->
-      <div class="section-divider"></div>
-
-      <!-- Core Capabilities -->
-      <section class="capabilities">
-        <div class="section-label">CORE CAPABILITIES</div>
-        <div class="cap-grid">
-          <div class="cap-card">
-            <div class="cap-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
+      <!-- Pain Points -->
+      <section class="f-section">
+        <div class="f-section-header">
+          <span class="f-label">이런 고민, 익숙하시죠?</span>
+          <h2 class="f-section-title">기존 방식의 한계를 매번 느끼고 있다면</h2>
+        </div>
+        <div class="pain-grid">
+          <div class="pain-card">
+            <div class="pain-icon pain-icon--red">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             </div>
-            <h3 class="cap-title">저비용 시뮬레이션</h3>
-            <p class="cap-desc">일반 시뮬레이션 1회 9,900원으로 대규모 예측을 실행할 수 있습니다.</p>
+            <h3>시나리오 분석을 수작업으로 하고 계신가요?</h3>
+            <p>엑셀과 문서를 오가며 이해관계자별 반응을 수동으로 정리하면, 시간과 정확성 모두 놓치게 됩니다.</p>
           </div>
-          <div class="cap-card">
-            <div class="cap-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
+          <div class="pain-card">
+            <div class="pain-icon pain-icon--orange">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <h3 class="cap-title">대규모 에이전트</h3>
-            <p class="cap-desc">최대 백만 레벨 에이전트를 동시 운용하여 현실과 유사한 복잡계를 구현합니다.</p>
+            <h3>외주 리서치에 몇 주씩 기다리고 계신가요?</h3>
+            <p>전통적인 여론조사나 리서치 외주는 비용도 높고, 결과를 받기까지 수주가 걸립니다.</p>
           </div>
-          <div class="cap-card">
-            <div class="cap-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-                <path d="M9 12l2 2 4-4"/>
-              </svg>
+          <div class="pain-card">
+            <div class="pain-icon pain-icon--blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
-            <h3 class="cap-title">완전 자동화</h3>
-            <p class="cap-desc">데이터 업로드만으로 시뮬레이션 환경 구축부터 보고서 생성까지 완전 자동으로 처리됩니다.</p>
+            <h3>ChatGPT 한 줄 답변으론 부족하셨나요?</h3>
+            <p>단일 AI 응답은 다수 이해관계자의 입장 차이와 시나리오 분기를 반영하지 못합니다.</p>
           </div>
         </div>
       </section>
 
-      <!-- Divider -->
-      <div class="section-divider"></div>
+      <!-- Core Features (alternating) -->
+      <section class="f-section f-section--alt">
+        <div class="f-section-header">
+          <span class="f-label">주요 기능</span>
+          <h2 class="f-section-title">자료에서 보고서까지 하나의 워크플로우</h2>
+          <p class="f-section-subtitle">업로드한 자료의 구조를 분석하고, 다수 에이전트가 시나리오를 비교해 보고서를 만듭니다.</p>
+        </div>
 
-      <!-- Workflow Timeline -->
-      <section class="workflow">
-        <div class="section-label">WORKFLOW</div>
-        <h2 class="section-heading">워크플로우</h2>
-        <div class="timeline">
-          <div class="timeline-line"></div>
-          <div v-for="(step, i) in steps" :key="i" class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <div class="timeline-num">{{ String(i + 1).padStart(2, '0') }}</div>
-              <h3 class="timeline-title">{{ step.name }}</h3>
-              <p class="timeline-desc">{{ step.desc }}</p>
-            </div>
+        <div class="feature-row">
+          <div class="feature-content">
+            <span class="feature-tag feature-tag--purple">구조 분석</span>
+            <h3 class="feature-title">지식 그래프 자동 구축</h3>
+            <p class="feature-desc">업로드한 자료에서 이해관계자, 이슈, 변수를 자동 추출하여 관계 구조를 시각화합니다.</p>
+            <ul class="feature-checks">
+              <li>이해관계자 · 변수 자동 식별</li>
+              <li>관계 그래프 시각화</li>
+              <li>PDF, Markdown, CSV 등 다양한 포맷 지원</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <img src="/landing-graph.png" alt="지식 그래프" class="feature-img" />
+          </div>
+        </div>
+
+        <div class="feature-row feature-row--reversed">
+          <div class="feature-content">
+            <span class="feature-tag feature-tag--blue">시뮬레이션</span>
+            <h3 class="feature-title">다수 에이전트 시나리오 비교</h3>
+            <p class="feature-desc">각 이해관계자의 입장을 가진 AI 에이전트들이 다중 라운드로 반응하며 시나리오를 비교합니다.</p>
+            <ul class="feature-checks">
+              <li>이해관계자별 AI 페르소나 자동 생성</li>
+              <li>다중 라운드 상호작용 시뮬레이션</li>
+              <li>시나리오별 반응 경로 추적</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <img src="/landing-agents.png" alt="에이전트 시뮬레이션" class="feature-img" />
+          </div>
+        </div>
+
+        <div class="feature-row">
+          <div class="feature-content">
+            <span class="feature-tag feature-tag--green">보고서</span>
+            <h3 class="feature-title">심층 분석 보고서 자동 생성</h3>
+            <p class="feature-desc">시뮬레이션 결과를 정리한 구조화된 분석 보고서를 자동으로 생성하고 PDF로 내려받을 수 있습니다.</p>
+            <ul class="feature-checks">
+              <li>시나리오 비교 · 핵심 인사이트 요약</li>
+              <li>웹 보고서 + PDF 다운로드</li>
+              <li>보고서 기반 추가 질의 가능</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <img src="/landing-report.png" alt="분석 보고서" class="feature-img" />
           </div>
         </div>
       </section>
 
-      <!-- Divider -->
-      <div class="section-divider"></div>
+      <!-- Workflow -->
+      <section class="f-section">
+        <div class="f-section-header">
+          <span class="f-label">작동 방식</span>
+          <h2 class="f-section-title">5단계 시뮬레이션 파이프라인</h2>
+        </div>
+        <div class="workflow-list">
+          <div v-for="(step, i) in steps" :key="i" class="workflow-item">
+            <div class="workflow-num">{{ String(i + 1).padStart(2, '0') }}</div>
+            <div class="workflow-body">
+              <h3>{{ step.name }}</h3>
+              <p>{{ step.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Use Cases -->
-      <section class="use-cases">
-        <div class="section-label">USE CASES</div>
-        <h2 class="section-heading">활용 사례</h2>
-        <div class="cases-list">
-          <div class="case-card" style="--accent: #6366f1">
-            <h3 class="case-title">여론 예측</h3>
-            <p class="case-desc">정책 발표, 기업 PR 등의 여론 반응을 사전에 시뮬레이션하여 리스크를 최소화합니다.</p>
+      <section class="f-section f-section--alt">
+        <div class="f-section-header">
+          <span class="f-label">활용 사례</span>
+          <h2 class="f-section-title">다양한 분야에서 활용됩니다</h2>
+        </div>
+        <div class="usecases-grid">
+          <div class="usecase-card usecase-card--purple">
+            <div class="usecase-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <h3>여론 예측</h3>
+            <p>정책 발표, 기업 PR 등의 여론 반응을 사전에 시뮬레이션하여 리스크를 최소화합니다.</p>
           </div>
-          <div class="case-card" style="--accent: #818cf8">
-            <h3 class="case-title">금융 시나리오</h3>
-            <p class="case-desc">시장 변동, 정책 변화에 따른 투자자 행동 패턴을 다차원적으로 분석합니다.</p>
+          <div class="usecase-card usecase-card--blue">
+            <div class="usecase-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+            <h3>시장 분석</h3>
+            <p>가격 정책, 브랜드 전략, 이슈 확산이 소비자와 커뮤니티에 미치는 변화를 점검합니다.</p>
           </div>
-          <div class="case-card" style="--accent: #a78bfa">
-            <h3 class="case-title">정책 시뮬레이션</h3>
-            <p class="case-desc">정책 시행 전 사회적 반응과 영향을 제로 리스크 환경에서 테스트합니다.</p>
+          <div class="usecase-card usecase-card--green">
+            <div class="usecase-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <h3>정책 영향 평가</h3>
+            <p>정책·규제 변화가 이해관계자별 반응과 온라인 여론에 어떤 영향을 주는지 사전 검토합니다.</p>
           </div>
-          <div class="case-card" style="--accent: #c4b5fd">
-            <h3 class="case-title">창작 시뮬레이션</h3>
-            <p class="case-desc">소설 결말 추론, 시나리오 분기점 탐색 등 창작 활동을 지원합니다.</p>
+          <div class="usecase-card usecase-card--red">
+            <div class="usecase-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <h3>캠페인·메시지 테스트</h3>
+            <p>브랜드 메시지, 보도자료, 공지문이 어떤 논점과 반응을 불러올지 시뮬레이션합니다.</p>
           </div>
         </div>
       </section>
 
-      <!-- Divider -->
-      <div class="section-divider"></div>
-
       <!-- CTA -->
-      <section class="cta">
-        <p class="cta-lead">미래를 시뮬레이션할 준비가 되셨나요?</p>
-        <router-link to="/" class="cta-btn">
-          <span>지금 시작하기</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </router-link>
+      <section class="f-cta">
+        <h2 class="f-cta-title">의사결정 전 가설 검토를<br class="desktop-br"/> 지금 시작하세요</h2>
+        <p class="f-cta-desc">자료를 업로드하면 시나리오를 비교하고 분석 보고서를 받을 수 있습니다.</p>
+        <div class="f-cta-actions">
+          <router-link to="/signup" class="btn-primary">무료로 시작하기</router-link>
+          <router-link to="/samples" class="btn-ghost">샘플 보고서 보기</router-link>
+        </div>
       </section>
 
       <!-- Footer -->
-      <footer class="footer">
-        <p class="footer-text">
-          TIRESIAS VIEW is open source (AGPL-3.0) based on <a href="https://github.com/666ghj/MiroFish" target="_blank" class="footer-link">MiroFish</a>.
-          <a href="https://github.com/lazalus/tiresias" target="_blank" class="footer-link">Source Code</a>
-        </p>
+      <footer class="f-footer">
+        <div class="f-footer-links">
+          <router-link to="/pricing">가격 안내</router-link>
+          <router-link to="/samples">샘플 보고서</router-link>
+          <router-link to="/terms">이용약관</router-link>
+          <router-link to="/privacy">개인정보처리방침</router-link>
+        </div>
+        <p class="f-footer-biz">에스아이 | 대표 정희수 | 사업자등록번호 111-63-00101 | 통신판매업신고번호 2024-안양동안-0010 | support@tiresiasview.com</p>
       </footer>
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { applySeoMeta, resetSeoMeta } from '../utils/seo.js'
 
 const route = useRoute()
 const fromProfile = computed(() => route.query.from === 'profile')
 
 const steps = [
-  {
-    name: '그래프 구축',
-    desc: '업로드된 데이터에서 현실 시드를 추출하고, 개체 및 집단 기억을 주입하여 GraphRAG 지식 그래프를 자동 구축합니다.'
-  },
-  {
-    name: '환경 설정',
-    desc: '엔티티 관계를 추출하고 페르소나를 생성한 후, 시뮬레이션 환경에 에이전트 파라미터를 주입합니다.'
-  },
-  {
-    name: '시뮬레이션 실행',
-    desc: '이중 플랫폼에서 병렬 시뮬레이션을 수행하며, 예측 요구사항을 자동 분석하고 시계열 기억을 동적으로 업데이트합니다.'
-  },
-  {
-    name: '보고서 생성',
-    desc: 'ReportAgent가 풍부한 도구 세트를 활용하여 시뮬레이션 결과를 분석하고 상세한 예측 보고서를 생성합니다.'
-  },
-  {
-    name: '심층 상호작용',
-    desc: '시뮬레이션 세계의 에이전트와 자유롭게 대화하거나 ReportAgent에게 추가 질문을 할 수 있습니다.'
-  }
+  { name: '자료 업로드 및 견적 확인', desc: 'PDF, Markdown, TXT, CSV 자료를 올리고 예상 페이지 수와 분석 깊이에 따른 견적을 먼저 확인합니다.' },
+  { name: '온톨로지·지식 그래프 구축', desc: '문서에서 핵심 엔티티와 관계를 추출해 그래프를 만들고, 이후 단계에서 재사용할 수 있는 구조화된 지식을 준비합니다.' },
+  { name: '페르소나·환경 준비', desc: '그래프를 바탕으로 에이전트 프로필, 환경 설정, 라운드 구성 등 시뮬레이션 실행 조건을 자동 생성합니다.' },
+  { name: '다중 라운드 시뮬레이션', desc: '플랫폼별 행동과 상호작용을 여러 라운드로 실행해 변화 흐름과 반응 패턴을 수집합니다.' },
+  { name: '보고서 생성 및 후속 질의', desc: '결과를 요약한 보고서를 만들고, 이후 추가 질문과 세부 분석을 이어서 확인할 수 있습니다.' }
 ]
+
+onMounted(() => {
+  if (fromProfile.value) return
+  applySeoMeta({
+    title: '서비스 소개 | 테이레시아스 뷰 – AI 시나리오 분석 플랫폼',
+    description: '보고서를 업로드하면 AI 에이전트가 이해관계자 반응을 시뮬레이션하고 시나리오별 분석 보고서를 생성합니다. 지식 그래프 구축, 다중 에이전트 시뮬레이션, 보고서 자동 생성까지 하나의 흐름으로.',
+    canonical: 'https://tiresiasview.com/features',
+  })
+})
+
+onUnmounted(() => {
+  if (fromProfile.value) return
+  resetSeoMeta()
+})
 </script>
 
 <style scoped>
-/* ── Sub Page (from profile) ── */
+/* ── Sub Page (앱 내부) ── */
 .sub-page {
   min-height: 100vh;
   background: var(--bg-primary);
@@ -187,419 +239,294 @@ const steps = [
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
 .sub-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: sticky; top: 0; z-index: 100;
   background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 56px;
-  padding: 0 16px;
-  max-width: 680px;
-  margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px; padding: 0 16px;
+  max-width: 680px; margin: 0 auto;
 }
 .back-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--text-primary);
-  text-decoration: none;
-  border-radius: 10px;
-  transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; color: var(--text-primary);
+  text-decoration: none; border-radius: 10px;
 }
-.back-btn:hover { background: var(--border-color); }
-.sub-title { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
+.sub-title { font-size: 1rem; font-weight: 600; }
 .spacer { width: 36px; }
+.sub-content { max-width: 680px; margin: 0 auto; padding: 24px 20px 80px; }
 
-/* ── Base ── */
-.app-screen {
+/* ── Standalone Page ── */
+.features-page {
   min-height: 100vh;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: #ffffff;
+  color: #1a1a2e;
   font-family: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ── Header ── */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--header-bg);
+.page-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(255,255,255,0.92);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #f0f0f5;
 }
-
-.header-inner {
-  max-width: 680px;
-  margin: 0 auto;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
+.header-container {
+  max-width: 1160px; margin: 0 auto; height: 64px;
+  display: flex; align-items: center; padding: 0 32px;
 }
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.logo-link { text-decoration: none; }
+.logo {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; color: #1a1a2e;
 }
-
-.app-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.app-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
 .header-nav {
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center; gap: 24px; margin-left: auto; margin-right: 24px;
 }
-
-.header-link {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  padding: 6px 14px;
-  border-radius: 8px;
-  transition: color 0.15s, background 0.15s;
-}
-
-.header-link:hover {
-  color: var(--text-primary);
-  background: var(--border-color);
-}
-
-/* ── Main ── */
-.features-main {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 0 24px 120px;
-}
-
-/* ── Hero ── */
-.hero {
-  text-align: center;
-  padding: 80px 0 64px;
-}
-
-.hero-title {
-  font-size: 2.2rem;
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.03em;
-  margin: 0 0 20px;
-  color: var(--text-primary);
-}
-
-.hero-subtitle {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.8;
-  margin: 0 auto;
-  max-width: 520px;
-  font-weight: 400;
-}
-
-/* ── Section Divider ── */
-.section-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin: 0;
-}
-
-/* ── Section Labels ── */
-.section-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-tertiary, var(--text-muted));
-  margin-bottom: 12px;
-}
-
-.section-heading {
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin: 0 0 32px;
-  color: var(--text-primary);
-}
-
-/* ── Capabilities ── */
-.capabilities {
-  padding: 64px 0;
-}
-
-.cap-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.cap-card {
-  padding: 28px 22px;
-  border-radius: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  transition: border-color 0.15s;
-}
-
-.cap-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-.cap-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
-  margin-bottom: 16px;
-}
-
-.cap-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 6px;
-  color: var(--text-primary);
-}
-
-.cap-desc {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* ── Workflow Timeline ── */
-.workflow {
-  padding: 64px 0;
-}
-
-.timeline {
-  position: relative;
-  padding-left: 24px;
-}
-
-.timeline-line {
-  position: absolute;
-  left: 4px;
-  top: 6px;
-  bottom: 6px;
-  width: 1px;
-  background: var(--border-color);
-}
-
-.timeline-item {
-  position: relative;
-  padding-bottom: 32px;
-  display: flex;
-  align-items: flex-start;
-}
-
-.timeline-item:last-child {
-  padding-bottom: 0;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: -24px;
-  top: 6px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #6366f1;
-  border: 2px solid var(--bg-primary);
-  box-shadow: 0 0 0 1px var(--border-color);
-}
-
-.timeline-content {
-  flex: 1;
-}
-
-.timeline-num {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-}
-
-.timeline-title {
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 6px;
-  color: var(--text-primary);
-}
-
-.timeline-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.65;
-  margin: 0;
-}
-
-/* ── Use Cases ── */
-.use-cases {
-  padding: 64px 0;
-}
-
-.cases-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.case-card {
-  padding: 22px 22px 22px 26px;
-  border-radius: 10px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--accent, #6366f1);
-  transition: border-color 0.15s;
-}
-
-.case-card:hover {
-  border-color: var(--border-color);
-  border-left-color: var(--accent, #6366f1);
-}
-
-.case-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 6px;
-  color: var(--text-primary);
-}
-
-.case-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* ── CTA ── */
-.cta {
-  text-align: center;
-  padding: 64px 0 0;
-}
-
-.cta-lead {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  margin: 0 0 20px;
-  font-weight: 400;
-}
-
-.cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #6366f1;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: -0.01em;
-  padding: 12px 28px;
-  border-radius: 10px;
-  transition: background 0.15s;
-}
-
-.cta-btn:hover {
-  background: #5558e6;
-}
-
-/* ── Footer ── */
-.footer {
-  padding-top: 48px;
-  text-align: center;
-}
-
-.footer-text {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.footer-link {
-  color: var(--text-secondary);
-  text-decoration: none;
+.header-nav a {
+  color: #64648a; text-decoration: none; font-size: 0.88rem; font-weight: 500;
   transition: color 0.15s;
 }
+.header-nav a:hover { color: #1a1a2e; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.btn-header {
+  background: #6366f1; color: #fff; text-decoration: none;
+  font-size: 0.88rem; font-weight: 600; padding: 9px 22px; border-radius: 10px;
+  transition: background 0.15s;
+}
+.btn-header:hover { background: #5558e6; }
 
-.footer-link:hover {
-  color: #6366f1;
+.page-main {
+  max-width: 1160px; margin: 0 auto; padding: 100px 32px 0;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 1.7rem;
-  }
+/* ── Shared labels/buttons ── */
+.f-label {
+  display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em;
+  color: #6366f1; margin-bottom: 12px; text-transform: uppercase;
+}
+.f-badge {
+  display: inline-block; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
+  color: #6366f1; background: rgba(99,102,241,0.08); padding: 6px 16px;
+  border-radius: 20px; margin-bottom: 20px;
+}
+.btn-primary {
+  display: inline-block; background: #6366f1; color: #fff; text-decoration: none;
+  font-size: 0.95rem; font-weight: 600; padding: 14px 32px; border-radius: 12px;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #5558e6; }
+.btn-ghost {
+  display: inline-block; color: #64648a; text-decoration: none; font-size: 0.95rem; font-weight: 500;
+  padding: 14px 32px; border-radius: 12px; border: 1px solid #e0e0ea;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover { border-color: #c0c0d0; color: #1a1a2e; }
 
-  .cap-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
+/* ── Hero ── */
+.f-hero {
+  text-align: center; padding: 60px 0 80px;
+}
+.f-hero-title {
+  font-size: 2.8rem; font-weight: 800; line-height: 1.25; color: #1a1a2e;
+  margin: 0 0 20px; letter-spacing: -0.03em;
+}
+.f-hero-desc {
+  font-size: 1.05rem; color: #64648a; line-height: 1.7;
+  max-width: 600px; margin: 0 auto 32px;
+}
+.f-hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-  .features-main {
-    padding: 0 20px 80px;
-  }
+/* ── Sections ── */
+.f-section { padding: 80px 0; }
+.f-section--alt { background: #f8f8fc; margin: 0 -32px; padding: 80px 32px; }
+.f-section-header { text-align: center; margin-bottom: 48px; }
+.f-section-title {
+  font-size: 2rem; font-weight: 800; line-height: 1.35; color: #1a1a2e;
+  margin: 0 0 14px; letter-spacing: -0.02em;
+}
+.f-section-subtitle { font-size: 1rem; color: #64648a; line-height: 1.65; max-width: 560px; margin: 0 auto; }
 
-  .hero {
-    padding: 56px 0 48px;
-  }
+/* ── Pain Points ── */
+.pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.pain-card {
+  background: #fafafe; border: 1px solid #ededf5; border-radius: 16px; padding: 32px 28px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pain-card:hover { border-color: #d0d0e0; box-shadow: 0 8px 32px rgba(0,0,0,0.04); }
+.pain-icon {
+  width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; margin-bottom: 20px;
+}
+.pain-icon--red { background: rgba(239,68,68,0.08); color: #ef4444; }
+.pain-icon--orange { background: rgba(245,158,11,0.08); color: #f59e0b; }
+.pain-icon--blue { background: rgba(59,130,246,0.08); color: #3b82f6; }
+.pain-card h3 { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0 0 10px; line-height: 1.5; }
+.pain-card p { font-size: 0.88rem; color: #64648a; line-height: 1.65; margin: 0; }
 
-  .capabilities,
-  .workflow,
-  .use-cases {
-    padding: 48px 0;
-  }
-
-  .cta {
-    padding: 48px 0 0;
-  }
+/* ── Feature rows (alternating) ── */
+.feature-row {
+  display: flex; align-items: center; gap: 56px; margin-bottom: 72px;
+}
+.feature-row:last-child { margin-bottom: 0; }
+.feature-row--reversed { flex-direction: row-reverse; }
+.feature-content { flex: 1; }
+.feature-visual {
+  flex: 1; border-radius: 20px; overflow: hidden;
+  border: 1px solid #e8e8f0; box-shadow: 0 12px 40px rgba(0,0,0,0.06);
+}
+.feature-img { display: block; width: 100%; height: auto; }
+.feature-tag {
+  display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 4px 12px; border-radius: 6px; margin-bottom: 14px; text-transform: uppercase;
+}
+.feature-tag--purple { background: rgba(99,102,241,0.08); color: #6366f1; }
+.feature-tag--blue { background: rgba(59,130,246,0.08); color: #3b82f6; }
+.feature-tag--green { background: rgba(34,197,94,0.08); color: #16a34a; }
+.feature-title {
+  font-size: 1.5rem; font-weight: 800; color: #1a1a2e; margin: 0 0 12px;
+  letter-spacing: -0.01em; line-height: 1.35;
+}
+.feature-desc { font-size: 0.95rem; color: #64648a; line-height: 1.7; margin: 0 0 20px; }
+.feature-checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.feature-checks li {
+  font-size: 0.88rem; color: #3a3a5c; padding-left: 24px; position: relative; line-height: 1.5;
+}
+.feature-checks li::before {
+  content: ''; position: absolute; left: 0; top: 5px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(99,102,241,0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 10px;
 }
 
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.5rem;
-  }
-
-  .section-heading {
-    font-size: 1.2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 0.82rem;
-  }
+/* ── Workflow ── */
+.workflow-list { display: flex; flex-direction: column; }
+.workflow-item {
+  display: flex; gap: 20px; align-items: flex-start;
+  padding: 24px 0; border-bottom: 1px solid #ededf5;
 }
+.workflow-item:last-child { border-bottom: none; }
+.workflow-num {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.4rem; font-weight: 700;
+  color: rgba(99,102,241,0.25); min-width: 40px; flex-shrink: 0;
+}
+.workflow-body h3 { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; margin: 0 0 6px; }
+.workflow-body p { font-size: 0.85rem; color: #64648a; line-height: 1.65; margin: 0; }
+
+/* ── Use Cases ── */
+.usecases-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.usecase-card {
+  background: #fff; border: 1px solid #ededf5; border-radius: 16px; padding: 28px 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.usecase-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.05); }
+.usecase-icon { margin-bottom: 16px; }
+.usecase-card--purple .usecase-icon { color: #6366f1; }
+.usecase-card--blue .usecase-icon { color: #3b82f6; }
+.usecase-card--green .usecase-icon { color: #16a34a; }
+.usecase-card--red .usecase-icon { color: #ef4444; }
+.usecase-card--purple:hover { border-color: rgba(99,102,241,0.3); }
+.usecase-card--blue:hover { border-color: rgba(59,130,246,0.3); }
+.usecase-card--green:hover { border-color: rgba(34,197,94,0.3); }
+.usecase-card--red:hover { border-color: rgba(239,68,68,0.3); }
+.usecase-card h3 { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0 0 8px; }
+.usecase-card p { font-size: 0.85rem; color: #64648a; line-height: 1.65; margin: 0; }
+
+/* ── CTA ── */
+.f-cta { text-align: center; padding: 80px 0; }
+.f-cta-title {
+  font-size: 2.2rem; font-weight: 800; color: #1a1a2e; margin: 0 0 14px;
+  letter-spacing: -0.02em; line-height: 1.35;
+}
+.f-cta-desc { font-size: 1rem; color: #64648a; margin: 0 0 32px; }
+.f-cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* ── Footer ── */
+.f-footer {
+  border-top: 1px solid #ededf5; text-align: center; padding: 32px 0 48px;
+}
+.f-footer-links { display: flex; gap: 20px; justify-content: center; margin-bottom: 16px; }
+.f-footer-links a { font-size: 0.82rem; color: #64648a; text-decoration: none; }
+.f-footer-links a:hover { color: #1a1a2e; }
+.f-footer-biz { font-size: 0.72rem; color: #a0a0b8; margin: 0; }
+
+/* ── Desktop br ── */
+.desktop-br { display: none; }
+@media (min-width: 1024px) { .desktop-br { display: inline; } }
+
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  .header-container { height: 56px; padding: 0 20px; }
+  .header-nav { display: none; }
+  .page-main { padding: 80px 20px 0; }
+
+  .f-hero { padding: 32px 0 56px; }
+  .f-hero-title { font-size: 1.8rem; }
+  .f-hero-desc { font-size: 0.9rem; }
+  .f-hero-cta { flex-direction: column; gap: 10px; }
+  .btn-primary, .btn-ghost { text-align: center; padding: 14px 24px; font-size: 0.9rem; }
+
+  .f-section { padding: 56px 0; }
+  .f-section--alt { margin: 0 -20px; padding: 56px 20px; }
+  .f-section-header { margin-bottom: 32px; }
+  .f-section-title { font-size: 1.5rem; }
+
+  .pain-grid { grid-template-columns: 1fr; gap: 14px; }
+  .pain-card { padding: 24px 20px; }
+
+  .feature-row, .feature-row--reversed { flex-direction: column; gap: 28px; margin-bottom: 48px; }
+  .feature-visual { width: 100%; }
+  .feature-title { font-size: 1.25rem; }
+
+  .usecases-grid { grid-template-columns: 1fr; gap: 12px; }
+  .usecase-card { display: flex; gap: 16px; align-items: flex-start; padding: 22px 20px; }
+  .usecase-icon { margin-bottom: 0; flex-shrink: 0; padding-top: 2px; }
+
+  .f-cta-title { font-size: 1.5rem; }
+  .f-cta-actions { flex-direction: column; }
+
+  .f-footer { padding: 24px 0 40px; }
+  .f-footer-links { gap: 14px; flex-wrap: wrap; }
+}
+
+/* ── Sub page overrides ── */
+.sub-page .f-badge { background: rgba(99,102,241,0.08); color: var(--accent-color, #6366f1); }
+.sub-page .f-hero { text-align: left; padding: 16px 0 32px; }
+.sub-page .f-hero-title { color: var(--text-primary); font-size: 1.5rem; }
+.sub-page .f-hero-desc { color: var(--text-secondary); font-size: 0.88rem; max-width: 100%; margin-bottom: 20px; }
+.sub-page .f-hero-cta { justify-content: flex-start; }
+.sub-page .btn-primary { padding: 10px 22px; font-size: 0.85rem; border-radius: 10px; }
+.sub-page .btn-ghost { padding: 10px 22px; font-size: 0.85rem; border-radius: 10px; border-color: var(--border-color); color: var(--text-secondary); }
+.sub-page .f-section { padding: 32px 0; border-bottom: 1px solid var(--border-color); }
+.sub-page .f-section--alt { background: transparent; margin: 0; padding: 32px 0; }
+.sub-page .f-section-header { text-align: left; margin-bottom: 24px; }
+.sub-page .f-section-title { color: var(--text-primary); font-size: 1.2rem; }
+.sub-page .f-section-subtitle { color: var(--text-secondary); max-width: 100%; margin: 0; }
+.sub-page .f-label { color: var(--accent-color, #6366f1); }
+.sub-page .pain-grid { grid-template-columns: 1fr; }
+.sub-page .pain-card { background: var(--bg-secondary); border-color: var(--border-color); }
+.sub-page .pain-card h3 { color: var(--text-primary); }
+.sub-page .pain-card p { color: var(--text-secondary); }
+.sub-page .feature-row, .sub-page .feature-row--reversed { flex-direction: column; gap: 20px; margin-bottom: 32px; }
+.sub-page .feature-visual { border-color: var(--border-color); box-shadow: none; }
+.sub-page .feature-title { color: var(--text-primary); font-size: 1.15rem; }
+.sub-page .feature-desc { color: var(--text-secondary); }
+.sub-page .feature-checks li { color: var(--text-secondary); }
+.sub-page .workflow-item { border-bottom-color: var(--border-color); }
+.sub-page .workflow-body h3 { color: var(--text-primary); }
+.sub-page .workflow-body p { color: var(--text-secondary); }
+.sub-page .usecases-grid { grid-template-columns: 1fr; }
+.sub-page .usecase-card { background: var(--bg-secondary); border-color: var(--border-color); }
+.sub-page .usecase-card h3 { color: var(--text-primary); }
+.sub-page .usecase-card p { color: var(--text-secondary); }
+.sub-page .f-cta { padding: 32px 0; }
+.sub-page .f-cta-title { color: var(--text-primary); font-size: 1.3rem; }
+.sub-page .f-cta-desc { color: var(--text-secondary); }
+.sub-page .f-footer { border-top-color: var(--border-color); }
+.sub-page .f-footer-links a { color: var(--text-secondary); }
+.sub-page .f-footer-biz { color: var(--text-muted); }
 </style>

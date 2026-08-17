@@ -83,10 +83,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { currentUser, getToken } from '../store/auth.js'
+import { currentUser } from '../store/auth.js'
 import { sendSupportFeedback } from '../api/support.js'
+import { applySeoMeta, resetSeoMeta } from '../utils/seo.js'
 
 const route = useRoute()
 const isFeedbackTab = route.query.tab === 'feedback'
@@ -150,6 +151,45 @@ const faqItems = [
   }
 ]
 
+onMounted(() => {
+  if (isFeedbackTab) {
+    applySeoMeta({
+      title: '고객 의견 보내기 | 테이레시아스 뷰',
+      description: '테이레시아스 뷰에 문의하기, 불편사항 접수, 서비스 개선 제안을 보낼 수 있습니다.',
+      canonical: 'https://tiresiasview.com/support?tab=feedback',
+      robots: 'noindex,follow',
+    })
+    return
+  }
+
+  applySeoMeta({
+    title: '자주 묻는 질문 | 테이레시아스 뷰',
+    description: '테이레시아스 뷰의 가격, 파일 업로드, 시뮬레이션 방식, 오류 처리, 데이터 보관에 대한 자주 묻는 질문입니다.',
+    canonical: 'https://tiresiasview.com/support',
+    structuredData: [
+      {
+        id: 'support-faq',
+        data: {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqItems.slice(0, 8).map((item) => ({
+            '@type': 'Question',
+            name: item.q,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: item.a,
+            },
+          })),
+        },
+      },
+    ],
+  })
+})
+
+onUnmounted(() => {
+  resetSeoMeta(['support-faq'])
+})
+
 function toggleFaq(index) {
   openFaq.value = openFaq.value === index ? null : index
 }
@@ -170,7 +210,7 @@ async function handleSubmit() {
       name: form.value.name,
       email: form.value.email,
       message: form.value.message,
-    }, getToken())
+    })
 
     submitSuccess.value = '고객 의견이 접수되었습니다. 확인 후 필요한 경우 회신드리겠습니다.'
     form.value.message = ''

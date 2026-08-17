@@ -1,49 +1,32 @@
-# MiroFish 한국어 요약
+# Tiresias View 한국어 가이드
 
-## 이 프로젝트가 뭔가
+## 서비스 개요
 
-MiroFish는 멀티 에이전트 기반 예측 시뮬레이션 웹앱입니다.
+Tiresias View는 문서 기반 정책·시장·여론 시뮬레이션 서비스입니다.
 
-- 뉴스, 정책, 금융 신호, 보고서, 소설 같은 문서를 넣습니다.
-- 시스템이 문서에서 개체와 관계를 뽑아 그래프를 만듭니다.
-- 그 그래프를 바탕으로 여러 Agent의 성격, 기억, 행동 규칙을 생성합니다.
-- 이후 시뮬레이션을 돌려 결과를 분석 리포트로 반환합니다.
-- 마지막에는 시뮬레이션 세계의 Agent나 보고서 Agent와 대화할 수 있습니다.
+- 사용자가 PDF, Markdown, TXT 문서를 업로드합니다.
+- 시스템이 문서에서 온톨로지와 지식 그래프를 구성합니다.
+- 그래프를 바탕으로 페르소나와 시뮬레이션 환경을 준비합니다.
+- 시뮬레이션 결과를 분석해 보고서와 PDF를 생성합니다.
+- 완료된 보고서는 히스토리에서 다시 조회하고 다운로드할 수 있습니다.
 
-README 기준 핵심 메시지는 "현실의 씨앗 정보를 넣으면 디지털 평행 세계를 만들어 미래 흐름을 예측한다"입니다.
+## 현재 구조
 
-## 전체 흐름
+- `frontend/`: Vue 3 + Vite 클라이언트
+- `workers/`: Cloudflare Worker, D1, R2, 결제/인증/큐 처리
+- `backend/`: Flask 기반 그래프/시뮬레이션/보고서 API
 
-1. 문서 업로드
-2. GraphRAG 기반 그래프 구성
-3. Agent 프로필 및 시뮬레이션 환경 생성
-4. Twitter/Reddit 스타일 병렬 시뮬레이션 실행
-5. 리포트 생성 및 상호작용
+현재 운영 구조는 다음과 같습니다.
 
-## 기술 스택
+- 프런트엔드와 Worker는 이 저장소에서 배포합니다.
+- Worker가 public `/api/*` 진입점 역할을 합니다.
+- Worker의 무거운 작업 프록시 대상 백엔드 기본 URL은 `https://api.tiresiasview.com` 입니다.
+- 백엔드의 실제 호스트 머신이나 서버 경로는 이 저장소에서 고정하지 않습니다.
+- 그래프 저장소는 Neo4j 기준으로 구성되어 있습니다.
+- LLM 호출은 OpenAI 호환 API 기준으로 구성되어 있습니다.
+- 보고서 PDF는 백엔드의 Node + Playwright 렌더러를 사용합니다.
 
-- 프론트엔드: Vue 3 + Vite + axios + d3
-- 백엔드: Flask
-- LLM 연동: OpenAI SDK 호환 API
-- 메모리/그래프: Zep Cloud
-- 시뮬레이션 엔진: CAMEL OASIS
-
-## 주요 폴더
-
-- `frontend/`: 화면과 사용자 흐름
-- `backend/app/api/`: API 엔드포인트
-- `backend/app/services/`: 그래프 생성, 프로필 생성, 리포트 생성, 시뮬레이션 실행 로직
-- `backend/scripts/`: 실제 시뮬레이션 실행 스크립트
-- `static/`: README용 이미지와 정적 자산
-
-## 실행 조건
-
-- Node.js 18+
-- Python 3.11 ~ 3.12
-- `uv`
-- `.env`에 LLM API 키와 Zep API 키 필요
-
-## 빠른 실행
+## 로컬 실행
 
 ```bash
 cp .env.example .env
@@ -51,22 +34,44 @@ npm run setup:all
 npm run dev
 ```
 
-- 프론트: `http://localhost:3000`
-- 백엔드: `http://localhost:5001`
+- 프런트엔드: `http://localhost:5173`
+- 백엔드 API: `http://localhost:5001`
 
-## 꼭 알아둘 점
+개별 실행:
 
-- 기본 문서는 중국어 `README.md`, 영어 문서는 `README-EN.md`입니다.
-- 이 프로젝트는 외부 LLM API와 Zep Cloud를 사용하므로, 인터넷이 되는 환경과 유효한 API 키가 필요합니다.
-- 업로드 가능한 파일 형식은 `pdf`, `md`, `markdown`, `txt`입니다.
+```bash
+npm run frontend
+npm run backend
+```
 
-## 이번에 확인한 보안 메모
+## 배포
 
-코드 기준으로 즉시 실행되는 악성 스크립트, 숨겨진 마이너, 원격 쉘 생성 코드는 보이지 않았습니다. 다만 원본 저장소는 개발 편의 위주 설정이 섞여 있어서, 현재 워크스페이스에는 아래 방향으로 조정했습니다.
+프런트엔드 + Worker:
 
-- CORS 기본값을 로컬 개발 주소로 제한
-- `FLASK_DEBUG` 기본값을 `false` 기준으로 사용
-- API 에러 응답에서 traceback을 기본 비노출 처리
-- 로그 레벨을 환경변수로 제어 가능하게 정리
+```bash
+npm run deploy
+```
 
-추가로 실제 운영 전에 해야 할 일은 인증 추가, 업로드 제한 강화, API rate limit 적용입니다.
+원격 D1 migration:
+
+```bash
+cd workers
+npx wrangler d1 migrations apply tiresias-db --remote
+```
+
+백엔드 배포와 재시작은 이 저장소 밖에서 관리합니다.
+호스트 종류나 서버 경로를 README에 고정하지 않습니다.
+
+## 운영 메모
+
+- 결제는 Toss Payments를 사용합니다.
+- 보고서 PDF는 R2 캐시와 백엔드 공용 렌더러를 함께 사용합니다.
+- 무거운 작업은 Worker 대기열을 통해 순번 기반으로 처리합니다.
+- 현재 서비스명 기준 기술 식별자는 `tiresias` 슬러그를 사용합니다.
+- 워커는 `/api/graph`, `/api/simulation`, `/api/report` 계열을 내부 키와 함께 백엔드로 프록시합니다.
+
+## 추가 문서
+
+- 영어 문서: [README-EN.md](./README-EN.md)
+- Google Ads 운영 문서: [docs/marketing/google-ads-playbook.md](./docs/marketing/google-ads-playbook.md)
+- 원저작권/변경 고지: [NOTICE.md](./NOTICE.md)

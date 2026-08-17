@@ -13,7 +13,20 @@
     "build": "cd frontend && npm run build",
     "deploy": "npm run build && cd workers && npx wrangler deploy",
     "db:init": "cd workers && npx wrangler d1 execute tiresias-db --file=schema.sql",
-    "db:init:local": "cd workers && npx wrangler d1 execute tiresias-db --local --file=schema.sql"
+    "db:init:local": "cd workers && npx wrangler d1 execute tiresias-db --local --file=schema.sql",
+    "db:migrate": "cd workers && npx wrangler d1 migrations apply tiresias-db",
+    "db:migrate:local": "cd workers && npx wrangler d1 migrations apply tiresias-db --local",
+    "ads:check": "node scripts/google-ads/validate-config.mjs",
+    "ads:plan": "node scripts/google-ads/generate-plan.mjs",
+    "ads:campaign:sync": "node scripts/google-ads/sync-search-campaign.mjs",
+    "ads:conversions:create": "node scripts/google-ads/create-conversion-actions.mjs",
+    "ads:report:search-terms": "node scripts/google-ads/fetch-search-terms.mjs",
+    "ads:conversions:upload": "node scripts/google-ads/upload-offline-conversions.mjs",
+    "naver:ads:check": "node scripts/naver-ads/validate-config.mjs",
+    "naver:ads:plan": "node scripts/naver-ads/generate-plan.mjs",
+    "naver:ads:campaigns": "node scripts/naver-ads/list-campaigns.mjs",
+    "naver:ads:estimate": "node scripts/naver-ads/estimate-keywords.mjs",
+    "naver:ads:campaign:sync": "node scripts/naver-ads/sync-search-campaign.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
@@ -21,5 +34,8 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
 }

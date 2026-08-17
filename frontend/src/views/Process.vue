@@ -3,7 +3,7 @@
     <!-- 상단 내비게이션 바 -->
     <nav class="navbar">
       <div class="nav-brand" @click="goHome" style="display:flex;align-items:center;gap:8px;">
-        <img src="/logoss.png" alt="Tiresias View" style="width:28px;height:28px;border-radius:6px;" />
+        <img src="/logos1.png" alt="Tiresias View" style="width:28px;height:28px;border-radius:6px;" />
         TIRESIAS
       </div>
       
@@ -320,7 +320,7 @@
               <div class="detail-section">
                 <div class="detail-label">API 설명</div>
                 <div class="detail-content">
-                  생성된 온톨로지를 기반으로, 문서를 청크 분할 후 Zep API를 호출하여 지식 그래프를 구축하고, 엔티티와 관계를 추출합니다
+                  생성된 온톨로지를 기반으로 문서를 청크 분할한 뒤 지식 그래프를 구축하고, 엔티티와 관계를 추출합니다
                 </div>
               </div>
               
@@ -462,7 +462,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { generateOntology, getProject, buildGraph, getTaskStatus, getGraphData } from '../api/graph'
-import { getPendingUpload, clearPendingUpload } from '../store/pendingUpload'
+import { getPendingUpload, clearPendingUpload } from '../store/pendingUpload.js'
 import * as d3 from 'd3'
 
 const route = useRoute()
@@ -531,13 +531,13 @@ const goHome = () => {
   if (currentPhase.value > 0 && currentPhase.value < 5) {
     showExitConfirm.value = true
   } else {
-    router.push('/')
+    router.push('/dashboard')
   }
 }
 
 const confirmExit = () => {
   showExitConfirm.value = false
-  router.push('/')
+  router.push('/dashboard')
 }
 
 const cancelExit = () => {
@@ -630,7 +630,7 @@ const initProject = async () => {
 
 // 신규 프로젝트 처리 - ontology/generate API 호출
 const handleNewProject = async () => {
-  const pending = getPendingUpload()
+  const pending = await getPendingUpload()
   
   if (!pending.isPending || pending.files.length === 0) {
     error.value = '업로드할 파일이 없습니다. 홈으로 돌아가서 다시 시도하세요'
@@ -649,13 +649,16 @@ const handleNewProject = async () => {
       formDataObj.append('files', file)
     })
     formDataObj.append('simulation_requirement', pending.simulationRequirement)
+    if (pending.pendingToken) {
+      formDataObj.append('pending_token', pending.pendingToken)
+    }
     
     // 온톨로지 생성 API 호출
     const response = await generateOntology(formDataObj)
     
     if (response.success) {
       // 업로드 대기 데이터 삭제
-      clearPendingUpload()
+      await clearPendingUpload()
       
       // 프로젝트 ID 및 데이터 업데이트
       currentProjectId.value = response.data.project_id
@@ -896,6 +899,19 @@ const pollTaskStatus = async (taskId) => {
       }
     }
   } catch (err) {
+    if (err?.response?.status === 404) {
+      stopPolling()
+      stopGraphPolling()
+      const projectResponse = await getProject(currentProjectId.value)
+      if (projectResponse.success) {
+        projectData.value = projectResponse.data
+        updatePhaseByStatus(projectResponse.data.status)
+        if (projectResponse.data.status === 'failed') {
+          error.value = projectResponse.data.error || '구조 분석 작업이 중단되었습니다. 다시 시도해주세요.'
+        }
+      }
+      return
+    }
     console.error('Poll task error:', err)
   }
 }

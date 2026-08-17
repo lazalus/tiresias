@@ -3,12 +3,12 @@
     <!-- Main Split Layout -->
     <div class="main-split-layout">
       <!-- LEFT PANEL: Report Style -->
-      <div class="left-panel report-style" ref="leftPanel">
+      <div class="left-panel report-style" ref="leftPanel" :class="{ 'mobile-hidden': mobilePanel !== 'report' }">
         <div v-if="reportOutline" class="report-content-wrapper">
           <!-- Report Header -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
+              <span class="report-tag">예측 보고서</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -77,7 +77,7 @@
       </div>
 
       <!-- RIGHT PANEL: Interaction Interface -->
-      <div class="right-panel" ref="rightPanel">
+      <div class="right-panel" ref="rightPanel" :class="{ 'mobile-hidden': mobilePanel !== 'chat' }">
         <!-- Unified Action Bar - Professional Design -->
         <div class="action-bar">
         <div class="action-bar-header">
@@ -85,8 +85,8 @@
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
           <div class="action-bar-text">
-            <span class="action-bar-title">Interactive Tools</span>
-            <span class="action-bar-subtitle mono">{{ profiles.length }} agents available</span>
+            <span class="action-bar-title">심층 대화</span>
+            <span class="action-bar-subtitle mono">{{ profiles.length }}명의 에이전트</span>
           </div>
         </div>
           <div class="action-bar-tabs">
@@ -98,7 +98,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
               </svg>
-              <span>Report Agent와 대화</span>
+              <span>AI에게 추가 질문</span>
             </button>
             <div class="agent-dropdown" v-if="profiles.length > 0">
               <button 
@@ -110,7 +110,7 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>{{ selectedAgent ? selectedAgent.username : '세계의 개인과 자유롭게 대화' }}</span>
+                <span>{{ selectedAgent ? selectedAgent.username : '에이전트와 직접 대화' }}</span>
                 <svg class="dropdown-arrow" :class="{ open: showAgentDropdown }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -141,7 +141,7 @@
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
-              <span>세계로 설문조사 전송</span>
+              <span>에이전트 설문</span>
             </button>
           </div>
         </div>
@@ -154,8 +154,8 @@
             <div class="tools-card-header">
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
-                <div class="tools-card-name">Report Agent - Chat</div>
-                <div class="tools-card-subtitle">보고서 생성 에이전트의 빠른 대화 버전으로, 4가지 전문 도구를 호출할 수 있으며 Tiresias의 전체 메모리를 보유합니다</div>
+                <div class="tools-card-name">AI 분석 도우미</div>
+                <div class="tools-card-subtitle">시뮬레이션 결과를 바탕으로 추가 질문에 답변합니다. 아래 4가지 도구를 활용해 정보를 검색합니다.</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -172,8 +172,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InsightForge 심층 귀인 분석</div>
-                    <div class="tool-desc">현실 세계의 시드 데이터와 시뮬레이션 환경 상태를 정렬하고, Global/Local Memory 메커니즘을 결합하여 시공간을 초월한 심층 귀인 분석을 제공합니다</div>
+                    <div class="tool-name">심층 분석</div>
+                    <div class="tool-desc">질문을 여러 각도로 분해하여 시뮬레이션 데이터에서 깊이 있는 인사이트를 찾아냅니다</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -184,8 +184,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">PanoramaSearch 파노라마 추적</div>
-                    <div class="tool-desc">그래프 구조 기반의 너비 우선 탐색 알고리즘으로, 이벤트 전파 경로를 재구성하고 전체 정보 흐름의 토폴로지 구조를 포착합니다</div>
+                    <div class="tool-name">전체 흐름 검색</div>
+                    <div class="tool-desc">시뮬레이션의 전체 타임라인과 사건 흐름을 파악하여 큰 그림을 보여줍니다</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -195,8 +195,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">QuickSearch 빠른 검색</div>
-                    <div class="tool-desc">GraphRAG 기반의 즉시 쿼리 인터페이스로, 인덱스 효율을 최적화하여 구체적인 노드 속성과 개별 사실을 빠르게 추출합니다</div>
+                    <div class="tool-name">빠른 검색</div>
+                    <div class="tool-desc">특정 사실이나 수치를 빠르게 확인할 때 사용합니다</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -208,8 +208,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InterviewSubAgent 가상 인터뷰</div>
-                    <div class="tool-desc">자율형 인터뷰로, 시뮬레이션 세계의 개인과 병렬로 다회차 대화를 수행하여 비구조화된 의견 데이터와 심리 상태를 수집합니다</div>
+                    <div class="tool-name">에이전트 인터뷰</div>
+                    <div class="tool-desc">시뮬레이션 속 에이전트들에게 직접 질문하여 다양한 관점의 의견을 수집합니다</div>
                   </div>
                 </div>
               </div>
@@ -421,11 +421,13 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { chatWithReport, getReport, getAgentLog } from '../api/report'
+import { renderMarkdown } from '../utils/markdown.js'
 import { interviewAgents, getSimulationProfilesRealtime } from '../api/simulation'
 
 const props = defineProps({
   reportId: String,
-  simulationId: String
+  simulationId: String,
+  mobilePanel: { type: String, default: 'chat' } // 'report' | 'chat'
 })
 
 const emit = defineEmits(['add-log', 'update-status'])
@@ -557,93 +559,6 @@ const formatTime = (timestamp) => {
   } catch {
     return ''
   }
-}
-
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  
-  let processedContent = content.replace(/^##\s+.+\n+/, '')
-  let html = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-  html = html.replace(/^#### (.+)$/gm, '<h5 class="md-h5">$1</h5>')
-  html = html.replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>')
-  html = html.replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>')
-  html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
-  html = html.replace(/^> (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
-  
-  // 리스트 처리 - 하위 리스트 지원
-  html = html.replace(/^(\s*)- (.+)$/gm, (match, indent, text) => {
-    const level = Math.floor(indent.length / 2)
-    return `<li class="md-li" data-level="${level}">${text}</li>`
-  })
-  html = html.replace(/^(\s*)(\d+)\. (.+)$/gm, (match, indent, num, text) => {
-    const level = Math.floor(indent.length / 2)
-    return `<li class="md-oli" data-level="${level}">${text}</li>`
-  })
-  
-  // 비순서 리스트 래핑
-  html = html.replace(/(<li class="md-li"[^>]*>.*?<\/li>\s*)+/g, '<ul class="md-ul">$&</ul>')
-  // 순서 리스트 래핑
-  html = html.replace(/(<li class="md-oli"[^>]*>.*?<\/li>\s*)+/g, '<ol class="md-ol">$&</ol>')
-  
-  // 리스트 항목 간 모든 공백 정리
-  html = html.replace(/<\/li>\s+<li/g, '</li><li')
-  // 리스트 시작 태그 뒤의 공백 정리
-  html = html.replace(/<ul class="md-ul">\s+/g, '<ul class="md-ul">')
-  html = html.replace(/<ol class="md-ol">\s+/g, '<ol class="md-ol">')
-  // 리스트 종료 태그 앞의 공백 정리
-  html = html.replace(/\s+<\/ul>/g, '</ul>')
-  html = html.replace(/\s+<\/ol>/g, '</ol>')
-  
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>')
-  html = html.replace(/^---$/gm, '<hr class="md-hr">')
-  html = html.replace(/\n\n/g, '</p><p class="md-p">')
-  html = html.replace(/\n/g, '<br>')
-  html = '<p class="md-p">' + html + '</p>'
-  html = html.replace(/<p class="md-p"><\/p>/g, '')
-  html = html.replace(/<p class="md-p">(<h[2-5])/g, '$1')
-  html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
-  html = html.replace(/<p class="md-p">(<ul|<ol|<blockquote|<pre|<hr)/g, '$1')
-  html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>|<\/pre>)<\/p>/g, '$1')
-  // 블록 요소 전후의 <br> 태그 정리
-  html = html.replace(/<br>\s*(<ul|<ol|<blockquote)/g, '$1')
-  html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>)\s*<br>/g, '$1')
-  // 블록 요소 바로 뒤의 <p><br> 정리 (불필요한 빈 줄로 인한)
-  html = html.replace(/<p class="md-p">(<br>\s*)+(<ul|<ol|<blockquote|<pre|<hr)/g, '$2')
-  // 연속된 <br> 태그 정리
-  html = html.replace(/(<br>\s*){2,}/g, '<br>')
-  // 블록 요소 뒤에 바로 오는 단락 시작 태그 앞의 <br> 정리
-  html = html.replace(/(<\/ol>|<\/ul>|<\/blockquote>)<br>(<p|<div)/g, '$1$2')
-
-  // 비연속 순서 리스트 번호 수정: 단일 항목 <ol>이 단락 내용으로 분리될 때 번호 증가 유지
-  const tokens = html.split(/(<ol class="md-ol">(?:<li class="md-oli"[^>]*>[\s\S]*?<\/li>)+<\/ol>)/g)
-  let olCounter = 0
-  let inSequence = false
-  for (let i = 0; i < tokens.length; i++) {
-    if (tokens[i].startsWith('<ol class="md-ol">')) {
-      const liCount = (tokens[i].match(/<li class="md-oli"/g) || []).length
-      if (liCount === 1) {
-        olCounter++
-        if (olCounter > 1) {
-          tokens[i] = tokens[i].replace('<ol class="md-ol">', `<ol class="md-ol" start="${olCounter}">`)
-        }
-        inSequence = true
-      } else {
-        olCounter = 0
-        inSequence = false
-      }
-    } else if (inSequence) {
-      if (/<h[2-5]/.test(tokens[i])) {
-        olCounter = 0
-        inSequence = false
-      }
-    }
-  }
-  html = tokens.join('')
-
-  return html
 }
 
 // Chat Methods
@@ -1007,13 +922,14 @@ watch(() => props.simulationId, (newId) => {
 /* Left Panel - Report Style (Step4Report.vue와 완전히 동일) */
 .left-panel.report-style {
   width: 45%;
-  min-width: 450px;
+  min-width: min(450px, 100%);
   background: #FFFFFF;
   border-right: 1px solid #E5E7EB;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding: 30px 50px 60px 50px;
+  box-sizing: border-box;
 }
 
 .left-panel::-webkit-scrollbar {
@@ -1243,6 +1159,34 @@ watch(() => props.simulationId, (newId) => {
   color: #111827;
 }
 
+.generated-content :deep(.md-table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.25rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+.generated-content :deep(.md-th),
+.generated-content :deep(.md-td) {
+  padding: 12px 14px;
+  border-bottom: 1px solid #E5E7EB;
+  text-align: left;
+  vertical-align: top;
+}
+
+.generated-content :deep(.md-th) {
+  font-weight: 700;
+  color: #111827;
+  background: #F9FAFB;
+}
+
+.generated-content :deep(.md-table tr:last-child .md-td) {
+  border-bottom: 0;
+}
+
 /* Loading State */
 .loading-state {
   display: flex;
@@ -1330,6 +1274,8 @@ watch(() => props.simulationId, (newId) => {
   flex-direction: column;
   background: #FFFFFF;
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Action Bar - Professional Design */
@@ -2617,5 +2563,72 @@ watch(() => props.simulationId, (newId) => {
   border: none;
   border-top: 1px solid #E5E7EB;
   margin: 24px 0;
+}
+
+/* Desktop: 좌우 분할, CSS 변수 적용 */
+@media (min-width: 1024px) {
+  .left-panel.report-style {
+    width: 45%;
+    background: var(--bg-primary, #FFFFFF);
+    border-right: 1px solid var(--border-color, #E5E7EB);
+  }
+
+  .right-panel {
+    background: var(--bg-primary, #FFFFFF);
+  }
+
+  .action-bar {
+    background: var(--bg-secondary, #FAFBFC);
+    border-bottom-color: var(--border-color, #E5E7EB);
+  }
+
+  .report-content-wrapper {
+    max-width: 100%;
+    padding: 32px 28px 48px;
+  }
+}
+
+/* Mobile: mobilePanel prop에 따라 보고서/대화 전환 */
+@media (max-width: 1023px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  .main-split-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .left-panel.report-style {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-right: none;
+    padding: 16px 12px 32px;
+    overflow-y: visible;
+    height: auto;
+  }
+  .right-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto;
+    overflow-y: visible;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    background: var(--bg-primary, #FFFFFF);
+  }
+  .action-bar {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 8px;
+    background: var(--bg-secondary, #FAFBFC);
+    border-bottom-color: var(--border-color, #E5E7EB);
+  }
+  .chat-messages {
+    padding: 12px;
+  }
+  .chat-input-area {
+    padding: 10px 12px;
+  }
+  .mono {
+    word-break: break-all;
+  }
 }
 </style>

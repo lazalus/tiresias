@@ -1,12 +1,30 @@
 <template>
   <router-view />
+  <ChatWidget v-if="route.path === '/dashboard'" />
 </template>
 
 <script setup>
-import { useTheme } from './store/theme.js'
+import ChatWidget from './components/ChatWidget.vue'
+import { watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-// Apply theme on app load
+const route = useRoute()
+import { useTheme } from './store/theme.js'
+import { currentUser } from './store/auth.js'
+
 useTheme()
+
+const router = useRouter()
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
+router.afterEach((to) => {
+  try {
+    navigator.sendBeacon(`${API_BASE}/api/track`, JSON.stringify({
+      path: to.path,
+      user_id: currentUser.value?.id || null
+    }))
+  } catch {}
+})
 </script>
 
 <style>

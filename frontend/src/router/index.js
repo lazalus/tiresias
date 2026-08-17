@@ -1,9 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated, currentUser } from '../store/auth.js'
 import Home from '../views/Home.vue'
+import Landing from '../views/Landing.vue'
 import Features from '../views/Features.vue'
+import Pricing from '../views/Pricing.vue'
 import Login from '../views/Login.vue'
 import Signup from '../views/Signup.vue'
+import SignupVerify from '../views/SignupVerify.vue'
 import Process from '../views/MainView.vue'
 import SimulationView from '../views/SimulationView.vue'
 import SimulationRunView from '../views/SimulationRunView.vue'
@@ -16,6 +19,9 @@ import Profile from '../views/Profile.vue'
 import Terms from '../views/Terms.vue'
 import Privacy from '../views/Privacy.vue'
 import Support from '../views/Support.vue'
+import SampleReports from '../views/SampleReports.vue'
+import SampleReportView from '../views/SampleReportView.vue'
+import OpenSource from '../views/OpenSource.vue'
 
 const routes = [
   {
@@ -31,12 +37,29 @@ const routes = [
     meta: { guest: true }
   },
   {
+    path: '/signup/verify',
+    name: 'SignupVerify',
+    component: SignupVerify,
+    meta: { guest: true }
+  },
+  {
     path: '/features',
     name: 'Features',
     component: Features
   },
   {
+    path: '/pricing',
+    name: 'Pricing',
+    component: Pricing
+  },
+  {
     path: '/',
+    name: 'Landing',
+    component: Landing,
+    meta: { guest: true }
+  },
+  {
+    path: '/dashboard',
     name: 'Home',
     component: Home,
     meta: { requiresAuth: true }
@@ -114,6 +137,22 @@ const routes = [
     path: '/support',
     name: 'Support',
     component: Support
+  },
+  {
+    path: '/open-source',
+    name: 'OpenSource',
+    component: OpenSource
+  },
+  {
+    path: '/samples',
+    name: 'SampleReports',
+    component: SampleReports
+  },
+  {
+    path: '/samples/:reportId',
+    name: 'SampleReport',
+    component: SampleReportView,
+    props: true
   }
 ]
 
@@ -126,10 +165,14 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated.value) {
     next({ name: 'Login' })
+  } else if (currentUser.value?.mustChangePassword && to.meta.requiresAuth && to.name !== 'Profile') {
+    next({ name: 'Profile', query: { forcePassword: '1' } })
   } else if (to.meta.requiresAdmin && (!currentUser.value || currentUser.value.role !== 'admin')) {
     next({ name: 'Home' })
-  } else if (to.meta.guest && isAuthenticated.value) {
-    next({ name: 'Home' })
+  } else if (to.meta.guest && isAuthenticated.value && !['Landing', 'SignupVerify'].includes(String(to.name))) {
+    next(currentUser.value?.mustChangePassword ? { name: 'Profile', query: { forcePassword: '1' } } : { name: 'Home' })
+  } else if (to.name === 'Landing' && isAuthenticated.value) {
+    next(currentUser.value?.mustChangePassword ? { name: 'Profile', query: { forcePassword: '1' } } : { name: 'Home' })
   } else {
     next()
   }

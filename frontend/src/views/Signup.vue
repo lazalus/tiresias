@@ -1,10 +1,25 @@
 <template>
   <div class="signup-page">
     <div class="signup-container">
-      <img src="/logoss.png" alt="Tiresias View" class="logo" />
+      <div class="brand">
+        <span class="brand-name">TIRESIAS VIEW</span>
+      </div>
       <h1>회원가입</h1>
+      <p class="subtitle">보고서 기반 예측 시뮬레이션</p>
 
-      <form @submit.prevent="handleSignup">
+      <div v-if="verificationSent" class="success-card">
+        <h2 class="success-title">인증 메일을 보냈습니다</h2>
+        <p class="success-text">
+          <strong>{{ sentEmail }}</strong> 주소로 회원가입 인증 링크를 보냈습니다.
+          메일의 링크를 눌러야 실제 계정이 생성됩니다.
+        </p>
+        <p class="success-subtext">
+          메일이 보이지 않으면 스팸함도 확인해주세요. 링크가 만료되면 같은 이메일로 다시 회원가입하면 새 인증 메일이 발송됩니다.
+        </p>
+        <router-link to="/login" class="btn-secondary">로그인으로 이동</router-link>
+      </div>
+
+      <form v-else @submit.prevent="handleSignup">
         <p v-if="error" class="error">{{ error }}</p>
 
         <div class="field">
@@ -66,6 +81,14 @@
           </svg>
           <span v-else>회원가입</span>
         </button>
+
+        <p class="legal-consent">
+          회원가입 시
+          <router-link to="/terms">이용약관</router-link>
+          및
+          <router-link to="/privacy">개인정보처리방침</router-link>
+          에 동의한 것으로 봅니다.
+        </p>
       </form>
 
       <p class="footer-text">
@@ -77,12 +100,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { apiSignup } from '../api/auth.js'
-import { login } from '../store/auth.js'
-
-const router = useRouter()
+import { applySeoMeta, resetSeoMeta } from '../utils/seo.js'
 
 const name = ref('')
 const email = ref('')
@@ -90,9 +110,24 @@ const password = ref('')
 const passwordConfirm = ref('')
 const loading = ref(false)
 const error = ref('')
+const verificationSent = ref(false)
+const sentEmail = ref('')
 
 const passwordMismatch = computed(() => {
   return passwordConfirm.value.length > 0 && password.value !== passwordConfirm.value
+})
+
+onMounted(() => {
+  applySeoMeta({
+    title: '회원가입 | 테이레시아스 뷰',
+    description: '테이레시아스 뷰 회원가입 페이지',
+    canonical: 'https://tiresiasview.com/signup',
+    robots: 'noindex,follow',
+  })
+})
+
+onUnmounted(() => {
+  resetSeoMeta()
 })
 
 async function handleSignup() {
@@ -111,9 +146,9 @@ async function handleSignup() {
   loading.value = true
 
   try {
-    const { user, token } = await apiSignup(name.value, email.value, password.value)
-    login(user, token)
-    router.push('/')
+    const result = await apiSignup(name.value, email.value, password.value)
+    verificationSent.value = true
+    sentEmail.value = result?.email || email.value
   } catch (err) {
     error.value = err.response?.data?.error || '회원가입에 실패했습니다. 다시 시도해주세요.'
   } finally {
@@ -137,19 +172,31 @@ async function handleSignup() {
   max-width: 360px;
 }
 
-.logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+.brand {
+  margin-bottom: 20px;
+}
+
+.brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--accent-color, #6366f1);
 }
 
 h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
   margin: 0 0 32px;
+  line-height: 1.4;
 }
 
 form {
@@ -163,6 +210,56 @@ form {
   color: #ef4444;
   margin: 0;
   line-height: 1.4;
+}
+
+.success-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-secondary);
+}
+
+.success-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.success-text,
+.success-subtext {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.legal-consent {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.legal-consent a {
+  color: var(--accent-color);
+  text-decoration: none;
 }
 
 .field {

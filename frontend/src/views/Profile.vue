@@ -47,6 +47,11 @@
           <span class="list-label">역할</span>
           <span class="list-value">{{ user?.role === 'admin' ? '관리자' : '일반' }}</span>
         </div>
+        <div class="list-divider"></div>
+        <button class="list-item list-item--btn" @click="showPasswordModal = true">
+          <span class="list-label">비밀번호 변경</span>
+          <span class="row-arrow">&rsaquo;</span>
+        </button>
       </div>
 
       <!-- Credits -->
@@ -130,6 +135,42 @@
 
     <BottomNav />
 
+    <!-- Password Change Modal -->
+    <Teleport to="body">
+      <div v-if="showPasswordModal" class="modal-overlay" @click.self="closePasswordModal">
+        <div class="modal-content">
+          <div class="modal-title">비밀번호 변경</div>
+          <p v-if="mustChangePassword" class="password-required-notice">
+            관리자 초기화 후 첫 로그인입니다. 새 비밀번호를 설정해주세요.
+          </p>
+
+          <p v-if="passwordError" class="password-feedback password-feedback--error">{{ passwordError }}</p>
+          <p v-if="passwordSuccess" class="password-feedback password-feedback--success">{{ passwordSuccess }}</p>
+
+          <div class="password-form">
+            <div class="password-field">
+              <label for="currentPassword">현재 비밀번호</label>
+              <input id="currentPassword" v-model="currentPassword" type="password" autocomplete="current-password" placeholder="현재 비밀번호" />
+            </div>
+            <div class="password-field">
+              <label for="newPassword">새 비밀번호</label>
+              <input id="newPassword" v-model="newPassword" type="password" autocomplete="new-password" placeholder="8자 이상 입력해주세요" />
+            </div>
+            <div class="password-field">
+              <label for="newPasswordConfirm">새 비밀번호 확인</label>
+              <input id="newPasswordConfirm" v-model="newPasswordConfirm" type="password" autocomplete="new-password" placeholder="새 비밀번호를 다시 입력해주세요" />
+            </div>
+            <div class="modal-actions">
+              <button v-if="!mustChangePassword" class="modal-cancel" @click="closePasswordModal">취소</button>
+              <button class="modal-save" :disabled="passwordLoading" @click="changePassword">
+                {{ passwordLoading ? '변경 중...' : '변경' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Edit Profile Modal -->
     <Teleport to="body">
       <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
@@ -172,10 +213,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
-import { currentUser, logout, getToken, updateUser } from '../store/auth.js'
+import { currentUser, logout, updateUser, buildAuthAxiosConfig, login } from '../store/auth.js'
 import { useTheme } from '../store/theme.js'
 import BottomNav from '../components/BottomNav.vue'
 import HeaderNav from '../components/HeaderNav.vue'
+import { apiChangePassword } from '../api/auth.js'
 
 const { theme, toggleTheme } = useTheme()
 
@@ -189,6 +231,13 @@ const editName = ref('')
 const editNickname = ref('')
 const editProfileImage = ref(null)
 const photoInput = ref(null)
+const currentPassword = ref('')
+const newPassword = ref('')
+const newPasswordConfirm = ref('')
+const passwordLoading = ref(false)
+const passwordError = ref('')
+const passwordSuccess = ref('')
+const showPasswordModal = ref(false)
 
 // 고객센터 서브페이지에서 돌아왔을 때 아코디언 열기
 const openAccordion = ref(route.query.from === 'support' ? 'support' : null)
@@ -203,6 +252,8 @@ const userInitial = computed(() => {
   const name = user.value?.name || user.value?.email || '?'
   return name.charAt(0).toUpperCase()
 })
+
+const mustChangePassword = computed(() => Boolean(user.value?.mustChangePassword || user.value?.must_change_password || route.query.forcePassword === '1'))
 
 const faqItems = [
   {
@@ -223,7 +274,21 @@ const faqItems = [
   }
 ]
 
-onMounted(() => {})
+onMounted(() => {
+  if (mustChangePassword.value) {
+    showPasswordModal.value = true
+  }
+})
+
+function closePasswordModal() {
+  if (mustChangePassword.value) return
+  showPasswordModal.value = false
+  passwordError.value = ''
+  passwordSuccess.value = ''
+  currentPassword.value = ''
+  newPassword.value = ''
+  newPasswordConfirm.value = ''
+}
 
 function toggleAccordion(key) {
   openAccordion.value = openAccordion.value === key ? null : key
@@ -272,17 +337,14 @@ async function saveProfile() {
   if (!name) return
 
   // DB에 저장
-  const token = getToken()
-  if (token) {
-    try {
-      await axios.put(`${API_BASE}/api/auth/profile`, {
-        name,
-        nickname: nickname || name,
-        profile_image: editProfileImage.value
-      }, { headers: { Authorization: `Bearer ${token}` } })
-    } catch (e) {
-      console.warn('프로필 저장 실패:', e)
-    }
+  try {
+    await axios.put(`${API_BASE}/api/auth/profile`, {
+      name,
+      nickname: nickname || name,
+      profile_image: editProfileImage.value
+    }, buildAuthAxiosConfig())
+  } catch (e) {
+    console.warn('프로필 저장 실패:', e)
   }
 
   updateUser({
@@ -296,6 +358,47 @@ async function saveProfile() {
 function handleLogout() {
   logout()
   router.push({ name: 'Login' })
+}
+
+async function changePassword() {
+  passwordError.value = ''
+  passwordSuccess.value = ''
+
+  if (!currentPassword.value || !newPassword.value || !newPasswordConfirm.value) {
+    passwordError.value = '모든 비밀번호 필드를 입력해주세요.'
+    return
+  }
+
+  if (newPassword.value.length < 8) {
+    passwordError.value = '새 비밀번호는 8자 이상이어야 합니다.'
+    return
+  }
+
+  if (newPassword.value !== newPasswordConfirm.value) {
+    passwordError.value = '새 비밀번호가 일치하지 않습니다.'
+    return
+  }
+
+  passwordLoading.value = true
+  try {
+    const { user: refreshedUser, token } = await apiChangePassword(currentPassword.value, newPassword.value)
+    login({ ...refreshedUser, mustChangePassword: false, must_change_password: 0 }, token)
+    currentPassword.value = ''
+    newPassword.value = ''
+    newPasswordConfirm.value = ''
+    passwordSuccess.value = '비밀번호가 변경되었습니다.'
+    setTimeout(() => {
+      showPasswordModal.value = false
+      passwordSuccess.value = ''
+    }, 1200)
+    if (route.query.forcePassword === '1' || mustChangePassword.value) {
+      setTimeout(() => router.replace('/dashboard'), 1200)
+    }
+  } catch (e) {
+    passwordError.value = e.response?.data?.error || e.message || '비밀번호 변경에 실패했습니다.'
+  } finally {
+    passwordLoading.value = false
+  }
 }
 </script>
 
@@ -474,6 +577,98 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.list-item--btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.list-item--btn:hover {
+  background: var(--bg-surface);
+}
+
+.list-item--btn .row-arrow {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.password-required-notice {
+  margin: 0 0 14px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #f59e0b;
+}
+
+.password-feedback {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.password-feedback--error {
+  color: #ef4444;
+}
+
+.password-feedback--success {
+  color: #10b981;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.password-field label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.password-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  outline: none;
+}
+
+.password-field input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.password-save-btn {
+  margin-top: 4px;
+  height: 42px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.password-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .credits-num {

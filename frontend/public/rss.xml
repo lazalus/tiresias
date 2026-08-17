@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>테이레시아스 뷰 - AI 예측 시뮬레이션</title>
+    <link>https://tiresiasview.com</link>
+    <description>AI 에이전트 기반 예측 시뮬레이션 플랫폼. 여론, 시장, 정책의 미래 반응을 시뮬레이션합니다.</description>
+    <language>ko</language>
+    <lastBuildDate>Thu, 20 Mar 2026 00:00:00 +0900</lastBuildDate>
+    <item>
+      <title>테이레시아스 뷰 서비스 소개</title>
+      <link>https://tiresiasview.com/features</link>
+      <description>AI 에이전트가 구축하는 병렬 세계 시뮬레이션. 문서에서 그래프를 만들고 시뮬레이션으로 미래 시나리오를 점검합니다.</description>
+    </item>
+    <item>
+      <title>샘플 보고서</title>
+      <link>https://tiresiasview.com/samples</link>
+      <description>테이레시아스 뷰로 생성된 실제 시뮬레이션 보고서를 확인하세요.</description>
+    </item>
+  </channel>
+</rss>

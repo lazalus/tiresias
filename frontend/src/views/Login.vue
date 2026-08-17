@@ -1,8 +1,11 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <img src="/logoss.png" alt="Tiresias View" class="logo" />
-      <h1>Tiresias View에 로그인</h1>
+      <div class="brand">
+        <span class="brand-name">TIRESIAS VIEW</span>
+      </div>
+      <h1>로그인</h1>
+      <p class="subtitle">보고서 기반 예측 시뮬레이션</p>
 
       <form @submit.prevent="handleLogin">
         <p v-if="error" class="error">{{ error }}</p>
@@ -50,10 +53,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiLogin } from '../api/auth.js'
 import { login } from '../store/auth.js'
+import { applySeoMeta, resetSeoMeta } from '../utils/seo.js'
 
 const router = useRouter()
 
@@ -62,6 +66,19 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
+onMounted(() => {
+  applySeoMeta({
+    title: '로그인 | 테이레시아스 뷰',
+    description: '테이레시아스 뷰 로그인 페이지',
+    canonical: 'https://tiresiasview.com/login',
+    robots: 'noindex,follow',
+  })
+})
+
+onUnmounted(() => {
+  resetSeoMeta()
+})
+
 async function handleLogin() {
   error.value = ''
   loading.value = true
@@ -69,7 +86,7 @@ async function handleLogin() {
   try {
     const { user, token } = await apiLogin(email.value, password.value)
     login(user, token)
-    router.push('/')
+    router.push(user?.must_change_password || user?.mustChangePassword ? '/profile?forcePassword=1' : '/dashboard')
   } catch (err) {
     error.value = err.response?.data?.error || err.message || '로그인에 실패했습니다. 다시 시도해주세요.'
   } finally {
@@ -93,19 +110,31 @@ async function handleLogin() {
   max-width: 360px;
 }
 
-.logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+.brand {
+  margin-bottom: 20px;
+}
+
+.brand-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--accent-color, #6366f1);
 }
 
 h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
   margin: 0 0 32px;
+  line-height: 1.4;
 }
 
 form {

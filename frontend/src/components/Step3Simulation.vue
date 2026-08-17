@@ -3,89 +3,31 @@
     <!-- Top Control Bar -->
     <div class="control-bar">
       <div class="status-group">
-        <!-- Twitter 플랫폼 진행 상황 -->
+        <!-- 정보광장 -->
         <div class="platform-status twitter" :class="{ active: runStatus.twitter_running, completed: runStatus.twitter_completed }">
           <div class="platform-header">
-            <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
-            <span class="platform-name">Info Plaza</span>
-            <span v-if="runStatus.twitter_completed" class="status-badge">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </span>
+            <span class="platform-name">정보광장</span>
+            <span v-if="runStatus.twitter_completed" class="status-badge completed-badge">완료</span>
+            <span v-else-if="runStatus.twitter_running" class="status-badge running-badge">진행중</span>
           </div>
           <div class="platform-stats">
-            <span class="stat">
-              <span class="stat-label">ROUND</span>
-              <span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
-            </span>
-            <span class="stat">
-              <span class="stat-label">Elapsed Time</span>
-              <span class="stat-value mono">{{ twitterElapsedTime }}</span>
-            </span>
-            <span class="stat">
-              <span class="stat-label">ACTS</span>
-              <span class="stat-value mono">{{ runStatus.twitter_actions_count || 0 }}</span>
-            </span>
-          </div>
-          <!-- 사용 가능한 액션 안내 -->
-          <div class="actions-tooltip">
-            <div class="tooltip-title">Available Actions</div>
-            <div class="tooltip-actions">
-              <span class="tooltip-action">POST</span>
-              <span class="tooltip-action">LIKE</span>
-              <span class="tooltip-action">REPOST</span>
-              <span class="tooltip-action">QUOTE</span>
-              <span class="tooltip-action">FOLLOW</span>
-              <span class="tooltip-action">IDLE</span>
-            </div>
+            <span class="stat"><span class="stat-label">라운드</span><span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ displayedTotalRounds }}</span></span></span>
+            <span class="stat"><span class="stat-label">경과</span><span class="stat-value mono">{{ twitterElapsedTime }}</span></span>
+            <span class="stat"><span class="stat-label">행동</span><span class="stat-value mono">{{ runStatus.twitter_actions_count || 0 }}</span></span>
           </div>
         </div>
 
-        <!-- Reddit 플랫폼 진행 상황 -->
+        <!-- 주제토론 -->
         <div class="platform-status reddit" :class="{ active: runStatus.reddit_running, completed: runStatus.reddit_completed }">
           <div class="platform-header">
-            <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-            <span class="platform-name">Topic Community</span>
-            <span v-if="runStatus.reddit_completed" class="status-badge">
-              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </span>
+            <span class="platform-name">주제토론</span>
+            <span v-if="runStatus.reddit_completed" class="status-badge completed-badge">완료</span>
+            <span v-else-if="runStatus.reddit_running" class="status-badge running-badge">진행중</span>
           </div>
           <div class="platform-stats">
-            <span class="stat">
-              <span class="stat-label">ROUND</span>
-              <span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
-            </span>
-            <span class="stat">
-              <span class="stat-label">Elapsed Time</span>
-              <span class="stat-value mono">{{ redditElapsedTime }}</span>
-            </span>
-            <span class="stat">
-              <span class="stat-label">ACTS</span>
-              <span class="stat-value mono">{{ runStatus.reddit_actions_count || 0 }}</span>
-            </span>
-          </div>
-          <!-- 사용 가능한 액션 안내 -->
-          <div class="actions-tooltip">
-            <div class="tooltip-title">Available Actions</div>
-            <div class="tooltip-actions">
-              <span class="tooltip-action">POST</span>
-              <span class="tooltip-action">COMMENT</span>
-              <span class="tooltip-action">LIKE</span>
-              <span class="tooltip-action">DISLIKE</span>
-              <span class="tooltip-action">SEARCH</span>
-              <span class="tooltip-action">TREND</span>
-              <span class="tooltip-action">FOLLOW</span>
-              <span class="tooltip-action">MUTE</span>
-              <span class="tooltip-action">REFRESH</span>
-              <span class="tooltip-action">IDLE</span>
-            </div>
+            <span class="stat"><span class="stat-label">라운드</span><span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ displayedTotalRounds }}</span></span></span>
+            <span class="stat"><span class="stat-label">경과</span><span class="stat-value mono">{{ redditElapsedTime }}</span></span>
+            <span class="stat"><span class="stat-label">행동</span><span class="stat-value mono">{{ runStatus.reddit_actions_count || 0 }}</span></span>
           </div>
         </div>
       </div>
@@ -103,12 +45,31 @@
       </div>
     </div>
 
+    <div v-if="startError" class="start-alert" :class="{ waiting: startWaiting }">
+      <div class="start-alert-title">{{ startWaiting ? '현재 다른 사용자의 시뮬레이션이 진행 중입니다' : '시뮬레이션 시작 실패' }}</div>
+      <p class="start-alert-message">{{ startError }}</p>
+      <div class="start-alert-actions">
+        <span v-if="startWaiting && startQueueState?.position" class="start-alert-meta">현재 대기열 {{ startQueueState.position }}번입니다.</span>
+        <span v-if="startWaiting && startRetryCountdown > 0" class="start-alert-meta">약 {{ startRetryCountdown }}초 후 자동으로 다시 시도합니다.</span>
+        <button v-if="startWaiting" class="start-alert-btn" @click="doStartSimulation">지금 다시 시도</button>
+      </div>
+    </div>
+
+    <div v-if="reportQueueState" class="start-alert waiting">
+      <div class="start-alert-title">보고서 생성 대기열에 등록되었습니다</div>
+      <p class="start-alert-message">{{ reportQueueMessage }}</p>
+      <div class="start-alert-actions">
+        <span v-if="reportQueueState?.position" class="start-alert-meta">현재 대기열 {{ reportQueueState.position }}번입니다.</span>
+        <span v-if="reportRetryCountdown > 0" class="start-alert-meta">약 {{ reportRetryCountdown }}초 후 자동으로 다시 시도합니다.</span>
+      </div>
+    </div>
+
     <!-- Main Content: Dual Timeline -->
     <div class="main-content-area" ref="scrollContainer">
       <!-- Timeline Header -->
       <div class="timeline-header" v-if="allActions.length > 0">
         <div class="timeline-stats">
-          <span class="total-count">TOTAL EVENTS: <span class="mono">{{ allActions.length }}</span></span>
+          <span class="total-count">전체 이벤트: <span class="mono">{{ allActions.length }}</span></span>
           <span class="platform-breakdown">
             <span class="breakdown-item twitter">
               <svg class="mini-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -269,19 +230,7 @@
       </div>
     </div>
 
-    <!-- Bottom Info / Logs -->
-    <div class="system-logs">
-      <div class="log-header">
-        <span class="log-title">SIMULATION MONITOR</span>
-        <span class="log-id">{{ simulationId || 'NO_SIMULATION' }}</span>
-      </div>
-      <div class="log-content" ref="logContent">
-        <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
-          <span class="log-time">{{ log.time }}</span>
-          <span class="log-msg">{{ log.msg }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- System logs removed -->
   </div>
 </template>
 
@@ -295,6 +244,10 @@ import {
   getRunStatusDetail
 } from '../api/simulation'
 import { generateReport } from '../api/report'
+import { getCapacityState, isCapacityError, formatCapacityMessage } from '../api/capacity'
+import { formatQueueMessage, getQueuePollSeconds, getQueueStatus, isQueuedResponse } from '../api/queue'
+import { PROJECT_STATUS, normalizeProjectStatus } from '../utils/projectStatus.js'
+import { buildAuthFetchOptions } from '../store/auth.js'
 
 const props = defineProps({
   simulationId: String,
@@ -311,6 +264,7 @@ const props = defineProps({
 const emit = defineEmits(['go-back', 'next-step', 'add-log', 'update-status'])
 
 const router = useRouter()
+const MIN_SIMULATION_ROUNDS = 10
 
 // State
 const isGeneratingReport = ref(false)
@@ -318,10 +272,34 @@ const phase = ref(0) // 0: 시작 전, 1: 실행 중, 2: 완료
 const isStarting = ref(false)
 const isStopping = ref(false)
 const startError = ref(null)
+const startWaiting = ref(false)
+const startRetryCountdown = ref(0)
+const startQueueState = ref(null)
+const reportQueueState = ref(null)
+const reportRetryCountdown = ref(0)
 const runStatus = ref({})
 const allActions = ref([]) // 모든 액션 (증분 누적)
 const actionIds = ref(new Set()) // 중복 제거를 위한 액션 ID 집합
+const autoStartTriggered = ref(false)
+
+const isReportedProject = computed(() => {
+  const normalizedStatus = normalizeProjectStatus(props.projectData?.status, {
+    reportId: props.projectData?.report_id || props.projectData?.reportId || null,
+  })
+
+  return Boolean(
+    props.projectData?.report_id ||
+    props.projectData?.reportId ||
+    normalizedStatus === PROJECT_STATUS.REPORT_COMPLETED ||
+    normalizedStatus === PROJECT_STATUS.REPORT_GENERATING
+  )
+})
 const scrollContainer = ref(null)
+
+let lastStartQueueLogKey = ''
+let lastReportQueueLogKey = ''
+let queuedStartPayload = null
+let queuedReportPayload = null
 
 // Computed
 // 시간순으로 액션 표시 (최신 항목이 하단에 위치)
@@ -357,9 +335,276 @@ const redditElapsedTime = computed(() => {
   return formatElapsedTime(runStatus.value.reddit_current_round || 0)
 })
 
+const reportQueueMessage = computed(() => {
+  if (!reportQueueState.value) return ''
+  return formatQueueMessage(reportQueueState.value, '현재 보고서 생성 대기열에 등록되었습니다.')
+})
+
+const requestedMaxRounds = computed(() => {
+  if (!props.maxRounds) return null
+  return Math.max(MIN_SIMULATION_ROUNDS, props.maxRounds)
+})
+
+const displayedTotalRounds = computed(() => {
+  return runStatus.value.total_rounds || runStatus.value.max_rounds_applied || requestedMaxRounds.value || '-'
+})
+
 // Methods
 const addLog = (msg) => {
   emit('add-log', msg)
+}
+
+const stopStartRetry = () => {
+  if (startRetryTimer) {
+    clearInterval(startRetryTimer)
+    startRetryTimer = null
+  }
+  startRetryCountdown.value = 0
+}
+
+const stopReportRetry = () => {
+  if (reportRetryTimer) {
+    clearInterval(reportRetryTimer)
+    reportRetryTimer = null
+  }
+  reportRetryCountdown.value = 0
+}
+
+const stopStartQueue = () => {
+  if (startQueuePollTimer) {
+    clearTimeout(startQueuePollTimer)
+    startQueuePollTimer = null
+  }
+  queuedStartPayload = null
+  startQueueState.value = null
+  lastStartQueueLogKey = ''
+  stopStartRetry()
+}
+
+const stopReportQueue = () => {
+  if (reportQueuePollTimer) {
+    clearTimeout(reportQueuePollTimer)
+    reportQueuePollTimer = null
+  }
+  queuedReportPayload = null
+  reportQueueState.value = null
+  lastReportQueueLogKey = ''
+  stopReportRetry()
+}
+
+const logQueueState = (queue, type) => {
+  if (!queue) return
+  const logKey = `${queue.status}:${queue.position}:${queue.totalWaiting}:${queue.lastError || ''}`
+
+  if (type === 'start') {
+    if (logKey === lastStartQueueLogKey) return
+    lastStartQueueLogKey = logKey
+    addLog(formatQueueMessage(queue, '현재 시뮬레이션 시작 대기열에 등록되었습니다.'))
+    return
+  }
+
+  if (logKey === lastReportQueueLogKey) return
+  lastReportQueueLogKey = logKey
+  addLog(formatQueueMessage(queue, '현재 보고서 생성 대기열에 등록되었습니다.'))
+}
+
+const scheduleQueueCountdown = (seconds, type) => {
+  if (type === 'start') {
+    stopStartRetry()
+    startRetryCountdown.value = seconds
+    startRetryTimer = setInterval(() => {
+      startRetryCountdown.value -= 1
+      if (startRetryCountdown.value <= 0) {
+        stopStartRetry()
+      }
+    }, 1000)
+    return
+  }
+
+  stopReportRetry()
+  reportRetryCountdown.value = seconds
+  reportRetryTimer = setInterval(() => {
+    reportRetryCountdown.value -= 1
+    if (reportRetryCountdown.value <= 0) {
+      stopReportRetry()
+    }
+  }, 1000)
+}
+
+const enterStartQueue = (queue, payload) => {
+  startWaiting.value = true
+  startQueueState.value = queue
+  queuedStartPayload = payload
+  startError.value = formatQueueMessage(queue, '현재 시뮬레이션 시작 대기열에 등록되었습니다.')
+  emit('update-status', 'processing')
+  logQueueState(queue, 'start')
+  scheduleStartQueuePoll(getQueuePollSeconds(queue))
+}
+
+const enterReportQueue = (queue, payload) => {
+  reportQueueState.value = queue
+  queuedReportPayload = payload
+  isGeneratingReport.value = true
+  logQueueState(queue, 'report')
+  scheduleReportQueuePoll(getQueuePollSeconds(queue))
+}
+
+const scheduleStartQueuePoll = (seconds) => {
+  if (startQueuePollTimer) {
+    clearTimeout(startQueuePollTimer)
+    startQueuePollTimer = null
+  }
+  scheduleQueueCountdown(seconds, 'start')
+  startQueuePollTimer = setTimeout(async () => {
+    startQueuePollTimer = null
+    await pollStartQueueStatus()
+  }, seconds * 1000)
+}
+
+const scheduleReportQueuePoll = (seconds) => {
+  if (reportQueuePollTimer) {
+    clearTimeout(reportQueuePollTimer)
+    reportQueuePollTimer = null
+  }
+  scheduleQueueCountdown(seconds, 'report')
+  reportQueuePollTimer = setTimeout(async () => {
+    reportQueuePollTimer = null
+    await pollReportQueueStatus()
+  }, seconds * 1000)
+}
+
+const pollStartQueueStatus = async () => {
+  const queueId = startQueueState.value?.id
+  if (!queueId) return
+
+  try {
+    const response = await getQueueStatus(queueId)
+    const queue = response.queue
+    if (!queue) {
+      stopStartQueue()
+      return
+    }
+
+    if (queue.status === 'failed') {
+      stopStartQueue()
+      startError.value = queue.lastError || '시뮬레이션 시작 대기열 처리에 실패했습니다.'
+      startWaiting.value = false
+      emit('update-status', 'error')
+      return
+    }
+
+    if (queue.status === 'completed') {
+      stopStartQueue()
+      phase.value = 1
+      emit('update-status', 'processing')
+      stopPolling()
+      await fetchRunStatus()
+      startStatusPolling()
+      startDetailPolling()
+      return
+    }
+
+    startQueueState.value = queue
+    startError.value = formatQueueMessage(queue, '현재 시뮬레이션 시작 대기열에 등록되었습니다.')
+    logQueueState(queue, 'start')
+
+    if (queue.ready) {
+      const payload = queuedStartPayload || buildStartPayload()
+      stopStartQueue()
+      await doStartSimulation({ queueId: queue.id, payload })
+      return
+    }
+
+    scheduleStartQueuePoll(getQueuePollSeconds(queue))
+  } catch {
+    scheduleStartQueuePoll(3)
+  }
+}
+
+const pollReportQueueStatus = async () => {
+  const queueId = reportQueueState.value?.id
+  if (!queueId) return
+
+  try {
+    const response = await getQueueStatus(queueId)
+    const queue = response.queue
+    if (!queue) {
+      stopReportQueue()
+      isGeneratingReport.value = false
+      return
+    }
+
+    if (queue.status === 'failed') {
+      stopReportQueue()
+      isGeneratingReport.value = false
+      addLog(`✗ ${queue.lastError || '보고서 생성 대기열 처리에 실패했습니다.'}`)
+      return
+    }
+
+    if (queue.status === 'completed') {
+      const payload = queuedReportPayload || buildReportPayload()
+      stopReportQueue()
+      await handleNextStep({ payload })
+      return
+    }
+
+    reportQueueState.value = queue
+    logQueueState(queue, 'report')
+
+    if (queue.ready) {
+      const payload = queuedReportPayload || buildReportPayload()
+      stopReportQueue()
+      await handleNextStep({ queueId: queue.id, payload })
+      return
+    }
+
+    scheduleReportQueuePoll(getQueuePollSeconds(queue))
+  } catch {
+    scheduleReportQueuePoll(3)
+  }
+}
+
+const scheduleStartRetry = (error) => {
+  const state = getCapacityState(error)
+  const retryAfter = state?.retryAfter || 60
+
+  startWaiting.value = true
+  startQueueState.value = null
+  queuedStartPayload = null
+  startError.value = formatCapacityMessage(error, '현재 다른 사용자의 시뮬레이션이 진행 중입니다. 잠시 후 다시 시도해주세요.')
+  emit('update-status', 'processing')
+  addLog(`⏳ ${startError.value}`)
+
+  stopStartRetry()
+  startRetryCountdown.value = retryAfter
+  startRetryTimer = setInterval(async () => {
+    startRetryCountdown.value -= 1
+    if (startRetryCountdown.value > 0) {
+      return
+    }
+    stopStartRetry()
+    await doStartSimulation()
+  }, 1000)
+}
+
+const syncProjectStatus = async (status) => {
+  if (!props.projectData?.project_id) return
+
+  try {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+    await fetch(`${API_BASE}/api/projects/${props.projectData.project_id}`, buildAuthFetchOptions({
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        status,
+        simulation_id: props.simulationId
+      })
+    }))
+  } catch (error) {
+    console.warn('프로젝트 상태 동기화 실패:', error)
+  }
 }
 
 // 모든 상태 초기화 (시뮬레이션 재시작 시 사용)
@@ -371,15 +616,45 @@ const resetAllState = () => {
   prevTwitterRound.value = 0
   prevRedditRound.value = 0
   startError.value = null
+  startWaiting.value = false
+  startQueueState.value = null
   isStarting.value = false
   isStopping.value = false
   stopPolling()  // 이전에 존재할 수 있는 폴링 중지
+  stopStartQueue()
+}
+
+const buildStartPayload = () => {
+  const params = {
+    simulation_id: props.simulationId,
+    platform: 'parallel',
+    force: true,
+    enable_graph_memory_update: true
+  }
+
+  if (props.maxRounds) {
+    params.max_rounds = Math.max(MIN_SIMULATION_ROUNDS, props.maxRounds)
+  }
+
+  return params
+}
+
+const markReportedProjectBlocked = () => {
+  startError.value = '이미 보고서가 생성된 프로젝트입니다. 기존 보고서를 확인해주세요.'
+  phase.value = 2
+  emit('update-status', 'completed')
 }
 
 // 시뮬레이션 시작
-const doStartSimulation = async () => {
+const doStartSimulation = async ({ queueId = null, payload = null } = {}) => {
   if (!props.simulationId) {
     addLog('오류: simulationId가 없습니다')
+    return
+  }
+
+  if (isReportedProject.value) {
+    markReportedProjectBlocked()
+    addLog('이미 보고서가 생성된 프로젝트라 시뮬레이션 재시작을 막았습니다.')
     return
   }
 
@@ -392,31 +667,39 @@ const doStartSimulation = async () => {
   emit('update-status', 'processing')
   
   try {
-    const params = {
-      simulation_id: props.simulationId,
-      platform: 'parallel',
-      force: true,  // 강제 재시작
-      enable_graph_memory_update: true  // 동적 그래프 업데이트 활성화
-    }
+    const params = payload || buildStartPayload()
     
     if (props.maxRounds) {
-      params.max_rounds = props.maxRounds
-      addLog(`최대 시뮬레이션 라운드 설정: ${props.maxRounds}`)
+      params.max_rounds = Math.max(MIN_SIMULATION_ROUNDS, props.maxRounds)
+      addLog(`최대 시뮬레이션 라운드 설정: ${params.max_rounds}`)
     }
     
     addLog('동적 그래프 업데이트 모드 활성화')
     
-    const res = await startSimulation(params)
+    const res = await startSimulation({
+      ...params,
+      ...(queueId ? { queue_id: queueId } : {})
+    })
+
+    if (isQueuedResponse(res)) {
+      enterStartQueue(res.queue, params)
+      return
+    }
     
     if (res.success && res.data) {
+      stopStartQueue()
       if (res.data.force_restarted) {
         addLog('✓ 이전 시뮬레이션 로그 정리 완료, 시뮬레이션 재시작')
       }
       addLog('✓ 시뮬레이션 엔진 시작 성공')
       addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
+      if (res.data.max_rounds_applied) {
+        addLog(`  ├─ 적용 라운드 상한: ${res.data.max_rounds_applied}`)
+      }
       
       phase.value = 1
       runStatus.value = res.data
+      await syncProjectStatus(PROJECT_STATUS.SIMULATION_RUNNING)
       
       startStatusPolling()
       startDetailPolling()
@@ -426,7 +709,17 @@ const doStartSimulation = async () => {
       emit('update-status', 'error')
     }
   } catch (err) {
+    if (isCapacityError(err)) {
+      scheduleStartRetry(err)
+      return
+    }
+    if (err?.response?.data?.code === 'REPORT_ALREADY_EXISTS') {
+      markReportedProjectBlocked()
+      addLog('이미 보고서가 생성된 프로젝트라 시뮬레이션 재시작을 막았습니다.')
+      return
+    }
     startError.value = err.message
+    startWaiting.value = false
     addLog(`✗ 시작 오류: ${err.message}`)
     emit('update-status', 'error')
   } finally {
@@ -448,6 +741,7 @@ const handleStopSimulation = async () => {
       addLog('✓ 시뮬레이션 중지됨')
       phase.value = 2
       stopPolling()
+      await syncProjectStatus(PROJECT_STATUS.SIMULATION_STOPPED)
       emit('update-status', 'completed')
     } else {
       addLog(`중지 실패: ${res.error || '알 수 없는 오류'}`)
@@ -462,6 +756,10 @@ const handleStopSimulation = async () => {
 // 상태 폴링
 let statusTimer = null
 let detailTimer = null
+let startRetryTimer = null
+let startQueuePollTimer = null
+let reportRetryTimer = null
+let reportQueuePollTimer = null
 
 const startStatusPolling = () => {
   statusTimer = setInterval(fetchRunStatus, 2000)
@@ -522,6 +820,11 @@ const fetchRunStatus = async () => {
         addLog('✓ 시뮬레이션 완료')
         phase.value = 2
         stopPolling()
+        await syncProjectStatus(
+          data.runner_status === 'stopped'
+            ? PROJECT_STATUS.SIMULATION_STOPPED
+            : PROJECT_STATUS.SIMULATION_COMPLETED
+        )
         emit('update-status', 'completed')
       }
     }
@@ -638,27 +941,40 @@ const formatActionTime = (timestamp) => {
   }
 }
 
-const handleNextStep = async () => {
+const buildReportPayload = () => ({
+  simulation_id: props.simulationId,
+  force_regenerate: false
+})
+
+const handleNextStep = async ({ queueId = null, payload = null } = {}) => {
   if (!props.simulationId) {
     addLog('오류: simulationId가 없습니다')
     return
   }
 
-  if (isGeneratingReport.value) {
+  if (isGeneratingReport.value && !queueId && !payload) {
     addLog('보고서 생성 요청이 전송되었습니다. 잠시 기다려주세요...')
     return
   }
 
   isGeneratingReport.value = true
+  await syncProjectStatus(PROJECT_STATUS.REPORT_GENERATING)
   addLog('보고서 생성 시작 중...')
   
   try {
+    const requestPayload = payload || buildReportPayload()
     const res = await generateReport({
-      simulation_id: props.simulationId,
-      force_regenerate: true
+      ...requestPayload,
+      ...(queueId ? { queue_id: queueId } : {})
     })
+
+    if (isQueuedResponse(res)) {
+      enterReportQueue(res.queue, requestPayload)
+      return
+    }
     
     if (res.success && res.data) {
+      stopReportQueue()
       const reportId = res.data.report_id
       addLog(`✓ 보고서 생성 작업 시작됨: ${reportId}`)
 
@@ -666,10 +982,17 @@ const handleNextStep = async () => {
       router.push({ name: 'Report', params: { reportId } })
     } else {
       addLog(`✗ 보고서 생성 시작 실패: ${res.error || '알 수 없는 오류'}`)
+      await syncProjectStatus(PROJECT_STATUS.SIMULATION_COMPLETED)
       isGeneratingReport.value = false
     }
   } catch (err) {
-    addLog(`✗ 보고서 생성 시작 오류: ${err.message}`)
+    if (isCapacityError(err)) {
+      addLog(`⏳ ${formatCapacityMessage(err, '현재 다른 보고서 생성 작업이 진행 중입니다. 잠시 후 다시 시도해주세요.')}`)
+    } else {
+      addLog(`✗ 보고서 생성 시작 오류: ${err.message}`)
+      await syncProjectStatus(PROJECT_STATUS.SIMULATION_COMPLETED)
+    }
+    stopReportQueue()
     isGeneratingReport.value = false
   }
 }
@@ -686,13 +1009,32 @@ watch(() => props.systemLogs?.length, () => {
 
 onMounted(() => {
   addLog('Step3 시뮬레이션 실행 초기화')
-  if (props.simulationId) {
-    doStartSimulation()
-  }
 })
+
+watch(
+  () => [props.simulationId, props.projectData?.project_id, props.projectData?.report_id, props.projectData?.status],
+  () => {
+    if (autoStartTriggered.value || !props.simulationId || !props.projectData?.project_id) {
+      return
+    }
+
+    autoStartTriggered.value = true
+
+    if (isReportedProject.value) {
+      markReportedProjectBlocked()
+      addLog('이미 보고서가 생성된 프로젝트라 자동 재시작을 건너뜁니다.')
+      return
+    }
+
+    doStartSimulation()
+  },
+  { immediate: true }
+)
 
 onUnmounted(() => {
   stopPolling()
+  stopStartQueue()
+  stopReportQueue()
 })
 </script>
 
@@ -701,21 +1043,75 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #FFFFFF;
+  background: var(--bg-primary);
   font-family: 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
   overflow: hidden;
 }
 
 /* --- Control Bar --- */
 .control-bar {
-  background: #FFF;
+  background: var(--bg-secondary);
   padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #EAEAEA;
+  border-bottom: 1px solid var(--border-color);
   z-index: 10;
   height: 64px;
+}
+
+.start-alert {
+  margin: 12px 24px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #F3C7BC;
+  background: #FFF4F1;
+}
+
+.start-alert.waiting {
+  border-color: #E4D39A;
+  background: #FFF9E8;
+}
+
+.start-alert-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #B93815;
+}
+
+.start-alert.waiting .start-alert-title {
+  color: #8A6A00;
+}
+
+.start-alert-message {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #7A4A3B;
+}
+
+.start-alert-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.start-alert-meta {
+  font-size: 11px;
+  color: #8A6A00;
+}
+
+.start-alert-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: #111;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .status-group {
@@ -730,8 +1126,8 @@ onUnmounted(() => {
   gap: 4px;
   padding: 6px 12px;
   border-radius: 4px;
-  background: #FAFAFA;
-  border: 1px solid #EAEAEA;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   opacity: 0.7;
   transition: all 0.3s;
   min-width: 140px;
@@ -741,14 +1137,14 @@ onUnmounted(() => {
 
 .platform-status.active {
   opacity: 1;
-  border-color: #333;
-  background: #FFF;
+  border-color: var(--accent-color);
+  background: var(--bg-secondary);
 }
 
 .platform-status.completed {
   opacity: 1;
   border-color: #1A936F;
-  background: #F2FAF6;
+  background: rgba(26, 147, 111, 0.08);
 }
 
 /* Actions Tooltip */
@@ -762,7 +1158,7 @@ onUnmounted(() => {
   background: #000;
   color: #FFF;
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s ease;
@@ -820,15 +1216,32 @@ onUnmounted(() => {
 }
 
 .platform-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: #000;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-.platform-status.twitter .platform-icon { color: #000; }
-.platform-status.reddit .platform-icon { color: #000; }
+.completed-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: #1A936F;
+  background: rgba(26, 147, 111, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.running-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: #FF5722;
+  background: rgba(255, 87, 34, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.platform-status.twitter .platform-icon { color: var(--text-primary); }
+.platform-status.reddit .platform-icon { color: var(--text-primary); }
 
 .platform-stats {
   display: flex;
@@ -843,7 +1256,7 @@ onUnmounted(() => {
 
 .stat-label {
   font-size: 8px;
-  color: #999;
+  color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -852,20 +1265,17 @@ onUnmounted(() => {
 .stat-value {
   font-size: 11px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .stat-total, .stat-unit {
   font-size: 9px;
-  color: #999;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .status-badge {
   margin-left: auto;
-  color: #1A936F;
-  display: flex;
-  align-items: center;
 }
 
 /* Action Button */
@@ -885,12 +1295,12 @@ onUnmounted(() => {
 }
 
 .action-btn.primary {
-  background: #000;
+  background: var(--accent-color);
   color: #FFF;
 }
 
 .action-btn.primary:hover:not(:disabled) {
-  background: #333;
+  background: #5558e6;
 }
 
 .action-btn:disabled {
@@ -903,17 +1313,17 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   position: relative;
-  background: #FFF;
+  background: var(--bg-primary);
 }
 
 /* Timeline Header */
 .timeline-header {
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(17, 17, 24, 0.9);
   backdrop-filter: blur(8px);
   padding: 12px 24px;
-  border-bottom: 1px solid #EAEAEA;
+  border-bottom: 1px solid var(--border-color);
   z-index: 5;
   display: flex;
   justify-content: center;
@@ -924,15 +1334,15 @@ onUnmounted(() => {
   align-items: center;
   gap: 16px;
   font-size: 11px;
-  color: #666;
-  background: #F5F5F5;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
   padding: 4px 12px;
   border-radius: 20px;
 }
 
 .total-count {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .platform-breakdown {
@@ -947,9 +1357,9 @@ onUnmounted(() => {
   gap: 4px;
 }
 
-.breakdown-divider { color: #DDD; }
-.breakdown-item.twitter { color: #000; }
-.breakdown-item.reddit { color: #000; }
+.breakdown-divider { color: var(--text-muted); }
+.breakdown-item.twitter { color: var(--text-primary); }
+.breakdown-item.reddit { color: var(--text-primary); }
 
 /* --- Timeline Feed --- */
 .timeline-feed {
@@ -966,7 +1376,7 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: #EAEAEA; /* Cleaner line */
+  background: var(--border-color);
   transform: translateX(-50%);
 }
 
@@ -984,8 +1394,8 @@ onUnmounted(() => {
   top: 24px;
   width: 10px;
   height: 10px;
-  background: #FFF;
-  border: 1px solid #CCC;
+  background: var(--bg-secondary);
+  border: 1px solid var(--text-muted);
   border-radius: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -997,30 +1407,30 @@ onUnmounted(() => {
 .marker-dot {
   width: 4px;
   height: 4px;
-  background: #CCC;
+  background: var(--text-muted);
   border-radius: 50%;
 }
 
-.timeline-item.twitter .marker-dot { background: #000; }
-.timeline-item.reddit .marker-dot { background: #000; }
-.timeline-item.twitter .timeline-marker { border-color: #000; }
-.timeline-item.reddit .timeline-marker { border-color: #000; }
+.timeline-item.twitter .marker-dot { background: var(--accent-color); }
+.timeline-item.reddit .marker-dot { background: var(--accent-color); }
+.timeline-item.twitter .timeline-marker { border-color: var(--accent-color); }
+.timeline-item.reddit .timeline-marker { border-color: var(--accent-color); }
 
 /* Card Layout */
 .timeline-card {
   width: calc(100% - 48px);
-  background: #FFF;
+  background: var(--bg-secondary);
   border-radius: 2px;
   padding: 16px 20px;
-  border: 1px solid #EAEAEA;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   position: relative;
   transition: all 0.2s;
 }
 
 .timeline-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-color: #DDD;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.1);
 }
 
 /* Left side (Twitter) */
@@ -1050,7 +1460,7 @@ onUnmounted(() => {
   align-items: flex-start;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .agent-info {
@@ -1062,7 +1472,7 @@ onUnmounted(() => {
 .avatar-placeholder {
   width: 24px;
   height: 24px;
-  background: #000;
+  background: var(--accent-color);
   color: #FFF;
   border-radius: 50%;
   display: flex;
@@ -1076,7 +1486,7 @@ onUnmounted(() => {
 .agent-name {
   font-size: 13px;
   font-weight: 600;
-  color: #000;
+  color: var(--text-primary);
 }
 
 .header-meta {
@@ -1086,7 +1496,7 @@ onUnmounted(() => {
 }
 
 .platform-indicator {
-  color: #999;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
 }
@@ -1102,33 +1512,33 @@ onUnmounted(() => {
 }
 
 /* Monochromatic Badges */
-.badge-post { background: #F0F0F0; color: #333; border-color: #E0E0E0; }
-.badge-comment { background: #F0F0F0; color: #666; border-color: #E0E0E0; }
-.badge-action { background: #FFF; color: #666; border: 1px solid #E0E0E0; }
-.badge-meta { background: #FAFAFA; color: #999; border: 1px dashed #DDD; }
+.badge-post { background: rgba(255,255,255,0.08); color: var(--text-primary); border-color: var(--border-color); }
+.badge-comment { background: rgba(255,255,255,0.08); color: var(--text-secondary); border-color: var(--border-color); }
+.badge-action { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.badge-meta { background: var(--bg-surface); color: var(--text-muted); border: 1px dashed var(--border-color); }
 .badge-idle { opacity: 0.5; }
 
 .content-text {
   font-size: 13px;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .content-text.main-text {
   font-size: 14px;
-  color: #000;
+  color: var(--text-primary);
 }
 
 /* Info Blocks (Quote, Repost, etc) */
 .quoted-block, .repost-content {
-  background: #F9F9F9;
-  border: 1px solid #EEE;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   padding: 10px 12px;
   border-radius: 2px;
   margin-top: 8px;
   font-size: 12px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .quote-header, .repost-info, .like-info, .search-info, .follow-info, .vote-info, .idle-info, .comment-context {
@@ -1137,19 +1547,19 @@ onUnmounted(() => {
   gap: 6px;
   margin-bottom: 6px;
   font-size: 11px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .icon-small {
-  color: #999;
+  color: var(--text-muted);
 }
 .icon-small.filled {
-  color: #999; /* Keep icons neutral unless highlighted */
+  color: var(--text-muted);
 }
 
 .search-query {
   font-family: 'JetBrains Mono', monospace;
-  background: #F0F0F0;
+  background: var(--bg-tertiary);
   padding: 0 4px;
   border-radius: 2px;
 }
@@ -1159,7 +1569,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   font-size: 10px;
-  color: #BBB;
+  color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -1173,7 +1583,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  color: #CCC;
+  color: var(--text-muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1183,13 +1593,13 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #EAEAEA;
+  border: 1px solid var(--border-color);
   animation: ripple 2s infinite;
 }
 
 @keyframes ripple {
-  0% { transform: scale(0.8); opacity: 1; border-color: #CCC; }
-  100% { transform: scale(2.5); opacity: 0; border-color: #EAEAEA; }
+  0% { transform: scale(0.8); opacity: 1; border-color: var(--text-muted); }
+  100% { transform: scale(2.5); opacity: 0; border-color: var(--border-color); }
 }
 
 /* Animation */
@@ -1209,22 +1619,22 @@ onUnmounted(() => {
 
 /* Logs */
 .system-logs {
-  background: #000;
-  color: #DDD;
+  background: #08080c;
+  color: var(--text-secondary);
   padding: 16px;
   font-family: 'JetBrains Mono', monospace;
-  border-top: 1px solid #222;
+  border-top: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
 }
 
 .log-header {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   padding-bottom: 8px;
   margin-bottom: 8px;
   font-size: 10px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .log-content {
@@ -1237,7 +1647,7 @@ onUnmounted(() => {
 }
 
 .log-content::-webkit-scrollbar { width: 4px; }
-.log-content::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+.log-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .log-line {
   font-size: 11px;
@@ -1246,8 +1656,8 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-.log-time { color: #555; min-width: 75px; }
-.log-msg { color: #BBB; word-break: break-all; }
+.log-time { color: var(--text-muted); min-width: 75px; }
+.log-msg { color: var(--text-secondary); word-break: break-all; }
 .mono { font-family: 'JetBrains Mono', monospace; }
 
 /* Loading spinner for button */
@@ -1260,5 +1670,103 @@ onUnmounted(() => {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-right: 6px;
+}
+
+@media (max-width: 768px) {
+  /* Control bar: stack vertically */
+  .control-bar {
+    flex-direction: column;
+    height: auto;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .status-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .platform-status {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Timeline: full width, no dual-column split */
+  .timeline-feed {
+    padding: 12px 0;
+    max-width: 100%;
+  }
+
+  .timeline-axis {
+    display: none;
+  }
+
+  .timeline-marker {
+    display: none;
+  }
+
+  .timeline-item.twitter,
+  .timeline-item.reddit {
+    justify-content: stretch;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .timeline-item.twitter .timeline-card,
+  .timeline-item.reddit .timeline-card {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .timeline-item {
+    margin-bottom: 16px;
+  }
+
+  .timeline-card {
+    width: 100% !important;
+    padding: 12px 14px;
+  }
+
+  /* Hide simulation terminal/monitor/logs on mobile */
+  .system-logs,
+  .simulation-terminal,
+  .simulation-monitor,
+  .monitor-section,
+  [class*="terminal"],
+  [class*="monitor"] {
+    display: none !important;
+  }
+
+  /* Make post/comment cards full width */
+  .post-card,
+  .action-card,
+  .comment-card {
+    max-width: 100% !important;
+  }
+
+  /* Compact headers */
+  .platform-header {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .round-info,
+  .elapsed-info {
+    font-size: 10px !important;
+  }
+
+  /* Action button full width */
+  .action-controls {
+    width: 100%;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
 }
 </style>

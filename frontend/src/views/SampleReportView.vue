@@ -54,6 +54,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import ReportReader from '../components/ReportReader.vue'
+import { applySeoMeta, resetSeoMeta } from '../utils/seo.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,26 +64,6 @@ const loading = ref(true)
 const error = ref('')
 const report = ref(null)
 
-function ensureMeta(selector, attrs) {
-  let el = document.head.querySelector(selector)
-  if (!el) {
-    el = document.createElement('meta')
-    Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value))
-    document.head.appendChild(el)
-  }
-  return el
-}
-
-function ensureCanonicalLink() {
-  let link = document.head.querySelector('link[rel="canonical"]')
-  if (!link) {
-    link = document.createElement('link')
-    link.setAttribute('rel', 'canonical')
-    document.head.appendChild(link)
-  }
-  return link
-}
-
 onMounted(async () => {
   try {
     const res = await axios.get(`${API_BASE}/api/reports/samples/${route.params.reportId}`)
@@ -90,13 +71,30 @@ onMounted(async () => {
     if (report.value) {
       const title = `${report.value.title || '공개 샘플 보고서'} | Tiresias View`
       const description = report.value.summary || report.value.requirement || 'Tiresias View 공개 샘플 보고서'
-      document.title = title
-      ensureMeta('meta[name="description"]', { name: 'description' }).setAttribute('content', description)
-      ensureMeta('meta[property="og:title"]', { property: 'og:title' }).setAttribute('content', title)
-      ensureMeta('meta[property="og:description"]', { property: 'og:description' }).setAttribute('content', description)
-      ensureMeta('meta[property="og:url"]', { property: 'og:url' }).setAttribute('content', `https://tiresiasview.com/samples/${encodeURIComponent(route.params.reportId)}`)
-      ensureMeta('meta[name="robots"]', { name: 'robots' }).setAttribute('content', 'index,follow')
-      ensureCanonicalLink().setAttribute('href', `https://tiresiasview.com/samples/${encodeURIComponent(route.params.reportId)}`)
+      applySeoMeta({
+        title,
+        description,
+        canonical: `https://tiresiasview.com/samples/${encodeURIComponent(route.params.reportId)}`,
+        structuredData: [
+          {
+            id: 'sample-report-detail',
+            data: {
+              '@context': 'https://schema.org',
+              '@type': 'Report',
+              name: report.value.title || '공개 샘플 보고서',
+              url: `https://tiresiasview.com/samples/${encodeURIComponent(route.params.reportId)}`,
+              description,
+              datePublished: report.value.created_at || undefined,
+              isAccessibleForFree: true,
+              publisher: {
+                '@type': 'Organization',
+                name: 'Tiresias View',
+                url: 'https://tiresiasview.com',
+              },
+            },
+          },
+        ],
+      })
     }
   } catch (err) {
     error.value = err.response?.data?.error || err.message || '보고서를 불러오지 못했습니다.'
@@ -106,7 +104,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  document.title = '테이레시아스 뷰 - 보고서 기반 예측 시뮬레이션'
+  resetSeoMeta(['sample-report-detail'])
 })
 
 function goBack() {

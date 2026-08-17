@@ -10,20 +10,20 @@
           </div>
           <div class="step-status">
             <span v-if="currentPhase > 0" class="badge success">완료</span>
-            <span v-else-if="currentPhase === 0" class="badge processing">분석 중</span>
+            <span v-else-if="currentPhase === 0" class="badge processing">해석 중</span>
             <span v-else class="badge pending">대기</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="description">
-            업로드한 문서를 AI가 읽고, 등장하는 인물·조직·사건 등의 관계를 자동으로 파악합니다
+            업로드한 자료를 읽고, 주요 에이전트·기관·사건·정책 요소를 추출해 분석 기준선을 만듭니다
           </p>
 
           <!-- Loading / Progress -->
           <div v-if="currentPhase === 0 && ontologyProgress" class="progress-section">
             <div class="spinner-sm"></div>
-            <span>{{ ontologyProgress.message || '문서 분석 중...' }}</span>
+            <span>{{ ontologyProgress.message || '자료를 해석하고 있습니다...' }}</span>
           </div>
 
           <!-- Detail Overlay -->
@@ -120,22 +120,48 @@
 
         <div class="card-content">
           <p class="description">
-            분석된 내용을 바탕으로 인물·조직·사건 간의 관계 지도를 만듭니다
+            추출된 요소를 기반으로 영향 관계와 연결 축을 구조도로 정리합니다
           </p>
+
+          <div v-if="graphQueueState" class="queue-panel">
+            <div class="queue-title">구조 분석 대기열 {{ graphQueueState.position || 1 }}번</div>
+            <p class="queue-message">{{ graphQueueMessage }}</p>
+            <p v-if="graphQueueCountdown > 0" class="queue-meta">
+              약 {{ graphQueueCountdown }}초 후 자동으로 순번을 다시 확인합니다.
+            </p>
+          </div>
+
+          <div v-if="graphBuildRetryAvailable" class="retry-panel">
+            <div class="retry-title">이전 구조 분석이 중단되었습니다</div>
+            <p class="retry-message">{{ graphBuildError || '이미 생성된 프로젝트에서 구조 분석을 이어서 다시 시작할 수 있습니다.' }}</p>
+            <button
+              class="retry-btn"
+              :disabled="graphBuildRetrying"
+              @click="$emit('retry-graph-build')"
+            >
+              <span v-if="graphBuildRetrying" class="spinner-sm"></span>
+              {{ graphBuildRetrying ? '재시도 중...' : '구조 분석 다시 시작' }}
+            </button>
+          </div>
+
+          <div v-if="currentPhase === 1 && buildProgress?.message" class="progress-section build-message">
+            <div class="spinner-sm"></div>
+            <span>{{ buildProgress.message }}</span>
+          </div>
 
           <!-- Stats Cards -->
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.nodes }}</span>
-              <span class="stat-label">항목 수</span>
+              <span class="stat-label">핵심 요소</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.edges }}</span>
-              <span class="stat-label">관계 수</span>
+              <span class="stat-label">연결 관계</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.types }}</span>
-              <span class="stat-label">유형 수</span>
+              <span class="stat-label">분류 유형</span>
             </div>
           </div>
         </div>
@@ -154,32 +180,20 @@
         </div>
         
         <div class="card-content">
-          <p class="description">관계 지도 구축이 완료되었습니다. 다음 단계에서 시뮬레이션 환경을 설정합니다</p>
+          <p class="description">구조 분석이 완료되었습니다. 다음 단계에서 에이전트 모델과 실행 환경을 준비합니다</p>
           <button 
             class="action-btn" 
             :disabled="currentPhase < 2 || creatingSimulation"
             @click="handleEnterEnvSetup"
           >
             <span v-if="creatingSimulation" class="spinner-sm"></span>
-            {{ creatingSimulation ? '생성 중...' : '환경 설정으로 이동 ➝' }}
+            {{ creatingSimulation ? '생성 중...' : '실행 준비로 이동 ➝' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Bottom Info / Logs -->
-    <div class="system-logs">
-      <div class="log-header">
-        <span class="log-title">SYSTEM DASHBOARD</span>
-        <span class="log-id">{{ projectData?.project_id || 'NO_PROJECT' }}</span>
-      </div>
-      <div class="log-content" ref="logContent">
-        <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
-          <span class="log-time">{{ log.time }}</span>
-          <span class="log-msg">{{ log.msg }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- System logs removed -->
   </div>
 </template>
 
@@ -187,6 +201,8 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { createSimulation } from '../api/simulation'
+import { PROJECT_STATUS } from '../utils/projectStatus.js'
+import { buildAuthFetchOptions } from '../store/auth.js'
 
 const router = useRouter()
 
@@ -196,10 +212,16 @@ const props = defineProps({
   ontologyProgress: Object,
   buildProgress: Object,
   graphData: Object,
+  graphQueueState: { type: Object, default: null },
+  graphQueueMessage: { type: String, default: '' },
+  graphQueueCountdown: { type: Number, default: 0 },
+  graphBuildRetryAvailable: { type: Boolean, default: false },
+  graphBuildRetrying: { type: Boolean, default: false },
+  graphBuildError: { type: String, default: '' },
   systemLogs: { type: Array, default: () => [] }
 })
 
-defineEmits(['next-step'])
+defineEmits(['next-step', 'retry-graph-build'])
 
 const selectedOntologyItem = ref(null)
 const logContent = ref(null)
@@ -223,6 +245,19 @@ const handleEnterEnvSetup = async () => {
     })
     
     if (res.success && res.data?.simulation_id) {
+      // D1 프로젝트에 simulation_id 저장
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+        await fetch(`${API_BASE}/api/projects/${props.projectData.project_id}`, buildAuthFetchOptions({
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            simulation_id: res.data.simulation_id,
+            status: PROJECT_STATUS.SIMULATION_PREPARING,
+          })
+        }))
+      } catch (e) { console.warn('D1 simulation_id 저장 실패:', e) }
+
       // simulation 페이지로 이동
       router.push({
         name: 'Simulation',
@@ -297,8 +332,8 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .step-card.active {
-  border-color: #FF5722;
-  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.08);
+  border-color: #0F5FDB;
+  box-shadow: 0 8px 24px rgba(15, 95, 219, 0.08);
 }
 
 .card-header {
@@ -341,8 +376,8 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .badge.success { background: #E8F5E9; color: #2E7D32; }
-.badge.processing { background: #FF5722; color: #FFF; }
-.badge.accent { background: #FF5722; color: #FFF; }
+.badge.processing { background: #0F5FDB; color: #FFF; }
+.badge.accent { background: #0F5FDB; color: #FFF; }
 .badge.pending { background: #F5F5F5; color: #999; }
 
 .api-note {
@@ -357,6 +392,77 @@ watch(() => props.systemLogs.length, () => {
   color: #666;
   line-height: 1.5;
   margin-bottom: 16px;
+}
+
+.queue-panel {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #E4D39A;
+  background: #FFF9E8;
+}
+
+.queue-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8A6A00;
+  margin-bottom: 6px;
+}
+
+.queue-message {
+  font-size: 11px;
+  color: #6E5A0F;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.queue-meta {
+  font-size: 11px;
+  color: #8A6A00;
+  margin: 8px 0 0;
+}
+
+.retry-panel {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #D5E3FF;
+  background: #F6F9FF;
+}
+
+.retry-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0F5FDB;
+  margin-bottom: 6px;
+}
+
+.retry-message {
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+
+.retry-btn {
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 6px;
+  background: #0F5FDB;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retry-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* Step 01 Tags */
@@ -623,15 +729,15 @@ watch(() => props.systemLogs.length, () => {
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  color: #FF5722;
+  color: #0F5FDB;
   margin-bottom: 12px;
 }
 
 .spinner-sm {
   width: 14px;
   height: 14px;
-  border: 2px solid #FFCCBC;
-  border-top-color: #FF5722;
+  border: 2px solid #D5E3FF;
+  border-top-color: #0F5FDB;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

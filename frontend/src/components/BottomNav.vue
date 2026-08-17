@@ -1,6 +1,6 @@
 <template>
   <nav class="bottom-nav">
-    <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">
+    <router-link to="/dashboard" class="nav-item" :class="{ active: route.path === '/dashboard' }">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
         <polyline points="9 22 9 12 15 12 15 22"/>
@@ -91,5 +91,11 @@ const isAdmin = computed(() => currentUser.value?.role === 'admin')
 
 .nav-item span {
   letter-spacing: 0.01em;
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
 }
 </style>

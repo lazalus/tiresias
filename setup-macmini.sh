@@ -1,7 +1,9 @@
 #!/bin/bash
 # ============================================
-# Tiresias 맥미니 서버 자동 세팅 스크립트
-# 맥미니에서 실행: bash setup-macmini.sh
+# Legacy single-host bootstrap example
+# This script documents an older Mac mini based setup and is not the
+# source of truth for the current production backend host.
+# Use current runtime configuration and deployment notes first.
 # ============================================
 
 set -e
@@ -52,8 +54,8 @@ if [ ! -d "$BACKEND_DIR" ]; then
   echo "⚠️  프로젝트가 $PROJECT_DIR 에 없습니다."
   echo "   맥북에서 다음 명령어로 복사하세요:"
   echo ""
-  echo "   scp -r /Users/mavenworks/workspace/mirofish/backend USER@MACMINI_IP:~/tiresias/backend"
-  echo "   scp /Users/mavenworks/workspace/mirofish/.env USER@MACMINI_IP:~/tiresias/.env"
+  echo "   scp -r /Users/mavenworks/workspace/tiresias/backend USER@MACMINI_IP:~/tiresias/backend"
+  echo "   scp /Users/mavenworks/workspace/tiresias/.env USER@MACMINI_IP:~/tiresias/.env"
   echo ""
   echo "   복사 후 이 스크립트를 다시 실행하세요."
   exit 1

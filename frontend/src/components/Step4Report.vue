@@ -3,70 +3,19 @@
     <!-- Main Split Layout -->
     <div class="main-split-layout">
       <!-- LEFT PANEL: Report Style -->
-      <div class="left-panel report-style" ref="leftPanel">
-        <div v-if="reportOutline" class="report-content-wrapper">
-          <!-- Report Header -->
-          <div class="report-header-block">
-            <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
-              <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
-            </div>
-            <h1 class="main-title">{{ reportOutline.title }}</h1>
-            <p class="sub-title">{{ reportOutline.summary }}</p>
-            <div class="header-divider"></div>
-          </div>
+      <div class="left-panel report-style" ref="leftPanel" v-show="!activePanel || activePanel === 'report'">
+        <ReportReader
+          v-if="reportOutline"
+          :title="reportOutline.title"
+          :summary="reportOutline.summary"
+          :report-id="reportId || 'REF-2024-X92'"
+          :sections="reportOutline.sections || []"
+          :generated-sections="generatedSections"
+          :current-section-index="currentSectionIndex"
+        />
 
-          <!-- Sections List -->
-          <div class="sections-list">
-            <div 
-              v-for="(section, idx) in reportOutline.sections" 
-              :key="idx"
-              class="report-section-item"
-              :class="{ 
-                'is-active': currentSectionIndex === idx + 1,
-                'is-completed': isSectionCompleted(idx + 1),
-                'is-pending': !isSectionCompleted(idx + 1) && currentSectionIndex !== idx + 1
-              }"
-            >
-              <div class="section-header-row" @click="toggleSectionCollapse(idx)" :class="{ 'clickable': isSectionCompleted(idx + 1) }">
-                <span class="section-number">{{ String(idx + 1).padStart(2, '0') }}</span>
-                <h3 class="section-title">{{ section.title }}</h3>
-                <svg 
-                  v-if="isSectionCompleted(idx + 1)" 
-                  class="collapse-icon" 
-                  :class="{ 'is-collapsed': collapsedSections.has(idx) }"
-                  viewBox="0 0 24 24" 
-                  width="20" 
-                  height="20" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  stroke-width="2"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-              
-              <div class="section-body" v-show="!collapsedSections.has(idx)">
-                <!-- Completed Content -->
-                <div v-if="generatedSections[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedSections[idx + 1])"></div>
-                
-                <!-- Loading State -->
-                <div v-else-if="currentSectionIndex === idx + 1" class="loading-state">
-                  <div class="loading-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle cx="12" cy="12" r="10" stroke-width="4" stroke="#E5E7EB"></circle>
-                      <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
-                    </svg>
-                  </div>
-                  <span class="loading-text">{{ section.title }} 생성 중...</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Waiting State -->
-        <div v-if="!reportOutline" class="waiting-placeholder">
+        <!-- Waiting / Failure State -->
+        <div v-if="!reportOutline && !reportError" class="waiting-placeholder">
           <div class="waiting-animation">
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
@@ -74,15 +23,30 @@
           </div>
           <span class="waiting-text">Waiting for Report Agent...</span>
         </div>
+        <div v-if="!reportOutline && reportError" class="waiting-placeholder waiting-placeholder--error">
+          <div class="waiting-error-title">보고서 생성이 중단되었습니다</div>
+          <p class="waiting-error-text">{{ reportError }}</p>
+          <button class="waiting-error-btn" @click="goToRetryTarget">
+            {{ simulationId ? '시뮬레이션으로 돌아가 다시 생성' : '대시보드로 이동' }}
+          </button>
+        </div>
       </div>
 
       <!-- RIGHT PANEL: Workflow Timeline -->
-      <div class="right-panel" ref="rightPanel">
+      <div class="right-panel" ref="rightPanel" v-show="!activePanel || activePanel === 'workflow'">
         <div class="panel-header" :class="`panel-header--${activeStep.status}`" v-if="!isComplete">
           <span class="header-dot" v-if="activeStep.status === 'active'"></span>
           <span class="header-index mono">{{ activeStep.noLabel }}</span>
           <span class="header-title">{{ activeStep.title }}</span>
           <span class="header-meta mono" v-if="activeStep.meta">{{ activeStep.meta }}</span>
+        </div>
+
+        <div v-if="reportError" class="report-error-banner">
+          <div class="report-error-banner__title">보고서 생성 실패</div>
+          <p class="report-error-banner__text">{{ reportError }}</p>
+          <button class="report-error-banner__btn" @click="goToRetryTarget">
+            {{ simulationId ? '시뮬레이션으로 돌아가 다시 생성' : '대시보드로 이동' }}
+          </button>
         </div>
 
         <!-- Workflow Overview (flat, status-based palette) -->
@@ -135,14 +99,6 @@
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
-          <div v-if="isComplete" class="report-action-buttons">
-            <button class="save-report-btn" @click="saveReport" :disabled="savingReport">
-              {{ savingReport ? '저장 중...' : '보고서 저장' }}
-            </button>
-            <button class="pdf-download-btn" @click="downloadPDF" :disabled="downloadingPDF">
-              {{ downloadingPDF ? '생성 중...' : 'PDF 다운로드' }}
-            </button>
-          </div>
 
           <div class="workflow-divider"></div>
         </div>
@@ -400,17 +356,25 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, h, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAgentLog, getConsoleLog } from '../api/report'
+import { getAgentLog, getConsoleLog, getRefinedReport, getReportProgress, saveRefinedReport, saveReportRecord } from '../api/report'
+import { buildRefinedReportDocument as createRefinedReportDocument } from '../utils/reportPdfTemplate.js'
+import { renderMarkdown } from '../utils/markdown.js'
+import { tryDownloadReportPdf } from '../utils/pdfPayment.js'
+import { PROJECT_STATUS } from '../utils/projectStatus.js'
+import { buildAuthFetchOptions } from '../store/auth.js'
+import ReportReader from './ReportReader.vue'
 
 const router = useRouter()
 
 const props = defineProps({
   reportId: String,
   simulationId: String,
-  systemLogs: Array
+  projectId: String,
+  systemLogs: Array,
+  activePanel: { type: String, default: '' } // 'report' | 'workflow' | '' (PC: both)
 })
 
-const emit = defineEmits(['add-log', 'update-status'])
+const emit = defineEmits(['add-log', 'update-status', 'update-progress'])
 
 // Navigation
 const goToInteraction = () => {
@@ -419,40 +383,96 @@ const goToInteraction = () => {
   }
 }
 
+const goToRetryTarget = () => {
+  if (props.simulationId) {
+    router.push({ name: 'Simulation', params: { simulationId: props.simulationId } })
+    return
+  }
+  router.push({ name: 'Home' })
+}
+
+const collectReportSections = () => {
+  const sections = []
+  if (reportOutline.value?.sections) {
+    reportOutline.value.sections.forEach((section, idx) => {
+      sections.push({
+        title: section.title || `섹션 ${idx + 1}`,
+        content: generatedSections.value[idx + 1] || '',
+      })
+    })
+  }
+  return sections
+}
+
+const buildRefinedReportDocument = () => {
+  return createRefinedReportDocument({
+    title: reportOutline.value?.title || '정책 시뮬레이션 분석보고서',
+    summary: reportOutline.value?.summary || '',
+    sections: collectReportSections(),
+    generatedAt: new Date().toISOString(),
+  })
+}
+
+const persistRefinedReport = async (refined) => {
+  if (!props.reportId) return refined
+
+  try {
+    await saveRefinedReport(props.reportId, {
+        title: refined.title,
+        summary: refined.summary,
+        sections: refined.sections,
+        generated_at: refined.generated_at,
+    })
+  } catch (error) {
+    console.warn('정제본 저장 실패:', error)
+  }
+
+  return refined
+}
+
+const ensureRefinedReportDocument = async () => {
+  const fallback = buildRefinedReportDocument()
+
+  if (!props.reportId) {
+    return fallback
+  }
+
+  try {
+    const refineData = await getRefinedReport(props.reportId)
+    if (refineData?.success && refineData.refined) {
+      return {
+        ...fallback,
+        ...refineData.refined,
+        sections: refineData.refined.sections || fallback.sections,
+      }
+    }
+  } catch (error) {
+    console.warn('정제본 로드 실패, 기본 양식으로 생성:', error)
+  }
+
+  await persistRefinedReport(fallback)
+  return fallback
+}
+
 async function saveReport() {
-  if (savingReport.value) return
+  if (savingReport.value || savedReportPersisted.value) return
   savingReport.value = true
   try {
-    const token = localStorage.getItem('tiresias_token')
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+    const sections = collectReportSections()
 
-    // Collect all generated sections
-    const sections = []
-    if (reportOutline.value?.sections) {
-      reportOutline.value.sections.forEach((s, idx) => {
-        sections.push({
-          title: s.title,
-          content: generatedSections.value[idx + 1] || ''
-        })
-      })
-    }
-
-    await fetch(`${API_BASE}/api/reports`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
+    const resData = await saveReportRecord({
+        id: props.reportId,
         simulation_id: props.simulationId,
         title: reportOutline.value?.title || '',
         summary: reportOutline.value?.summary || '',
         content: sections.map(s => `## ${s.title}\n\n${s.content}`).join('\n\n'),
         sections
-      })
     })
 
-    alert('보고서가 저장되었습니다.')
+    // 서버에서 reports POST 시 프로젝트 상태 자동 업데이트됨
+    savedReportPersisted.value = true
+    await persistRefinedReport(buildRefinedReportDocument())
+    console.log('보고서 저장 성공:', resData)
   } catch (e) {
     alert('저장 실패: ' + e.message)
   } finally {
@@ -464,24 +484,31 @@ async function downloadPDF() {
   if (downloadingPDF.value) return
   downloadingPDF.value = true
   try {
-    const reportEl = document.querySelector('.report-content-wrapper') || document.querySelector('.left-panel')
-    if (!reportEl) {
-      alert('보고서 콘텐츠를 찾을 수 없습니다.')
+    if (!props.reportId) {
+      alert('보고서 ID가 아직 없습니다. 잠시 후 다시 시도해 주세요.')
       return
     }
 
-    const opt = {
-      margin: [15, 15, 15, 15],
-      filename: `Tiresias_Report_${new Date().toISOString().slice(0,10)}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+    const refinedReport = await ensureRefinedReportDocument()
+    await persistRefinedReport(refinedReport)
+
+    const result = await tryDownloadReportPdf({
+      apiBase: API_BASE,
+      reportId: props.reportId,
+      fileName: refinedReport.title || '정책 시뮬레이션 분석보고서',
+    })
+
+    if (result.downloaded) {
+      return
     }
 
-    await window.html2pdf().set(opt).from(reportEl).save()
+    throw new Error(result.errorData?.error || 'PDF 생성에 실패했습니다.')
   } catch (e) {
-    // Fallback: use browser print
-    window.print()
+    if (e?.code !== 'USER_CANCEL') {
+      alert('PDF 생성 실패: ' + e.message)
+    }
+    return
   } finally {
     downloadingPDF.value = false
   }
@@ -495,11 +522,12 @@ const consoleLogLine = ref(0)
 const reportOutline = ref(null)
 const currentSectionIndex = ref(null)
 const generatedSections = ref({})
-const expandedContent = ref(new Set())
 const expandedLogs = ref(new Set())
-const collapsedSections = ref(new Set())
 const isComplete = ref(false)
+const reportError = ref('')
+const reportFailureHandled = ref(false)
 const savingReport = ref(false)
+const savedReportPersisted = ref(false)
 const downloadingPDF = ref(false)
 const startTime = ref(null)
 const leftPanel = ref(null)
@@ -528,29 +556,6 @@ const toggleRawResult = (timestamp, event) => {
       rightPanel.value.scrollTop += scrollDelta
     })
   }
-}
-
-const toggleSectionContent = (idx) => {
-  if (!generatedSections.value[idx + 1]) return
-  const newSet = new Set(expandedContent.value)
-  if (newSet.has(idx)) {
-    newSet.delete(idx)
-  } else {
-    newSet.add(idx)
-  }
-  expandedContent.value = newSet
-}
-
-const toggleSectionCollapse = (idx) => {
-  // 완료된 섹션만 접기 가능
-  if (!generatedSections.value[idx + 1]) return
-  const newSet = new Set(collapsedSections.value)
-  if (newSet.has(idx)) {
-    newSet.delete(idx)
-  } else {
-    newSet.add(idx)
-  }
-  collapsedSections.value = newSet
 }
 
 const toggleLogExpand = (log) => {
@@ -630,30 +635,30 @@ const parseInsightForge = (text) => {
   
   try {
     // 분석 질문 추출
-    const queryMatch = text.match(/分析问题:\s*(.+?)(?:\n|$)/)
+    const queryMatch = text.match(/분석 질문:\s*(.+?)(?:\n|$)/)
     if (queryMatch) result.query = queryMatch[1].trim()
     
     // 예측 시나리오 추출
-    const reqMatch = text.match(/预测场景:\s*(.+?)(?:\n|$)/)
+    const reqMatch = text.match(/예측 시나리오:\s*(.+?)(?:\n|$)/)
     if (reqMatch) result.simulationRequirement = reqMatch[1].trim()
     
     // 통계 데이터 추출 - "관련 예측 사실: X건" 형식 매칭
-    const factMatch = text.match(/相关预测事实:\s*(\d+)/)
-    const entityMatch = text.match(/涉及实体:\s*(\d+)/)
-    const relMatch = text.match(/关系链:\s*(\d+)/)
+    const factMatch = text.match(/관련 예측 사실:\s*(\d+)/)
+    const entityMatch = text.match(/관련 엔티티:\s*(\d+)/)
+    const relMatch = text.match(/관계 체인:\s*(\d+)/)
     if (factMatch) result.stats.facts = parseInt(factMatch[1])
     if (entityMatch) result.stats.entities = parseInt(entityMatch[1])
     if (relMatch) result.stats.relationships = parseInt(relMatch[1])
     
     // 하위 질문 추출 - 전체 추출, 수량 제한 없음
-    const subQSection = text.match(/### 분석의 하위 질문\n([\s\S]*?)(?=\n###|$)/) || text.match(/### 分析的子问题\n([\s\S]*?)(?=\n###|$)/)
+    const subQSection = text.match(/### 분석의 하위 질문\n([\s\S]*?)(?=\n###|$)/)
     if (subQSection) {
       const lines = subQSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.subQueries = lines.map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean)
     }
     
     // 핵심 사실 추출 - 전체 추출, 수량 제한 없음
-    const factsSection = text.match(/### 【关键事实】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
+    const factsSection = text.match(/### 【핵심 사실】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
     if (factsSection) {
       const lines = factsSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.facts = lines.map(l => {
@@ -663,15 +668,15 @@ const parseInsightForge = (text) => {
     }
     
     // 핵심 엔티티 추출 - 전체 추출, 요약 및 관련 사실 수 포함
-    const entitySection = text.match(/### 【核心实体】\n([\s\S]*?)(?=\n###|$)/)
+    const entitySection = text.match(/### 【핵심 엔티티】\n([\s\S]*?)(?=\n###|$)/)
     if (entitySection) {
       const entityText = entitySection[1]
       // "- **"로 엔티티 블록 분할
       const entityBlocks = entityText.split(/\n(?=- \*\*)/).filter(b => b.trim().startsWith('- **'))
       result.entities = entityBlocks.map(block => {
         const nameMatch = block.match(/^-\s*\*\*(.+?)\*\*\s*\((.+?)\)/)
-        const summaryMatch = block.match(/摘要:\s*"?(.+?)"?(?:\n|$)/)
-        const relatedMatch = block.match(/相关事实:\s*(\d+)/)
+        const summaryMatch = block.match(/요약:\s*"?(.+?)"?(?:\n|$)/)
+        const relatedMatch = block.match(/관련 사실:\s*(\d+)/)
         return {
           name: nameMatch ? nameMatch[1].trim() : '',
           type: nameMatch ? nameMatch[2].trim() : '',
@@ -682,7 +687,7 @@ const parseInsightForge = (text) => {
     }
     
     // 관계 체인 추출 - 전체 추출, 수량 제한 없음
-    const relSection = text.match(/### 【关系链】\n([\s\S]*?)(?=\n###|$)/)
+    const relSection = text.match(/### 【관계 체인】\n([\s\S]*?)(?=\n###|$)/)
     if (relSection) {
       const lines = relSection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.relations = lines.map(l => {
@@ -711,21 +716,21 @@ const parsePanorama = (text) => {
   
   try {
     // 쿼리 추출
-    const queryMatch = text.match(/查询:\s*(.+?)(?:\n|$)/)
+    const queryMatch = text.match(/조회:\s*(.+?)(?:\n|$)/)
     if (queryMatch) result.query = queryMatch[1].trim()
     
     // 통계 데이터 추출
-    const nodesMatch = text.match(/总节点数:\s*(\d+)/)
-    const edgesMatch = text.match(/总边数:\s*(\d+)/)
-    const activeMatch = text.match(/当前有效事实:\s*(\d+)/)
-    const histMatch = text.match(/历史\/过期事实:\s*(\d+)/)
+    const nodesMatch = text.match(/총 노드 수:\s*(\d+)/)
+    const edgesMatch = text.match(/총 엣지 수:\s*(\d+)/)
+    const activeMatch = text.match(/현재 유효 사실:\s*(\d+)/)
+    const histMatch = text.match(/히스토리\/만료 사실:\s*(\d+)/)
     if (nodesMatch) result.stats.nodes = parseInt(nodesMatch[1])
     if (edgesMatch) result.stats.edges = parseInt(edgesMatch[1])
     if (activeMatch) result.stats.activeFacts = parseInt(activeMatch[1])
     if (histMatch) result.stats.historicalFacts = parseInt(histMatch[1])
     
     // 현재 유효 사실 추출 - 전체 추출, 수량 제한 없음
-    const activeSection = text.match(/### 【当前有效事实】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
+    const activeSection = text.match(/### 【현재 유효 사실】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
     if (activeSection) {
       const lines = activeSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.activeFacts = lines.map(l => {
@@ -736,7 +741,7 @@ const parsePanorama = (text) => {
     }
     
     // 과거/만료 사실 추출 - 전체 추출, 수량 제한 없음
-    const histSection = text.match(/### 【历史\/过期事实】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
+    const histSection = text.match(/### 【히스토리\/만료 사실】[\s\S]*?\n([\s\S]*?)(?=\n###|$)/)
     if (histSection) {
       const lines = histSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.historicalFacts = lines.map(l => {
@@ -746,7 +751,7 @@ const parsePanorama = (text) => {
     }
     
     // 관련 엔티티 추출 - 전체 추출, 수량 제한 없음
-    const entitySection = text.match(/### 【涉及实体】\n([\s\S]*?)(?=\n###|$)/)
+    const entitySection = text.match(/### 【관련 엔티티】\n([\s\S]*?)(?=\n###|$)/)
     if (entitySection) {
       const lines = entitySection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.entities = lines.map(l => {
@@ -775,11 +780,11 @@ const parseInterview = (text) => {
   
   try {
     // 인터뷰 주제 추출
-    const topicMatch = text.match(/\*\*采访主题:\*\*\s*(.+?)(?:\n|$)/)
+    const topicMatch = text.match(/\*\*인터뷰 주제:\*\*\s*(.+?)(?:\n|$)/)
     if (topicMatch) result.topic = topicMatch[1].trim()
     
     // 인터뷰 인원 수 추출 (예: "5 / 9 시뮬레이션 Agent")
-    const countMatch = text.match(/\*\*采访人数:\*\*\s*(\d+)\s*\/\s*(\d+)/)
+    const countMatch = text.match(/\*\*인터뷰 인원:\*\*\s*(\d+)\s*\/\s*(\d+)/)
     if (countMatch) {
       result.successCount = parseInt(countMatch[1])
       result.totalCount = parseInt(countMatch[2])
@@ -787,7 +792,7 @@ const parseInterview = (text) => {
     }
     
     // 인터뷰 대상 선택 이유 추출
-    const reasonMatch = text.match(/### 采访对象选择理由\n([\s\S]*?)(?=\n---\n|\n### 采访实录)/)
+    const reasonMatch = text.match(/### 인터뷰 대상 선정 이유\n([\s\S]*?)(?=\n---\n|\n### 인터뷰 기록)/)
     if (reasonMatch) {
       result.selectionReason = reasonMatch[1].trim()
     }
@@ -817,7 +822,7 @@ const parseInterview = (text) => {
         // 형식2: - 선택이름(index X)：이유
         // 예: - 선택학부모_601(index 0)：학부모 그룹 대표로서...
         if (!headerMatch) {
-          headerMatch = line.match(/^-\s*选择([^（(]+)(?:[（(]index\s*=?\s*\d+[)）])?[：:]\s*(.*)/)
+          headerMatch = line.match(/^-\s*선택([^（(]+)(?:[（(]index\s*=?\s*\d+[)）])?[：:]\s*(.*)/)
           if (headerMatch) {
             name = headerMatch[1].trim()
             reasonStart = headerMatch[2]
@@ -842,7 +847,7 @@ const parseInterview = (text) => {
           // 새로운 사람 시작
           currentName = name
           currentReason = reasonStart ? [reasonStart.trim()] : []
-        } else if (currentName && line.trim() && !line.match(/^未选|^综上|^最终选择/)) {
+        } else if (currentName && line.trim() && !line.match(/^미선택|^종합|^최종 선택/)) {
           // 이유의 이어지는 줄 (끝부분 요약 단락 제외)
           currentReason.push(line.trim())
         }
@@ -859,7 +864,7 @@ const parseInterview = (text) => {
     const individualReasons = parseIndividualReasons(result.selectionReason)
     
     // 각 인터뷰 기록 추출
-    const interviewBlocks = text.split(/#### 采访 #\d+:/).slice(1)
+    const interviewBlocks = text.split(/#### 인터뷰 #\d+:/).slice(1)
     
     interviewBlocks.forEach((block, index) => {
       const interview = {
@@ -889,7 +894,7 @@ const parseInterview = (text) => {
       }
       
       // 소개 추출
-      const bioMatch = block.match(/_简介:\s*([\s\S]*?)_\n/)
+      const bioMatch = block.match(/_소개:\s*([\s\S]*?)_\n/)
       if (bioMatch) {
         interview.bio = bioMatch[1].trim().replace(/\.\.\.$/, '...')
       }
@@ -912,13 +917,13 @@ const parseInterview = (text) => {
       }
       
       // 답변 추출 - Twitter와 Reddit 분리
-      const answerMatch = block.match(/\*\*A:\*\*\s*([\s\S]*?)(?=\*\*关键引言|$)/)
+      const answerMatch = block.match(/\*\*A:\*\*\s*([\s\S]*?)(?=\*\*핵심 인용|$)/)
       if (answerMatch) {
         const answerText = answerMatch[1].trim()
         
         // Twitter와 Reddit 답변 분리
-        const twitterMatch = answerText.match(/【Twitter平台回答】\n?([\s\S]*?)(?=【Reddit平台回答】|$)/)
-        const redditMatch = answerText.match(/【Reddit平台回答】\n?([\s\S]*?)$/)
+        const twitterMatch = answerText.match(/【트위터 플랫폼 응답】\n?([\s\S]*?)(?=【레딧 플랫폼 응답】|$)/)
+        const redditMatch = answerText.match(/【레딧 플랫폼 응답】\n?([\s\S]*?)$/)
         
         if (twitterMatch) {
           interview.twitterAnswer = twitterMatch[1].trim()
@@ -930,11 +935,11 @@ const parseInterview = (text) => {
         // 플랫폼 폴백 로직 (이전 형식 호환: 하나의 플랫폼 태그만 있는 경우)
         if (!twitterMatch && redditMatch) {
           // Reddit 답변만 있음, 플레이스홀더가 아닌 경우에만 기본 표시로 복사
-          if (interview.redditAnswer && interview.redditAnswer !== '（该平台未获得回复）') {
+          if (interview.redditAnswer && interview.redditAnswer !== '(해당 플랫폼에서 응답 없음)') {
             interview.twitterAnswer = interview.redditAnswer
           }
         } else if (twitterMatch && !redditMatch) {
-          if (interview.twitterAnswer && interview.twitterAnswer !== '（该平台未获得回复）') {
+          if (interview.twitterAnswer && interview.twitterAnswer !== '(해당 플랫폼에서 응답 없음)') {
             interview.redditAnswer = interview.twitterAnswer
           }
         } else if (!twitterMatch && !redditMatch) {
@@ -944,7 +949,7 @@ const parseInterview = (text) => {
       }
       
       // 핵심 인용문 추출 (다양한 인용부호 형식 호환)
-      const quotesMatch = block.match(/\*\*关键引言:\*\*\n([\s\S]*?)(?=\n---|\n####|$)/)
+      const quotesMatch = block.match(/\*\*핵심 인용:\*\*\n([\s\S]*?)(?=\n---|\n####|$)/)
       if (quotesMatch) {
         const quotesText = quotesMatch[1]
         // > "text" 형식 우선 매칭
@@ -966,7 +971,7 @@ const parseInterview = (text) => {
     })
     
     // 인터뷰 요약 추출
-    const summaryMatch = text.match(/### 采访摘要与核心观点\n([\s\S]*?)$/)
+    const summaryMatch = text.match(/### 인터뷰 요약 및 핵심 관점\n([\s\S]*?)$/)
     if (summaryMatch) {
       result.summary = summaryMatch[1].trim()
     }
@@ -988,22 +993,22 @@ const parseQuickSearch = (text) => {
   
   try {
     // 검색 쿼리 추출
-    const queryMatch = text.match(/搜索查询:\s*(.+?)(?:\n|$)/)
+    const queryMatch = text.match(/검색 조회:\s*(.+?)(?:\n|$)/)
     if (queryMatch) result.query = queryMatch[1].trim()
     
     // 결과 수 추출
-    const countMatch = text.match(/找到\s*(\d+)\s*条/)
+    const countMatch = text.match(/발견\s*(\d+)\s*건/)
     if (countMatch) result.count = parseInt(countMatch[1])
     
     // 관련 사실 추출 - 전체 추출, 수량 제한 없음
-    const factsSection = text.match(/### 相关事实:\n([\s\S]*)$/)
+    const factsSection = text.match(/### 관련 사실:\n([\s\S]*)$/)
     if (factsSection) {
       const lines = factsSection[1].split('\n').filter(l => l.match(/^\d+\./))
       result.facts = lines.map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean)
     }
     
     // 엣지 정보 추출 시도 (있는 경우)
-    const edgesSection = text.match(/### 相关边:\n([\s\S]*?)(?=\n###|$)/)
+    const edgesSection = text.match(/### 관련 엣지:\n([\s\S]*?)(?=\n###|$)/)
     if (edgesSection) {
       const lines = edgesSection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.edges = lines.map(l => {
@@ -1016,7 +1021,7 @@ const parseQuickSearch = (text) => {
     }
     
     // 노드 정보 추출 시도 (있는 경우)
-    const nodesSection = text.match(/### 相关节点:\n([\s\S]*?)(?=\n###|$)/)
+    const nodesSection = text.match(/### 관련 노드:\n([\s\S]*?)(?=\n###|$)/)
     if (nodesSection) {
       const lines = nodesSection[1].split('\n').filter(l => l.trim().startsWith('-'))
       result.nodes = lines.map(l => {
@@ -1405,7 +1410,7 @@ const InterviewDisplay = {
     const isPlaceholderText = (text) => {
       if (!text) return true
       const t = text.trim()
-      return t === '（该平台未获得回复）' || t === '(该平台未获得回复)' || t === '[无回复]' || t === '(해당 플랫폼에서 응답 없음)' || t === '[응답 없음]'
+      return t === '(해당 플랫폼에서 응답 없음)' || t === '[응답 없음]'
     }
 
     // 질문 번호로 답변 분할 시도
@@ -1413,15 +1418,15 @@ const InterviewDisplay = {
       if (!answerText || questionCount <= 0) return [answerText]
       if (isPlaceholderText(answerText)) return ['']
 
-      // 두 가지 번호 형식 지원:
-      // 1. "问题X：" 또는 "问题X:" (중국어 형식, 백엔드 새 형식)
+      // 번호 형식 지원:
+      // 1. "질문X:" (한국어 형식)
       // 2. "1. " 또는 "\n1. " (숫자+마침표, 이전 형식 호환)
       let matches = []
       let match
 
-      // "问题X：" 형식 우선 시도
-      const cnPattern = /(?:^|[\r\n]+)问题(\d+)[：:]\s*/g
-      while ((match = cnPattern.exec(answerText)) !== null) {
+      // "질문X:" 형식 시도
+      const koPattern = /(?:^|[\r\n]+)질문(\d+)[：:]\s*/g
+      while ((match = koPattern.exec(answerText)) !== null) {
         matches.push({
           num: parseInt(match[1]),
           index: match.index,
@@ -1444,7 +1449,7 @@ const InterviewDisplay = {
       // 번호를 찾지 못했거나 하나만 찾은 경우, 전체 반환
       if (matches.length <= 1) {
         const cleaned = answerText
-          .replace(/^问题\d+[：:]\s*/, '')
+          .replace(/^질문\d+[：:]\s*/, '')
           .replace(/^\d+\.\s+/, '')
           .trim()
         return [cleaned || answerText]
@@ -1780,15 +1785,17 @@ const QuickSearchDisplay = {
 
 // Computed
 const statusClass = computed(() => {
+  if (reportError.value) return 'error'
   if (isComplete.value) return 'completed'
   if (agentLogs.value.length > 0) return 'processing'
   return 'pending'
 })
 
 const statusText = computed(() => {
-  if (isComplete.value) return 'Completed'
-  if (agentLogs.value.length > 0) return 'Generating...'
-  return 'Waiting'
+  if (reportError.value) return '실패'
+  if (isComplete.value) return '완료'
+  if (agentLogs.value.length > 0) return '생성 중...'
+  return '대기'
 })
 
 const totalSections = computed(() => {
@@ -1867,7 +1874,7 @@ const workflowSteps = computed(() => {
     noLabel: 'PL',
     title: 'Planning / Outline',
     status: planningStatus,
-    meta: planningStatus === 'active' ? 'IN PROGRESS' : ''
+    meta: planningStatus === 'active' ? '진행 중' : ''
   })
 
   // Sections (if outline exists)
@@ -1883,7 +1890,7 @@ const workflowSteps = computed(() => {
       noLabel: String(idx).padStart(2, '0'),
       title: section.title,
       status,
-      meta: status === 'active' ? 'IN PROGRESS' : ''
+      meta: status === 'active' ? '진행 중' : ''
     })
   })
 
@@ -1905,8 +1912,37 @@ const addLog = (msg) => {
   emit('add-log', msg)
 }
 
-const isSectionCompleted = (sectionIndex) => {
-  return !!generatedSections.value[sectionIndex]
+const syncProjectAfterReportFailure = async () => {
+  if (!props.projectId) return
+
+  try {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+    await fetch(`${API_BASE}/api/projects/${props.projectId}`, buildAuthFetchOptions({
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        status: PROJECT_STATUS.SIMULATION_COMPLETED,
+        simulation_id: props.simulationId || null,
+        report_id: null,
+      })
+    }))
+  } catch (error) {
+    console.warn('보고서 실패 후 프로젝트 상태 복구 실패:', error)
+  }
+}
+
+const handleReportFailure = async (message) => {
+  if (reportFailureHandled.value) return
+
+  reportFailureHandled.value = true
+  reportError.value = message || '보고서 생성이 중단되었습니다. 다시 생성해주세요.'
+  emit('update-status', 'error')
+  emit('update-progress', '')
+  addLog(`✗ ${reportError.value}`)
+  stopPolling()
+  await syncProjectAfterReportFailure()
 }
 
 const formatTime = (timestamp) => {
@@ -1942,111 +1978,6 @@ const truncateText = (text, maxLen) => {
   if (!text) return ''
   if (text.length <= maxLen) return text
   return text.substring(0, maxLen) + '...'
-}
-
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  
-  // 시작 부분의 2단계 제목(## xxx) 제거, 섹션 제목은 이미 외부에서 표시됨
-  let processedContent = content.replace(/^##\s+.+\n+/, '')
-  
-  // 코드 블록 처리
-  let html = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
-  
-  // 인라인 코드 처리
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-  
-  // 제목 처리
-  html = html.replace(/^#### (.+)$/gm, '<h5 class="md-h5">$1</h5>')
-  html = html.replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>')
-  html = html.replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>')
-  html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
-  
-  // 인용 블록 처리
-  html = html.replace(/^> (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
-  
-  // 목록 처리 - 하위 목록 지원
-  html = html.replace(/^(\s*)- (.+)$/gm, (match, indent, text) => {
-    const level = Math.floor(indent.length / 2)
-    return `<li class="md-li" data-level="${level}">${text}</li>`
-  })
-  html = html.replace(/^(\s*)(\d+)\. (.+)$/gm, (match, indent, num, text) => {
-    const level = Math.floor(indent.length / 2)
-    return `<li class="md-oli" data-level="${level}">${text}</li>`
-  })
-
-  // 비순서 목록 감싸기
-  html = html.replace(/(<li class="md-li"[^>]*>.*?<\/li>\s*)+/g, '<ul class="md-ul">$&</ul>')
-  // 순서 목록 감싸기
-  html = html.replace(/(<li class="md-oli"[^>]*>.*?<\/li>\s*)+/g, '<ol class="md-ol">$&</ol>')
-
-  // 목록 항목 사이의 모든 공백 정리
-  html = html.replace(/<\/li>\s+<li/g, '</li><li')
-  // 목록 시작 태그 뒤의 공백 정리
-  html = html.replace(/<ul class="md-ul">\s+/g, '<ul class="md-ul">')
-  html = html.replace(/<ol class="md-ol">\s+/g, '<ol class="md-ol">')
-  // 목록 종료 태그 앞의 공백 정리
-  html = html.replace(/\s+<\/ul>/g, '</ul>')
-  html = html.replace(/\s+<\/ol>/g, '</ol>')
-  
-  // 굵은 글씨와 기울임 처리
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  html = html.replace(/_(.+?)_/g, '<em>$1</em>')
-  
-  // 구분선 처리
-  html = html.replace(/^---$/gm, '<hr class="md-hr">')
-  
-  // 줄바꿈 처리 - 빈 줄은 단락 구분, 단일 줄바꿈은 <br>
-  html = html.replace(/\n\n/g, '</p><p class="md-p">')
-  html = html.replace(/\n/g, '<br>')
-  
-  // 단락으로 감싸기
-  html = '<p class="md-p">' + html + '</p>'
-  
-  // 빈 단락 정리
-  html = html.replace(/<p class="md-p"><\/p>/g, '')
-  html = html.replace(/<p class="md-p">(<h[2-5])/g, '$1')
-  html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
-  html = html.replace(/<p class="md-p">(<ul|<ol|<blockquote|<pre|<hr)/g, '$1')
-  html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>|<\/pre>)<\/p>/g, '$1')
-  // 블록 레벨 요소 전후의 <br> 태그 정리
-  html = html.replace(/<br>\s*(<ul|<ol|<blockquote)/g, '$1')
-  html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>)\s*<br>/g, '$1')
-  // <p><br> 바로 뒤에 블록 레벨 요소가 오는 경우 정리 (불필요한 빈 줄로 인한)
-  html = html.replace(/<p class="md-p">(<br>\s*)+(<ul|<ol|<blockquote|<pre|<hr)/g, '$2')
-  // 연속된 <br> 태그 정리
-  html = html.replace(/(<br>\s*){2,}/g, '<br>')
-  // 블록 레벨 요소 뒤에 바로 오는 단락 시작 태그 앞의 <br> 정리
-  html = html.replace(/(<\/ol>|<\/ul>|<\/blockquote>)<br>(<p|<div)/g, '$1$2')
-
-  // 비연속 순서 목록의 번호 수정: 단일 항목 <ol>이 단락 내용으로 분리될 때 번호 증가 유지
-  const tokens = html.split(/(<ol class="md-ol">(?:<li class="md-oli"[^>]*>[\s\S]*?<\/li>)+<\/ol>)/g)
-  let olCounter = 0
-  let inSequence = false
-  for (let i = 0; i < tokens.length; i++) {
-    if (tokens[i].startsWith('<ol class="md-ol">')) {
-      const liCount = (tokens[i].match(/<li class="md-oli"/g) || []).length
-      if (liCount === 1) {
-        olCounter++
-        if (olCounter > 1) {
-          tokens[i] = tokens[i].replace('<ol class="md-ol">', `<ol class="md-ol" start="${olCounter}">`)
-        }
-        inSequence = true
-      } else {
-        olCounter = 0
-        inSequence = false
-      }
-    } else if (inSequence) {
-      if (/<h[2-5]/.test(tokens[i])) {
-        olCounter = 0
-        inSequence = false
-      }
-    }
-  }
-  html = tokens.join('')
-
-  return html
 }
 
 const getTimelineItemClass = (log, idx, total) => {
@@ -2093,6 +2024,18 @@ const getLogLevelClass = (log) => {
 // Polling
 let agentLogTimer = null
 let consoleLogTimer = null
+let reportProgressTimer = null
+const handleVisibilityChange = () => {
+  if (document.visibilityState !== 'visible' || !props.reportId) return
+
+  fetchAgentLog()
+  fetchConsoleLog()
+  fetchReportProgress()
+
+  if (!isComplete.value && !reportFailureHandled.value) {
+    startPolling()
+  }
+}
 
 const fetchAgentLog = async () => {
   if (!props.reportId) return
@@ -2109,27 +2052,34 @@ const fetchAgentLog = async () => {
           
           if (log.action === 'planning_complete' && log.details?.outline) {
             reportOutline.value = log.details.outline
+            const total = log.details.outline.sections?.length || 0
+            emit('update-progress', `0/${total}`)
           }
-          
+
           if (log.action === 'section_start') {
             currentSectionIndex.value = log.section_index
+            const total = reportOutline.value?.sections?.length || 0
+            emit('update-progress', `${log.section_index - 1}/${total}`)
           }
 
           // section_complete - 섹션 생성 완료
           if (log.action === 'section_complete') {
             if (log.details?.content) {
               generatedSections.value[log.section_index] = log.details.content
-              // 방금 생성된 섹션 자동 펼치기
-              expandedContent.value.add(log.section_index - 1)
               currentSectionIndex.value = null
+              const total = reportOutline.value?.sections?.length || 0
+              emit('update-progress', `${log.section_index}/${total}`)
             }
           }
-          
+
           if (log.action === 'report_complete') {
             isComplete.value = true
-            currentSectionIndex.value = null  // 로딩 상태 확실히 해제
+            currentSectionIndex.value = null
             emit('update-status', 'completed')
+            emit('update-progress', '')
             stopPolling()
+            // 자동으로 D1에 보고서 저장
+            saveReport()
             // 스크롤 로직은 루프 종료 후 nextTick에서 통합 처리
           }
           
@@ -2176,11 +2126,11 @@ const extractFinalContent = (response) => {
   }
   
   // 최종답안: 뒤의 내용 찾기 시도
-  const chineseFinalMatch = response.match(/最终答案[:：]\s*\n*([\s\S]*)$/i)
-  if (chineseFinalMatch) {
-    return chineseFinalMatch[1].trim()
+  const koreanFinalMatch = response.match(/최종 답변[:：]\s*\n*([\s\S]*)$/i)
+  if (koreanFinalMatch) {
+    return koreanFinalMatch[1].trim()
   }
-  
+
   // ##, # 또는 >로 시작하면 직접적인 markdown 내용일 수 있음
   const trimmedResponse = response.trim()
   if (trimmedResponse.match(/^[#>]/)) {
@@ -2227,14 +2177,36 @@ const fetchConsoleLog = async () => {
   }
 }
 
+const fetchReportProgress = async () => {
+  if (!props.reportId || isComplete.value || reportFailureHandled.value) return
+
+  try {
+    const res = await getReportProgress(props.reportId)
+    if (!res.success || !res.data) return
+
+    const progress = res.data
+    if (progress.status === 'failed') {
+      await handleReportFailure(progress.message || '보고서 생성이 중단되었습니다. 다시 생성해주세요.')
+      return
+    }
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      return
+    }
+    console.warn('Failed to fetch report progress:', err)
+  }
+}
+
 const startPolling = () => {
-  if (agentLogTimer || consoleLogTimer) return
+  if (agentLogTimer || consoleLogTimer || reportProgressTimer) return
   
   fetchAgentLog()
   fetchConsoleLog()
+  fetchReportProgress()
   
   agentLogTimer = setInterval(fetchAgentLog, 2000)
   consoleLogTimer = setInterval(fetchConsoleLog, 1500)
+  reportProgressTimer = setInterval(fetchReportProgress, 2500)
 }
 
 const stopPolling = () => {
@@ -2246,6 +2218,10 @@ const stopPolling = () => {
     clearInterval(consoleLogTimer)
     consoleLogTimer = null
   }
+  if (reportProgressTimer) {
+    clearInterval(reportProgressTimer)
+    reportProgressTimer = null
+  }
 }
 
 // Lifecycle
@@ -2254,9 +2230,11 @@ onMounted(() => {
     addLog(`Report Agent initialized: ${props.reportId}`)
     startPolling()
   }
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   stopPolling()
 })
 
@@ -2269,10 +2247,11 @@ watch(() => props.reportId, (newId) => {
     reportOutline.value = null
     currentSectionIndex.value = null
     generatedSections.value = {}
-    expandedContent.value = new Set()
     expandedLogs.value = new Set()
-    collapsedSections.value = new Set()
     isComplete.value = false
+    reportError.value = ''
+    reportFailureHandled.value = false
+    savedReportPersisted.value = false
     startTime.value = null
     
     startPolling()
@@ -2285,9 +2264,11 @@ watch(() => props.reportId, (newId) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #F8F9FA;
+  background: var(--bg-primary);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Main Split Layout */
@@ -2303,11 +2284,11 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 10px;
   padding: 14px 20px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   position: sticky;
@@ -2319,8 +2300,8 @@ watch(() => props.reportId, (newId) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #1F2937;
-  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.15);
+  background: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
   margin-right: 10px;
   flex-shrink: 0;
   animation: pulse-dot 1.5s ease-in-out infinite;
@@ -2328,17 +2309,17 @@ watch(() => props.reportId, (newId) => {
 
 @keyframes pulse-dot {
   0%, 100% {
-    box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.15);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(31, 41, 55, 0.1);
+    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.1);
   }
 }
 
 .header-index {
   font-size: 12px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-right: 10px;
   flex-shrink: 0;
 }
@@ -2346,42 +2327,44 @@ watch(() => props.reportId, (newId) => {
 .header-title {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-transform: none;
   letter-spacing: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-meta {
   margin-left: auto;
   font-size: 10px;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 /* Panel header status variants */
 .panel-header--active {
-  background: #FAFAFA;
-  border-color: #1F2937;
+  background: var(--bg-tertiary);
+  border-color: var(--accent-color);
 }
 
 .panel-header--active .header-index {
-  color: #1F2937;
+  color: var(--text-primary);
 }
 
 .panel-header--active .header-title {
-  color: #1F2937;
+  color: var(--text-primary);
 }
 
 .panel-header--active .header-meta {
-  color: #1F2937;
+  color: var(--text-primary);
 }
 
 .panel-header--done {
-  background: #F9FAFB;
+  background: var(--bg-secondary);
 }
 
 .panel-header--done .header-index {
@@ -2390,19 +2373,20 @@ watch(() => props.reportId, (newId) => {
 
 .panel-header--todo .header-index,
 .panel-header--todo .header-title {
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 /* Left Panel - Report Style */
 .left-panel.report-style {
   width: 45%;
-  min-width: 450px;
-  background: #FFFFFF;
-  border-right: 1px solid #E5E7EB;
+  min-width: min(450px, 100%);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding: 30px 50px 60px 50px;
+  box-sizing: border-box;
 }
 
 .left-panel::-webkit-scrollbar {
@@ -2420,11 +2404,11 @@ watch(() => props.reportId, (newId) => {
 }
 
 .left-panel:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .left-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Report Header */
@@ -2446,7 +2430,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 .report-tag {
-  background: #000000;
+  background: var(--accent-color);
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 700;
@@ -2457,7 +2441,7 @@ watch(() => props.reportId, (newId) => {
 
 .report-id {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -2466,7 +2450,7 @@ watch(() => props.reportId, (newId) => {
   font-family: 'Times New Roman', Times, serif;
   font-size: 36px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   line-height: 1.2;
   margin: 0 0 16px 0;
   letter-spacing: -0.02em;
@@ -2475,7 +2459,7 @@ watch(() => props.reportId, (newId) => {
 .sub-title {
   font-family: 'Times New Roman', Times, serif;
   font-size: 16px;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-style: italic;
   line-height: 1.6;
   margin: 0 0 30px 0;
@@ -2484,7 +2468,7 @@ watch(() => props.reportId, (newId) => {
 
 .header-divider {
   height: 1px;
-  background: #E5E7EB;
+  background: var(--border-color);
   width: 100%;
 }
 
@@ -2516,12 +2500,12 @@ watch(() => props.reportId, (newId) => {
 }
 
 .section-header-row.clickable:hover {
-  background-color: #F9FAFB;
+  background-color: var(--bg-tertiary);
 }
 
 .collapse-icon {
   margin-left: auto;
-  color: #9CA3AF;
+  color: var(--text-muted);
   transition: transform 0.3s ease;
   flex-shrink: 0;
   align-self: center;
@@ -2534,7 +2518,7 @@ watch(() => props.reportId, (newId) => {
 .section-number {
   font-family: 'JetBrains Mono', monospace;
   font-size: 16px;
-  color: #9CA3AF; /* 진한 회색, 상태에 따라 변하지 않음 */
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -2542,19 +2526,19 @@ watch(() => props.reportId, (newId) => {
   font-family: 'Times New Roman', Times, serif;
   font-size: 24px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0;
   transition: color 0.3s ease;
 }
 
 /* States */
 .report-section-item.is-pending .section-title {
-  color: #D1D5DB;
+  color: var(--text-muted);
 }
 
 .report-section-item.is-active .section-title,
 .report-section-item.is-completed .section-title {
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .section-body {
@@ -2567,7 +2551,10 @@ watch(() => props.reportId, (newId) => {
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.8;
-  color: #374151;
+  color: var(--text-secondary);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .generated-content :deep(p) {
@@ -2578,13 +2565,13 @@ watch(() => props.reportId, (newId) => {
 .generated-content :deep(.md-h3),
 .generated-content :deep(.md-h4) {
   font-family: 'Times New Roman', Times, serif;
-  color: #111827;
+  color: var(--text-primary);
   margin-top: 1.5em;
   margin-bottom: 0.8em;
   font-weight: 700;
 }
 
-.generated-content :deep(.md-h2) { font-size: 20px; border-bottom: 1px solid #F3F4F6; padding-bottom: 8px; }
+.generated-content :deep(.md-h2) { font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
 .generated-content :deep(.md-h3) { font-size: 18px; }
 .generated-content :deep(.md-h4) { font-size: 16px; }
 
@@ -2600,28 +2587,56 @@ watch(() => props.reportId, (newId) => {
 }
 
 .generated-content :deep(.md-quote) {
-  border-left: 3px solid #E5E7EB;
+  border-left: 3px solid var(--border-color);
   padding-left: 16px;
   margin: 1.5em 0;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-style: italic;
   font-family: 'Times New Roman', Times, serif;
 }
 
 .generated-content :deep(.code-block) {
-  background: #F9FAFB;
+  background: var(--bg-tertiary);
   padding: 12px;
   border-radius: 6px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   overflow-x: auto;
   margin: 1em 0;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
 }
 
 .generated-content :deep(strong) {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
+}
+
+.generated-content :deep(.md-table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.generated-content :deep(.md-th),
+.generated-content :deep(.md-td) {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.generated-content :deep(.md-th) {
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.generated-content :deep(.md-table tr:last-child .md-td) {
+  border-bottom: 0;
 }
 
 /* Loading State */
@@ -2629,7 +2644,7 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #6B7280;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-top: 4px;
 }
@@ -2646,7 +2661,7 @@ watch(() => props.reportId, (newId) => {
 .loading-text {
   font-family: 'Times New Roman', Times, serif;
   font-size: 15px;
-  color: #4B5563;
+  color: var(--text-secondary);
 }
 
 .cursor-blink {
@@ -2703,7 +2718,13 @@ watch(() => props.reportId, (newId) => {
   justify-content: center;
   gap: 20px;
   padding: 40px;
-  color: #9CA3AF;
+  color: var(--text-muted);
+}
+
+.waiting-placeholder--error {
+  align-items: flex-start;
+  justify-content: center;
+  color: var(--text-primary);
 }
 
 .waiting-animation {
@@ -2716,7 +2737,7 @@ watch(() => props.reportId, (newId) => {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 2px solid #E5E7EB;
+  border: 2px solid var(--border-color);
   border-radius: 50%;
   animation: ripple 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -2738,29 +2759,89 @@ watch(() => props.reportId, (newId) => {
   font-size: 14px;
 }
 
+.waiting-error-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.waiting-error-text {
+  max-width: 480px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.waiting-error-btn {
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-error-banner {
+  margin: 16px 20px 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 18px;
+}
+
+.report-error-banner__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.report-error-banner__text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.report-error-banner__btn {
+  margin-top: 12px;
+  border: none;
+  background: #111827;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Right Panel */
 .right-panel {
   flex: 1;
-  background: #FFFFFF;
+  background: var(--bg-primary);
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
 
-  /* Functional palette (low saturation, status-based) */
-  --wf-border: #E5E7EB;
-  --wf-divider: #F3F4F6;
+  /* Functional palette (dark theme aware) */
+  --wf-border: var(--border-color);
+  --wf-divider: rgba(255,255,255,0.04);
 
-  --wf-active-bg: #FAFAFA;
-  --wf-active-border: #1F2937;
-  --wf-active-dot: #1F2937;
-  --wf-active-text: #1F2937;
+  --wf-active-bg: var(--bg-tertiary);
+  --wf-active-border: var(--accent-color);
+  --wf-active-dot: var(--accent-color);
+  --wf-active-text: var(--text-primary);
 
-  --wf-done-bg: #F9FAFB;
-  --wf-done-border: #E5E7EB;
+  --wf-done-bg: var(--bg-secondary);
+  --wf-done-border: var(--border-color);
   --wf-done-dot: #10B981;
 
-  --wf-muted-dot: #D1D5DB;
-  --wf-todo-text: #9CA3AF;
+  --wf-muted-dot: var(--text-muted);
+  --wf-todo-text: var(--text-muted);
 }
 
 .right-panel::-webkit-scrollbar {
@@ -2778,15 +2859,17 @@ watch(() => props.reportId, (newId) => {
 }
 
 .right-panel:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .right-panel::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .mono {
   font-family: 'JetBrains Mono', monospace;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 /* Workflow Overview */
@@ -2815,14 +2898,14 @@ watch(() => props.reportId, (newId) => {
 .metric-label {
   font-size: 11px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .metric-value {
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .metric-pill {
@@ -2833,8 +2916,8 @@ watch(() => props.reportId, (newId) => {
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--wf-border);
-  background: #F9FAFB;
-  color: #6B7280;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 .metric-pill.pill--processing {
@@ -2844,15 +2927,15 @@ watch(() => props.reportId, (newId) => {
 }
 
 .metric-pill.pill--completed {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-  color: #065F46;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10B981;
 }
 
 .metric-pill.pill--pending {
   background: transparent;
   border-style: dashed;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .workflow-steps {
@@ -2869,7 +2952,7 @@ watch(() => props.reportId, (newId) => {
   padding: 10px 12px;
   border: 1px solid var(--wf-divider);
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--bg-secondary);
 }
 
 .wf-step--active {
@@ -2901,7 +2984,7 @@ watch(() => props.reportId, (newId) => {
   height: 10px;
   border-radius: 50%;
   background: var(--wf-muted-dot);
-  border: 2px solid #FFFFFF;
+  border: 2px solid var(--bg-secondary);
   z-index: 1;
 }
 
@@ -2931,7 +3014,7 @@ watch(() => props.reportId, (newId) => {
 .wf-step-index {
   font-size: 11px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--text-muted);
   letter-spacing: 0.02em;
   flex-shrink: 0;
 }
@@ -2940,7 +3023,7 @@ watch(() => props.reportId, (newId) => {
   font-family: 'Times New Roman', Times, serif;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   line-height: 1.35;
   min-width: 0;
   overflow: hidden;
@@ -2983,12 +3066,12 @@ watch(() => props.reportId, (newId) => {
   margin-bottom: 10px;
   border: 1px solid var(--wf-divider);
   border-radius: 8px;
-  background: #FFFFFF;
+  background: var(--bg-secondary);
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .timeline-item:hover {
-  background: #F9FAFB;
+  background: var(--bg-tertiary);
   border-color: var(--wf-border);
 }
 
@@ -3025,7 +3108,7 @@ watch(() => props.reportId, (newId) => {
   height: 12px;
   border-radius: 50%;
   background: var(--wf-muted-dot);
-  border: 2px solid #FFFFFF;
+  border: 2px solid var(--bg-secondary);
   z-index: 1;
 }
 
@@ -3052,6 +3135,8 @@ watch(() => props.reportId, (newId) => {
 
 .timeline-content {
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -3074,20 +3159,23 @@ watch(() => props.reportId, (newId) => {
 .action-label {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .action-time {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 
 .timeline-body {
   font-size: 13px;
-  color: #4B5563;
+  color: var(--text-secondary);
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .timeline-footer {
@@ -3096,7 +3184,7 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #F3F4F6;
+  border-top: 1px solid var(--wf-divider);
 }
 
 .elapsed-placeholder {
@@ -3111,8 +3199,8 @@ watch(() => props.reportId, (newId) => {
 
 .elapsed-badge {
   font-size: 11px;
-  color: #6B7280;
-  background: #F3F4F6;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
   padding: 2px 8px;
   border-radius: 10px;
   font-family: 'JetBrains Mono', monospace;
@@ -3123,16 +3211,22 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 8px;
   margin-bottom: 6px;
+  overflow: hidden;
 }
 
 .info-key {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   min-width: 80px;
+  flex-shrink: 0;
 }
 
 .info-val {
-  color: #374151;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  font-size: 12px;
 }
 
 .status-message {
@@ -3149,18 +3243,18 @@ watch(() => props.reportId, (newId) => {
 }
 
 .status-message.success {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
-  color: #065F46;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10B981;
 }
 
 .outline-badge {
   display: inline-block;
   margin-top: 8px;
   padding: 4px 10px;
-  background: #F9FAFB;
-  color: #6B7280;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
@@ -3171,7 +3265,7 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #F9FAFB;
+  background: var(--bg-tertiary);
   border: 1px solid var(--wf-border);
   border-radius: 6px;
 }
@@ -3187,8 +3281,8 @@ watch(() => props.reportId, (newId) => {
 
 
 .section-tag.completed {
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .section-tag.completed svg {
@@ -3198,7 +3292,7 @@ watch(() => props.reportId, (newId) => {
 .tag-num {
   font-size: 11px;
   font-weight: 700;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 .section-tag.completed .tag-num {
@@ -3208,7 +3302,7 @@ watch(() => props.reportId, (newId) => {
 .tag-title {
   font-size: 13px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .tool-badge {
@@ -3216,8 +3310,8 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #F9FAFB;
-  color: #374151;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border: 1px solid var(--wf-border);
   border-radius: 6px;
   font-size: 12px;
@@ -3291,9 +3385,9 @@ watch(() => props.reportId, (newId) => {
 
 /* Tool Colors - Gray (Default) */
 .tool-badge.tool-gray {
-  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  border-color: #D1D5DB;
-  color: #374151;
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-surface) 100%);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-primary);
 }
 .tool-badge.tool-gray .tool-icon {
   stroke: #6B7280;
@@ -3312,33 +3406,33 @@ watch(() => props.reportId, (newId) => {
   margin: 0;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: #4B5563;
+  color: var(--text-secondary);
   white-space: pre-wrap;
   word-break: break-all;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 10px;
 }
 
 /* Unified Action Buttons */
 .action-btn {
-  background: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   padding: 4px 10px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .action-btn:hover {
-  background: #E5E7EB;
-  color: #374151;
-  border-color: #D1D5DB;
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.1);
 }
 
 /* Result Wrapper */
@@ -3360,12 +3454,12 @@ watch(() => props.reportId, (newId) => {
 .result-tool {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .result-size {
   font-size: 10px;
-  color: #6B7280;
+  color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -3381,9 +3475,9 @@ watch(() => props.reportId, (newId) => {
   font-size: 11px;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #374151;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: 6px;
 }
@@ -3394,7 +3488,7 @@ watch(() => props.reportId, (newId) => {
   font-size: 11px;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 /* Legacy toggle-raw removed - using unified .action-btn */
@@ -3409,19 +3503,19 @@ watch(() => props.reportId, (newId) => {
 .meta-tag {
   font-size: 11px;
   padding: 3px 8px;
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
   border-radius: 4px;
 }
 
 .meta-tag.active {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
 }
 
 .meta-tag.final-answer {
-  background: #D1FAE5;
-  color: #059669;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
   font-weight: 600;
 }
 
@@ -3431,10 +3525,10 @@ watch(() => props.reportId, (newId) => {
   gap: 8px;
   margin-top: 10px;
   padding: 10px 14px;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 6px;
-  color: #065F46;
+  color: #10B981;
   font-size: 12px;
   font-weight: 500;
 }
@@ -3455,8 +3549,8 @@ watch(() => props.reportId, (newId) => {
   font-size: 11px;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #4B5563;
-  background: #F3F4F6;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
   padding: 10px;
   border-radius: 6px;
 }
@@ -3467,10 +3561,10 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 8px;
-  color: #065F46;
+  color: #10B981;
   font-weight: 600;
   font-size: 14px;
 }
@@ -3480,13 +3574,14 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: calc(100% - 40px);
-  margin: 4px 20px 0 20px;
+  width: auto;
+  margin: 4px 14px 0 14px;
   padding: 14px 20px;
+  box-sizing: border-box;
   font-size: 14px;
   font-weight: 600;
   color: #FFFFFF;
-  background: #1F2937;
+  background: var(--accent-color);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -3494,7 +3589,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 .next-step-btn:hover {
-  background: #374151;
+  background: #5558e6;
 }
 
 .next-step-btn svg {
@@ -3508,7 +3603,8 @@ watch(() => props.reportId, (newId) => {
 .report-action-buttons {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin: 8px 14px 0 14px;
+  box-sizing: border-box;
 }
 
 .save-report-btn, .pdf-download-btn {
@@ -3534,9 +3630,23 @@ watch(() => props.reportId, (newId) => {
   background: #5558e6;
 }
 .save-report-btn:disabled, .pdf-download-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
 }
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes btn-spin { to { transform: rotate(360deg); } }
 
 /* Workflow Empty */
 .workflow-empty {
@@ -3545,14 +3655,14 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
 .empty-pulse {
   width: 24px;
   height: 24px;
-  background: #E5E7EB;
+  background: var(--text-muted);
   border-radius: 50%;
   margin-bottom: 16px;
   animation: pulse-ring 1.5s infinite;
@@ -3584,8 +3694,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.stat-box) {
   flex: 1;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 10px 8px;
   text-align: center;
@@ -3595,69 +3705,69 @@ watch(() => props.reportId, (newId) => {
   display: block;
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   font-family: 'JetBrains Mono', monospace;
 }
 
 :deep(.stat-box .stat-label) {
   display: block;
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 :deep(.stat-box.highlight) {
-  background: #ECFDF5;
-  border-color: #A7F3D0;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 :deep(.stat-box.highlight .stat-num) {
-  color: #059669;
+  color: #10B981;
 }
 
 :deep(.stat-box.muted) {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
 }
 
 :deep(.stat-box.muted .stat-num) {
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 :deep(.query-display) {
-  background: #F9FAFB;
+  background: var(--bg-tertiary);
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
   margin-bottom: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--border-color);
   line-height: 1.5;
 }
 
 :deep(.expand-details) {
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.expand-details:hover) {
-  border-color: #D1D5DB;
-  color: #374151;
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-primary);
 }
 
 :deep(.detail-content) {
   margin-top: 14px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px;
 }
@@ -3665,12 +3775,12 @@ watch(() => props.reportId, (newId) => {
 :deep(.section-label) {
   font-size: 11px;
   font-weight: 600;
-  color: #6B7280;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 10px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Facts Section */
@@ -3682,7 +3792,7 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.fact-row:last-child) {
@@ -3690,7 +3800,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 :deep(.fact-row.active) {
-  background: #ECFDF5;
+  background: rgba(16, 185, 129, 0.08);
   margin: 0 -10px;
   padding: 8px 10px;
   border-radius: 6px;
@@ -3703,22 +3813,22 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F3F4F6;
+  background: var(--bg-tertiary);
   border-radius: 6px;
   font-size: 10px;
   font-weight: 700;
-  color: #6B7280;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 :deep(.fact-row.active .fact-idx) {
-  background: #A7F3D0;
-  color: #065F46;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
 }
 
 :deep(.fact-text) {
   font-size: 12px;
-  color: #4B5563;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -3737,8 +3847,8 @@ watch(() => props.reportId, (newId) => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 6px 12px;
 }
@@ -3746,13 +3856,13 @@ watch(() => props.reportId, (newId) => {
 :deep(.chip-name) {
   font-size: 12px;
   font-weight: 500;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 :deep(.chip-type) {
   font-size: 10px;
-  color: #9CA3AF;
-  background: #E5E7EB;
+  color: var(--text-muted);
+  background: var(--bg-surface);
   padding: 1px 6px;
   border-radius: 3px;
 }
@@ -3768,7 +3878,7 @@ watch(() => props.reportId, (newId) => {
   gap: 8px;
   padding: 8px 0;
   flex-wrap: wrap;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.relation-row:last-child) {
@@ -3778,8 +3888,8 @@ watch(() => props.reportId, (newId) => {
 :deep(.rel-node) {
   font-size: 12px;
   font-weight: 500;
-  color: #111827;
-  background: #F3F4F6;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
   padding: 4px 10px;
   border-radius: 4px;
 }
@@ -3816,7 +3926,7 @@ watch(() => props.reportId, (newId) => {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
@@ -3841,25 +3951,25 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .stat-label) {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-transform: lowercase;
 }
 
 :deep(.interview-display .stat-divider) {
-  color: #D1D5DB;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
 :deep(.interview-display .stat-size) {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 
 :deep(.interview-display .header-topic) {
   margin-top: 4px;
   font-size: 12px;
-  color: #6B7280;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -3869,11 +3979,11 @@ watch(() => props.reportId, (newId) => {
   gap: 8px;
   padding: 0 0 14px 0;
   background: transparent;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  scrollbar-color: #E5E7EB transparent;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
 }
 
 :deep(.interview-display .agent-tabs::-webkit-scrollbar) {
@@ -3885,12 +3995,12 @@ watch(() => props.reportId, (newId) => {
 }
 
 :deep(.interview-display .agent-tabs::-webkit-scrollbar-thumb) {
-  background: #E5E7EB;
+  background: rgba(255,255,255,0.08);
   border-radius: 2px;
 }
 
 :deep(.interview-display .agent-tabs::-webkit-scrollbar-thumb:hover) {
-  background: #D1D5DB;
+  background: rgba(255,255,255,0.12);
 }
 
 :deep(.interview-display .agent-tab) {
@@ -3898,21 +4008,21 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 :deep(.interview-display .agent-tab:hover) {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
-  color: #374151;
+  background: var(--bg-tertiary);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-primary);
 }
 
 :deep(.interview-display .agent-tab.active) {
@@ -3928,8 +4038,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E5E7EB;
-  color: #6B7280;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
   font-size: 10px;
   font-weight: 700;
   border-radius: 50%;
@@ -3937,7 +4047,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 :deep(.interview-display .agent-tab:hover .tab-avatar) {
-  background: #D1D5DB;
+  background: rgba(255,255,255,0.12);
 }
 
 :deep(.interview-display .agent-tab.active .tab-avatar) {
@@ -3973,8 +4083,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E5E7EB;
-  color: #6B7280;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 600;
   border-radius: 50%;
@@ -3989,19 +4099,19 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .profile-name) {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 :deep(.interview-display .profile-role) {
   font-size: 11px;
-  color: #6B7280;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 :deep(.interview-display .profile-bio) {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -4011,8 +4121,8 @@ watch(() => props.reportId, (newId) => {
 
 /* Selection Reason - 선택 이유 */
 :deep(.interview-display .selection-reason) {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px 14px;
   margin-bottom: 16px;
@@ -4021,7 +4131,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .reason-label) {
   font-size: 11px;
   font-weight: 600;
-  color: #64748B;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-bottom: 6px;
@@ -4029,7 +4139,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .reason-content) {
   font-size: 12px;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -4071,8 +4181,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .q-badge) {
   background: transparent;
-  color: #9CA3AF;
-  border: 1px solid #E5E7EB;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
 }
 
 :deep(.interview-display .a-badge) {
@@ -4089,7 +4199,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .qa-sender) {
   font-size: 11px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -4097,7 +4207,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .qa-text) {
   font-size: 13px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -4114,7 +4224,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .placeholder-text) {
   font-style: italic;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.interview-display .qa-answer-header) {
@@ -4143,19 +4253,19 @@ watch(() => props.reportId, (newId) => {
   border-radius: 4px;
   font-size: 10px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.interview-display .platform-btn:hover) {
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 :deep(.interview-display .platform-btn.active) {
   background: transparent;
   color: #4F46E5;
-  border-color: #E5E7EB;
+  border-color: var(--border-color);
   box-shadow: none;
 }
 
@@ -4165,12 +4275,12 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .answer-text) {
   font-size: 13px;
-  color: #111827;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
 :deep(.interview-display .answer-text strong) {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -4180,18 +4290,18 @@ watch(() => props.reportId, (newId) => {
   padding: 0;
   background: transparent;
   border: none;
-  border-bottom: 1px dotted #D1D5DB;
+  border-bottom: 1px dotted var(--border-color);
   border-radius: 0;
   font-size: 11px;
   font-weight: 500;
-  color: #9CA3AF;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.interview-display .expand-answer-btn:hover) {
   background: transparent;
-  color: #6B7280;
+  color: var(--text-secondary);
   border-bottom-style: solid;
 }
 
@@ -4199,7 +4309,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .quotes-section) {
   background: transparent;
   border: none;
-  border-top: 1px solid #F3F4F6;
+  border-top: 1px solid var(--border-color);
   border-radius: 0;
   padding: 16px 0 0 0;
   margin-top: 16px;
@@ -4208,7 +4318,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .quotes-header) {
   font-size: 11px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 12px;
@@ -4223,12 +4333,12 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .quote-item) {
   margin: 0;
   padding: 10px 12px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 12px;
   font-style: italic;
-  color: #4B5563;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -4238,14 +4348,14 @@ watch(() => props.reportId, (newId) => {
   padding: 16px 0 0 0;
   background: transparent;
   border: none;
-  border-top: 1px solid #F3F4F6;
+  border-top: 1px solid var(--border-color);
   border-radius: 0;
 }
 
 :deep(.interview-display .summary-header) {
   font-size: 11px;
   font-weight: 600;
-  color: #9CA3AF;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 8px;
@@ -4253,7 +4363,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .summary-content) {
   font-size: 13px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -4264,7 +4374,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .summary-content h5) {
   margin: 12px 0 8px 0;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 :deep(.interview-display .summary-content h2) {
@@ -4286,7 +4396,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.interview-display .summary-content strong) {
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 :deep(.interview-display .summary-content em) {
@@ -4306,15 +4416,15 @@ watch(() => props.reportId, (newId) => {
 :deep(.interview-display .summary-content blockquote) {
   margin: 8px 0;
   padding-left: 12px;
-  border-left: 3px solid #E5E7EB;
-  color: #6B7280;
+  border-left: 3px solid var(--border-color);
+  color: var(--text-secondary);
   font-style: italic;
 }
 
 /* Markdown styles in quotes */
 :deep(.interview-display .quote-item strong) {
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.interview-display .quote-item em) {
@@ -4379,7 +4489,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.insight-header .stat-size) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.insight-header .header-topic) {
@@ -4402,8 +4512,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 2px;
   padding: 8px 12px;
-  background: #FAFAFA;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-top: none;
 }
 
@@ -4417,18 +4527,18 @@ watch(() => props.reportId, (newId) => {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.insight-tab:hover) {
-  background: #F3F4F6;
-  color: #374151;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 :deep(.insight-tab.active) {
-  background: #FFFFFF;
+  background: var(--bg-secondary);
   color: #7C3AED;
   border-color: #C4B5FD;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -4437,8 +4547,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.insight-content) {
   padding: 12px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 8px 8px;
 }
@@ -4449,18 +4559,18 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.insight-display .panel-title) {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.insight-display .panel-count) {
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.insight-display .facts-list),
@@ -4481,8 +4591,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
@@ -4493,18 +4603,18 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E5E7EB;
+  background: rgba(255,255,255,0.08);
   border-radius: 50%;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 :deep(.insight-display .fact-content) {
   flex: 1;
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -4514,43 +4624,43 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: default;
   transition: all 0.15s ease;
 }
 
 :deep(.insight-display .entity-tag:hover) {
-  background: #F3F4F6;
-  border-color: #D1D5DB;
+  background: var(--bg-tertiary);
+  border-color: rgba(255,255,255,0.1);
 }
 
 :deep(.insight-display .entity-tag .entity-name) {
   font-size: 12px;
   font-weight: 500;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 :deep(.insight-display .entity-tag .entity-type) {
   font-size: 9px;
   color: #7C3AED;
-  background: #EDE9FE;
+  background: rgba(124, 58, 237, 0.15);
   padding: 1px 4px;
   border-radius: 3px;
 }
 
 :deep(.insight-display .entity-tag .entity-fact-count) {
   font-size: 9px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-left: 2px;
 }
 
 /* Legacy entity card styles for backwards compatibility */
 :deep(.insight-display .entity-card) {
   padding: 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
 }
 
@@ -4567,13 +4677,13 @@ watch(() => props.reportId, (newId) => {
 :deep(.insight-display .entity-card .entity-name) {
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 :deep(.insight-display .entity-card .entity-type) {
   font-size: 10px;
   color: #7C3AED;
-  background: #EDE9FE;
+  background: rgba(124, 58, 237, 0.15);
   padding: 2px 6px;
   border-radius: 4px;
   display: inline-block;
@@ -4582,8 +4692,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.insight-display .entity-card .entity-fact-count) {
   font-size: 10px;
-  color: #9CA3AF;
-  background: #F3F4F6;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -4591,9 +4701,9 @@ watch(() => props.reportId, (newId) => {
 :deep(.insight-display .entity-summary) {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid var(--border-color);
   font-size: 11px;
-  color: #6B7280;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -4603,20 +4713,20 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.insight-display .rel-source),
 :deep(.insight-display .rel-target) {
   padding: 4px 8px;
-  background: #FFFFFF;
-  border: 1px solid #D1D5DB;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.insight-display .rel-arrow) {
@@ -4629,12 +4739,12 @@ watch(() => props.reportId, (newId) => {
 :deep(.insight-display .rel-line) {
   flex: 1;
   height: 1px;
-  background: #D1D5DB;
+  background: rgba(255,255,255,0.12);
 }
 
 :deep(.insight-display .rel-label) {
   padding: 2px 6px;
-  background: #EDE9FE;
+  background: rgba(124, 58, 237, 0.15);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 500;
@@ -4647,8 +4757,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
@@ -4665,7 +4775,7 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.insight-display .subquery-text) {
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
@@ -4677,12 +4787,12 @@ watch(() => props.reportId, (newId) => {
   width: 100%;
   margin-top: 12px;
   padding: 8px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: center;
@@ -4691,9 +4801,9 @@ watch(() => props.reportId, (newId) => {
 :deep(.insight-display .expand-btn:hover),
 :deep(.panorama-display .expand-btn:hover),
 :deep(.quick-search-display .expand-btn:hover) {
-  background: #F3F4F6;
-  color: #374151;
-  border-color: #D1D5DB;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.1);
 }
 
 /* Empty State */
@@ -4703,7 +4813,7 @@ watch(() => props.reportId, (newId) => {
   padding: 24px;
   text-align: center;
   font-size: 12px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 /* ========== Enhanced Panorama Display Styles ========== */
@@ -4764,7 +4874,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.panorama-header .stat-size) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.panorama-header .header-topic) {
@@ -4777,8 +4887,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 2px;
   padding: 8px 12px;
-  background: #FAFAFA;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-top: none;
 }
 
@@ -4792,18 +4902,18 @@ watch(() => props.reportId, (newId) => {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.panorama-tab:hover) {
-  background: #F3F4F6;
-  color: #374151;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 :deep(.panorama-tab.active) {
-  background: #FFFFFF;
+  background: var(--bg-secondary);
   color: #2563EB;
   border-color: #93C5FD;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -4812,8 +4922,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.panorama-content) {
   padding: 12px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 8px 8px;
 }
@@ -4824,18 +4934,18 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.panorama-display .panel-title) {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.panorama-display .panel-count) {
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.panorama-display .facts-list) {
@@ -4848,19 +4958,19 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.panorama-display .fact-item.active) {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
 }
 
 :deep(.panorama-display .fact-item.historical) {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
 }
 
 :deep(.panorama-display .fact-number) {
@@ -4870,35 +4980,35 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E5E7EB;
+  background: rgba(255,255,255,0.08);
   border-radius: 50%;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 :deep(.panorama-display .fact-item.active .fact-number) {
-  background: #E5E7EB;
-  color: #6B7280;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
 }
 
 :deep(.panorama-display .fact-item.historical .fact-number) {
-  background: #9CA3AF;
+  background: var(--text-muted);
   color: #FFFFFF;
 }
 
 :deep(.panorama-display .fact-content) {
   flex: 1;
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
 :deep(.panorama-display .fact-time) {
   display: block;
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
   margin-bottom: 4px;
   font-family: 'JetBrains Mono', monospace;
 }
@@ -4919,21 +5029,21 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.panorama-display .entity-name) {
   font-size: 12px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.panorama-display .entity-type) {
   font-size: 10px;
   color: #2563EB;
-  background: #DBEAFE;
+  background: rgba(59, 130, 246, 0.15);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -4996,7 +5106,7 @@ watch(() => props.reportId, (newId) => {
 :deep(.quicksearch-header .stat-size) {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.quicksearch-header .header-query) {
@@ -5013,8 +5123,8 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 2px;
   padding: 8px 12px;
-  background: #FAFAFA;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-top: none;
 }
 
@@ -5028,18 +5138,18 @@ watch(() => props.reportId, (newId) => {
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
-  color: #6B7280;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.quicksearch-tab:hover) {
-  background: #F3F4F6;
-  color: #374151;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 :deep(.quicksearch-tab.active) {
-  background: #FFFFFF;
+  background: var(--bg-secondary);
   color: #EA580C;
   border-color: #FDBA74;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -5048,8 +5158,8 @@ watch(() => props.reportId, (newId) => {
 
 :deep(.quicksearch-content) {
   padding: 12px;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-top: none;
   border-radius: 0 0 8px 8px;
 }
@@ -5065,18 +5175,18 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 :deep(.quick-search-display .panel-title) {
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.quick-search-display .panel-count) {
   font-size: 10px;
-  color: #9CA3AF;
+  color: var(--text-muted);
 }
 
 :deep(.quick-search-display .facts-list) {
@@ -5089,14 +5199,14 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   gap: 10px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.quick-search-display .fact-item.active) {
-  background: #F9FAFB;
-  border-color: #E5E7EB;
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
 }
 
 :deep(.quick-search-display .fact-number) {
@@ -5106,23 +5216,23 @@ watch(() => props.reportId, (newId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E5E7EB;
+  background: rgba(255,255,255,0.08);
   border-radius: 50%;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #6B7280;
+  color: var(--text-secondary);
 }
 
 :deep(.quick-search-display .fact-item.active .fact-number) {
-  background: #E5E7EB;
-  color: #6B7280;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
 }
 
 :deep(.quick-search-display .fact-content) {
   flex: 1;
   font-size: 12px;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.6;
 }
 
@@ -5138,20 +5248,20 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.quick-search-display .edge-source),
 :deep(.quick-search-display .edge-target) {
   padding: 4px 8px;
-  background: #FFFFFF;
-  border: 1px solid #D1D5DB;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.quick-search-display .edge-arrow) {
@@ -5164,12 +5274,12 @@ watch(() => props.reportId, (newId) => {
 :deep(.quick-search-display .edge-line) {
   flex: 1;
   height: 1px;
-  background: #D1D5DB;
+  background: rgba(255,255,255,0.12);
 }
 
 :deep(.quick-search-display .edge-label) {
   padding: 2px 6px;
-  background: #FFEDD5;
+  background: rgba(234, 88, 12, 0.12);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 500;
@@ -5189,43 +5299,43 @@ watch(() => props.reportId, (newId) => {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
 :deep(.quick-search-display .node-name) {
   font-size: 12px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 :deep(.quick-search-display .node-type) {
   font-size: 10px;
   color: #EA580C;
-  background: #FFEDD5;
+  background: rgba(234, 88, 12, 0.12);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 /* Console Logs - Step3Simulation.vue와 일관성 유지 */
 .console-logs {
-  background: #000;
-  color: #DDD;
+  background: #08080c;
+  color: var(--text-secondary);
   padding: 16px;
   font-family: 'JetBrains Mono', monospace;
-  border-top: 1px solid #222;
+  border-top: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
 }
 
 .log-header {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   padding-bottom: 8px;
   margin-bottom: 8px;
   font-size: 10px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .log-title {
@@ -5243,7 +5353,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 .log-content::-webkit-scrollbar { width: 4px; }
-.log-content::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+.log-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .log-line {
   font-size: 11px;
@@ -5251,11 +5361,140 @@ watch(() => props.reportId, (newId) => {
 }
 
 .log-msg {
-  color: #BBB;
+  color: var(--text-secondary);
   word-break: break-all;
 }
 
 .log-msg.error { color: #EF5350; }
 .log-msg.warning { color: #FFA726; }
 .log-msg.success { color: #66BB6A; }
+
+/* Desktop: 콘솔 숨기고 레이아웃 최적화 */
+@media (min-width: 1024px) {
+  .console-logs {
+    display: none;
+  }
+
+  .main-split-layout {
+    flex-direction: row;
+  }
+
+  .left-panel.report-style {
+    width: 60% !important;
+    min-width: 0;
+  }
+
+  .right-panel {
+    width: 40% !important;
+    min-width: 0;
+  }
+
+  .report-content-wrapper {
+    max-width: 100%;
+    padding: 32px 28px 48px;
+  }
+
+  .main-title {
+    font-size: 1.6rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Stack left/right panels vertically */
+  .main-split-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .left-panel.report-style {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 12px 32px 12px;
+    overflow-y: visible;
+    height: auto;
+    box-sizing: border-box;
+  }
+
+  .right-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto;
+    overflow-y: visible;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .workflow-overview {
+    padding: 12px 14px 0 14px;
+  }
+
+  .workflow-timeline {
+    padding: 0 14px;
+  }
+
+  .info-val.mono {
+    font-size: 11px;
+  }
+
+  /* Hide system logs and console on mobile */
+  .system-logs,
+  .console-logs {
+    display: none !important;
+  }
+
+  .report-content-wrapper {
+    max-width: 100%;
+  }
+
+  .panel-header {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  /* Report header responsive */
+  .main-title {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+  }
+
+  .sub-title {
+    font-size: 13px !important;
+  }
+
+  /* Section content */
+  .section-header-row {
+    gap: 8px !important;
+  }
+
+  .section-number {
+    font-size: 14px !important;
+    min-width: 24px !important;
+  }
+
+  .section-title {
+    font-size: 14px !important;
+  }
+
+  /* Action buttons full width */
+  .report-action-buttons {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .save-report-btn,
+  .pdf-download-btn,
+  .next-step-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Workflow metrics compact */
+  .workflow-metrics {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
 </style>

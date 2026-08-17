@@ -1,9 +1,10 @@
 services:
-  mirofish:
-    image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
-    # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+  tiresias:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tiresias:local
+    container_name: tiresias
     env_file:
       - .env
     ports:

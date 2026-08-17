@@ -1,0 +1,27 @@
+# Worker secrets / local dev vars
+# Copy to workers/.dev.vars for local Wrangler dev,
+# or register the same keys as Cloudflare Worker secrets/vars in production.
+
+SIMULATION_API=https://api.tiresiasview.com
+INTERNAL_API_KEY=
+OPENAI_ADMIN_KEY=
+
+# Existing auth
+JWT_SECRET=change-this-to-a-random-32-plus-character-secret
+
+# Signup email verification
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=login@tiresiasview.com
+RESEND_FROM_NAME=Tiresias View
+AUTH_SIGNUP_VERIFICATION_SECRET=change-this-to-a-separate-random-32-plus-character-secret
+AUTH_SIGNUP_VERIFICATION_TTL_HOURS=24
+AUTH_BASE_URL=https://tiresiasview.com
+SUPPORT_EMAIL=support@tiresiasview.com
+
+# Google Search Console diagnostics
+# The refresh token must be authorized with:
+# https://www.googleapis.com/auth/webmasters
+GOOGLE_SEARCH_CONSOLE_SITE_URL=
+GOOGLE_SEARCH_CONSOLE_CLIENT_ID=
+GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET=
+GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN=

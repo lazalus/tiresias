@@ -1,7 +1,7 @@
-"""Zep Graph 分页读取工具。
+"""Zep Graph 페이지별 읽기 도구.
 
-Zep 的 node/edge 列表接口使用 UUID cursor 分页，
-本模块封装自动翻页逻辑（含单页重试），对调用方透明地返回完整列表。
+Zep의 노드/엣지 목록 인터페이스는 UUID 커서로 페이지를 나누며,
+이 모듈은 자동 페이지 넘김 로직(단일 페이지 재시도 포함)을 캡슐화하여 호출자에게 투명하게 전체 목록을 반환합니다.
 """
 
 from __future__ import annotations
@@ -10,17 +10,46 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from zep_cloud import InternalServerError
-from zep_cloud.client import Zep
+try:
+    from zep_cloud import InternalServerError
+    from zep_cloud.client import Zep
+except Exception:  # pragma: no cover - legacy compatibility when Zep is removed
+    class InternalServerError(Exception):
+        """Fallback placeholder used when zep-cloud is no longer installed."""
+
+    Zep = Any  # type: ignore[assignment]
 
 from .logger import get_logger
 
-logger = get_logger('mirofish.zep_paging')
+logger = get_logger('tiresias.zep_paging')
 
 _DEFAULT_PAGE_SIZE = 100
 _MAX_NODES = 2000
 _DEFAULT_MAX_RETRIES = 3
 _DEFAULT_RETRY_DELAY = 2.0  # seconds, doubles each retry
+
+
+def _extract_rate_limit_delay(exc: Exception, fallback: float) -> float:
+    headers = getattr(exc, "headers", None)
+    if isinstance(headers, dict):
+        retry_after = headers.get("retry-after") or headers.get("Retry-After")
+        if retry_after:
+            try:
+                return max(float(retry_after), fallback)
+            except (TypeError, ValueError):
+                return fallback
+    return fallback
+
+
+def _is_retryable_exception(exc: Exception) -> bool:
+    if isinstance(exc, (ConnectionError, TimeoutError, OSError, InternalServerError)):
+        return True
+
+    status_code = getattr(exc, "status_code", None)
+    message = str(exc)
+    if status_code == 429:
+        return True
+    return "status_code: 429" in message or "Rate limit exceeded" in message
 
 
 def _fetch_page_with_retry(
@@ -31,7 +60,7 @@ def _fetch_page_with_retry(
     page_description: str = "page",
     **kwargs: Any,
 ) -> list[Any]:
-    """单页请求，失败时指数退避重试。仅重试网络/IO类瞬态错误。"""
+    """단일 페이지 요청, 실패 시 지수 백오프 재시도. 네트워크/IO 유형의 일시적인 오류만 재시도합니다."""
     if max_retries < 1:
         raise ValueError("max_retries must be >= 1")
 
@@ -41,14 +70,17 @@ def _fetch_page_with_retry(
     for attempt in range(max_retries):
         try:
             return api_call(*args, **kwargs)
-        except (ConnectionError, TimeoutError, OSError, InternalServerError) as e:
+        except Exception as e:
+            if not _is_retryable_exception(e):
+                raise
             last_exception = e
             if attempt < max_retries - 1:
+                wait_seconds = _extract_rate_limit_delay(e, delay)
                 logger.warning(
-                    f"Zep {page_description} attempt {attempt + 1} failed: {str(e)[:100]}, retrying in {delay:.1f}s..."
+                    f"Zep {page_description} attempt {attempt + 1} failed: {str(e)[:100]}, retrying in {wait_seconds:.1f}s..."
                 )
-                time.sleep(delay)
-                delay *= 2
+                time.sleep(wait_seconds)
+                delay = max(delay * 2, wait_seconds)
             else:
                 logger.error(f"Zep {page_description} failed after {max_retries} attempts: {str(e)}")
 
@@ -64,7 +96,7 @@ def fetch_all_nodes(
     max_retries: int = _DEFAULT_MAX_RETRIES,
     retry_delay: float = _DEFAULT_RETRY_DELAY,
 ) -> list[Any]:
-    """分页获取图谱节点，最多返回 max_items 条（默认 2000）。每页请求自带重试。"""
+    """그래프 노드를 페이지별로 가져오며, 최대 max_items개(기본값 2000)를 반환합니다. 각 페이지 요청에는 재시도가 포함됩니다."""
     all_nodes: list[Any] = []
     cursor: str | None = None
     page_num = 0
@@ -109,7 +141,7 @@ def fetch_all_edges(
     max_retries: int = _DEFAULT_MAX_RETRIES,
     retry_delay: float = _DEFAULT_RETRY_DELAY,
 ) -> list[Any]:
-    """分页获取图谱所有边，返回完整列表。每页请求自带重试。"""
+    """그래프의 모든 엣지를 페이지별로 가져오며, 전체 목록을 반환합니다. 각 페이지 요청에는 재시도가 포함됩니다."""
     all_edges: list[Any] = []
     cursor: str | None = None
     page_num = 0

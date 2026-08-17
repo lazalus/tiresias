@@ -1,5 +1,13 @@
 <template>
-  <div class="sub-page">
+  <div v-if="isRedirectProcessing" class="redirect-screen">
+    <div class="redirect-card">
+      <div class="redirect-spinner"></div>
+      <h1 class="redirect-title">{{ redirectTitle }}</h1>
+      <p class="redirect-text">{{ redirectMessage }}</p>
+    </div>
+  </div>
+
+  <div v-else class="sub-page">
     <!-- Sub Header -->
     <header class="sub-header">
       <router-link to="/profile" class="back-btn">
@@ -7,7 +15,7 @@
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </router-link>
-      <h1 class="sub-title">이용권 관리</h1>
+      <h1 class="sub-title">결제 내역</h1>
       <div class="spacer"></div>
     </header>
 
@@ -16,92 +24,39 @@
       <div class="usage-card">
         <div class="usage-row">
           <div class="usage-item">
-            <div class="usage-label">보유 크레딧</div>
-            <div class="usage-number">{{ credits ?? '-' }}</div>
+            <div class="usage-label">총 결제 건수</div>
+            <div class="usage-number">{{ totalPaymentCount }}</div>
           </div>
           <div class="usage-divider"></div>
           <div class="usage-item">
-            <div class="usage-label">이번 달 사용량</div>
-            <div class="usage-number usage-secondary">{{ monthlyUsage }}</div>
-          </div>
-        </div>
-        <div class="usage-note">시뮬레이션 1회 실행에 1 크레딧이 소모됩니다</div>
-      </div>
-
-      <!-- Value Info Box -->
-      <div class="info-box">
-        <div class="info-title">1회 시뮬레이션에 포함된 것</div>
-        <div class="info-list">
-          <div class="info-row">
-            <span class="info-check">&#10003;</span>
-            <span>수천 개 AI 에이전트가 가상 세계를 구축하고 상호작용</span>
-          </div>
-          <div class="info-row">
-            <span class="info-check">&#10003;</span>
-            <span>2개 병렬 세계 동시 비교 시뮬레이션</span>
-          </div>
-          <div class="info-row">
-            <span class="info-check">&#10003;</span>
-            <span>지식 그래프 자동 구축 + 시계열 분석</span>
-          </div>
-          <div class="info-row">
-            <span class="info-check">&#10003;</span>
-            <span>전문 분석 보고서 자동 생성</span>
-          </div>
-          <div class="info-row">
-            <span class="info-check">&#10003;</span>
-            <span>AI와 심층 대화로 추가 인사이트 획득</span>
+            <div class="usage-label">이번 달 결제 금액</div>
+            <div class="usage-number usage-secondary">{{ monthlyPaymentAmount.toLocaleString() }}원</div>
           </div>
         </div>
       </div>
-
-      <!-- Plans -->
-      <section class="billing-section">
-        <h2 class="billing-section-title">이용권 구매</h2>
-        <div class="plans-row">
-          <div
-            v-for="plan in plans"
-            :key="plan.id"
-            class="plan-card"
-            :class="{ featured: plan.featured }"
-          >
-            <div v-if="plan.featured" class="plan-badge">인기</div>
-            <div class="plan-name">{{ plan.name }}</div>
-            <div class="plan-credits">
-              <span class="plan-credits-num">{{ plan.credits }}</span>
-              <span class="plan-credits-unit">크레딧</span>
-            </div>
-            <div class="plan-price">{{ plan.price.toLocaleString() }}원</div>
-            <div v-if="plan.savings" class="plan-savings">{{ plan.savings }}</div>
-            <button class="plan-btn" :class="{ 'plan-btn-featured': plan.featured }" @click="handlePurchase(plan)" :disabled="purchaseLoading">
-              구매
-            </button>
-          </div>
-        </div>
-      </section>
 
       <!-- Transaction History -->
       <section class="billing-section">
-        <h2 class="billing-section-title">거래 내역</h2>
+        <h2 class="billing-section-title">결제 내역</h2>
         <div v-if="history.length === 0" class="empty-state">
-          거래 내역이 없습니다
+          결제 내역이 없습니다
         </div>
         <div v-else class="tx-table">
           <div class="tx-header">
             <span class="tx-col tx-col-date">날짜</span>
             <span class="tx-col tx-col-type">유형</span>
-            <span class="tx-col tx-col-amount">수량</span>
+            <span class="tx-col tx-col-amount">금액</span>
             <span class="tx-col tx-col-desc">설명</span>
           </div>
           <div v-for="tx in history" :key="tx.id" class="tx-row">
-            <span class="tx-col tx-col-date">{{ formatDate(tx.created_at) }}</span>
+            <span class="tx-col tx-col-date">{{ formatDate(tx.created_at || tx.createdAt) }}</span>
             <span class="tx-col tx-col-type">
               <span class="tx-badge" :class="tx.type">
-                {{ tx.type === 'purchase' ? '구매' : tx.type === 'usage' ? '사용' : tx.type === 'grant' ? '지급' : tx.type }}
+                {{ formatType(tx.type) }}
               </span>
             </span>
-            <span class="tx-col tx-col-amount" :class="{ positive: tx.amount > 0, negative: tx.amount < 0 }">
-              {{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }}
+            <span class="tx-col tx-col-amount">
+              {{ formatAmount(tx.amount) }}
             </span>
             <span class="tx-col tx-col-desc">{{ tx.description }}</span>
           </div>
@@ -110,108 +65,67 @@
     </main>
 
     <BottomNav />
-
-    <!-- 결제 위젯 모달 -->
-    <div v-if="showPaymentWidget" class="payment-overlay" @click.self="cancelPayment">
-      <div class="payment-modal">
-        <div class="payment-header">
-          <h3>{{ selectedPlan?.name }} 결제</h3>
-          <span class="payment-amount">{{ selectedPlan?.price?.toLocaleString() }}원</span>
-          <button class="payment-close" @click="cancelPayment">&times;</button>
-        </div>
-        <div id="payment-method" class="payment-widget-area"></div>
-        <div id="agreement" class="payment-agreement-area"></div>
-        <button class="payment-submit" @click="submitPayment" :disabled="purchaseLoading">
-          <span v-if="!purchaseLoading">결제하기</span>
-          <span v-else>처리 중...</span>
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { getToken, currentUser } from '../store/auth.js'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { buildAuthAxiosConfig } from '../store/auth.js'
+import { getPendingUpload } from '../store/pendingUpload.js'
 import axios from 'axios'
 import BottomNav from '../components/BottomNav.vue'
+import { clearPendingOrder, downloadConfirmedPdf, readPendingOrder } from '../utils/pdfPayment.js'
+import { trackGoogleAdsConversionOnce, trackMarketingEvent } from '../utils/marketing.js'
 
-const TOSS_CLIENT_KEY = 'live_gck_LlDJaYngroy4XnkKKwGK3ezGdRpX'
-const TOSS_CUSTOMER_KEY = 'tiresias'
+const router = useRouter()
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
-const credits = ref(null)
-const plans = ref([])
 const history = ref([])
-const purchaseLoading = ref(false)
-const showPaymentWidget = ref(false)
-const selectedPlan = ref(null)
-let paymentWidget = null
-let paymentMethodsWidget = null
-let agreementWidget = null
+const redirectHandled = ref(false)
+const isRedirectProcessing = ref(false)
+const redirectTitle = ref('결제를 확인하고 있습니다')
+const redirectMessage = ref('잠시만 기다려주세요. 결제 완료 후 바로 시뮬레이션과 보고서 생성 흐름으로 이동합니다.')
 
-const monthlyUsage = computed(() => {
+const totalPaymentCount = computed(() => {
+  return history.value.filter(tx =>
+    tx.type === 'simulation_payment' ||
+    tx.type === 'pdf_payment' ||
+    tx.type === 'purchase'
+  ).length
+})
+
+const monthlyPaymentAmount = computed(() => {
   const now = new Date()
-  const thisMonth = history.value.filter(tx => {
-    if (tx.type !== 'usage') return false
-    const d = new Date(tx.created_at)
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-  })
-  return thisMonth.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+  return history.value
+    .filter(tx => {
+      if (!['simulation_payment', 'pdf_payment', 'purchase', 'simulation_refund', 'pdf_refund'].includes(tx.type)) return false
+      const d = new Date(tx.created_at || tx.createdAt)
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+    })
+    .reduce((sum, tx) => sum + Number(tx.amount || 0), 0)
 })
 
 function authHeaders() {
-  return { headers: { Authorization: `Bearer ${getToken()}` } }
+  return buildAuthAxiosConfig()
 }
 
 onMounted(async () => {
-  await Promise.all([fetchCredits(), fetchPlans(), fetchHistory()])
-  await loadTossSDK()
-  checkRedirectResult()
-})
+  const params = new URLSearchParams(window.location.search)
+  const hasRedirectPayload =
+    Boolean(params.get('paymentKey') && params.get('orderId') && params.get('amount')) ||
+    params.get('fail') === 'true' ||
+    Boolean(params.get('code')) ||
+    Boolean(params.get('message'))
 
-onUnmounted(() => {
-  showPaymentWidget.value = false
-  paymentWidget = null
-})
-
-// 토스 결제위젯 SDK 로드
-async function loadTossSDK() {
-  if (window.TossPayments) return
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = 'https://js.tosspayments.com/v2/standard'
-    script.onload = resolve
-    script.onerror = reject
-    document.head.appendChild(script)
-  })
-}
-
-async function fetchCredits() {
-  try {
-    const res = await axios.get(`${API_BASE}/api/payments/credits`, authHeaders())
-    credits.value = res.data.credits ?? res.data
-  } catch (e) {
-    console.error('Failed to fetch credits:', e)
+  if (hasRedirectPayload) {
+    isRedirectProcessing.value = true
+    await checkRedirectResult()
+    return
   }
-}
 
-async function fetchPlans() {
-  try {
-    const res = await axios.get(`${API_BASE}/api/payments/plans`, authHeaders())
-    plans.value = res.data.plans || res.data || defaultPlans()
-  } catch (e) {
-    plans.value = defaultPlans()
-  }
-}
-
-function defaultPlans() {
-  return [
-    { id: 'plan_1', name: '기본', credits: 1, price: 9900, savings: null, featured: false },
-    { id: 'plan_5', name: '스탠다드', credits: 5, price: 44000, savings: '11% 할인', featured: true },
-    { id: 'plan_10', name: '프로', credits: 10, price: 79000, savings: '20% 할인', featured: false }
-  ]
-}
+  await fetchHistory()
+})
 
 async function fetchHistory() {
   try {
@@ -222,109 +136,151 @@ async function fetchHistory() {
   }
 }
 
-async function handlePurchase(plan) {
-  selectedPlan.value = plan
-  showPaymentWidget.value = true
-  purchaseLoading.value = true
-
+async function confirmPayment(paymentKey, orderId, amount, simulationType) {
   try {
-    await loadTossSDK()
-
-    const customerKey = `${TOSS_CUSTOMER_KEY}_${currentUser.value?.id || 'guest'}`
-    const tossPayments = window.TossPayments(TOSS_CLIENT_KEY)
-    paymentWidget = tossPayments.widgets({ customerKey })
-
-    await paymentWidget.setAmount({ currency: 'KRW', value: plan.price })
-
-    // 위젯 렌더링 대기
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    await paymentWidget.renderPaymentMethods({
-      selector: '#payment-method',
-      variantKey: 'tiresias'
-    })
-
-    await paymentWidget.renderAgreement({
-      selector: '#agreement',
-      variantKey: 'tiresias'
-    })
-  } catch (e) {
-    showPaymentWidget.value = false
-    alert('결제 위젯 로드 실패: ' + (e.message || e))
-  } finally {
-    purchaseLoading.value = false
-  }
-}
-
-async function submitPayment() {
-  if (!paymentWidget || !selectedPlan.value) return
-  purchaseLoading.value = true
-
-  try {
-    const orderId = `tiresias_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-
-    await paymentWidget.requestPayment({
-      orderId,
-      orderName: `Tiresias ${selectedPlan.value.name} (${selectedPlan.value.credits} 크레딧)`,
-      successUrl: `${window.location.origin}/credits?planId=${selectedPlan.value.id}`,
-      failUrl: `${window.location.origin}/credits?fail=true`,
-    })
-  } catch (e) {
-    if (e.code === 'USER_CANCEL') {
-      showPaymentWidget.value = false
-    } else {
-      alert('결제 요청 실패: ' + (e.message || e))
-    }
-  } finally {
-    purchaseLoading.value = false
-  }
-}
-
-function cancelPayment() {
-  showPaymentWidget.value = false
-  selectedPlan.value = null
-}
-
-async function confirmPayment(paymentKey, orderId, amount, planId) {
-  purchaseLoading.value = true
-  try {
-    await axios.post(`${API_BASE}/api/payments/confirm`, {
+    const res = await axios.post(`${API_BASE}/api/payments/confirm`, {
       paymentKey,
       orderId,
       amount: Number(amount),
-      planId
+      simulationType
     }, authHeaders())
-    await fetchCredits()
     await fetchHistory()
-    alert('결제가 완료되었습니다!')
+    return res.data || { success: true }
   } catch (e) {
     alert('결제 확인 실패: ' + (e.response?.data?.error || e.message))
-  } finally {
-    purchaseLoading.value = false
+    return null
   }
 }
 
-function checkRedirectResult() {
+async function checkRedirectResult() {
+  if (redirectHandled.value) return
+
   const params = new URLSearchParams(window.location.search)
   const paymentKey = params.get('paymentKey')
   const orderId = params.get('orderId')
   const amount = params.get('amount')
-  const planId = params.get('planId')
+  const simulationType = params.get('simulationType')
+  const code = params.get('code')
+  const message = params.get('message')
 
-  if (params.get('fail') === 'true') {
-    const code = params.get('code')
-    const message = params.get('message')
+  if (!paymentKey && (params.get('fail') === 'true' || code || message)) {
+    redirectHandled.value = true
+    isRedirectProcessing.value = false
     if (code !== 'USER_CANCEL') {
       alert(`결제 실패: ${message || '알 수 없는 오류'}`)
     }
     window.history.replaceState({}, '', window.location.pathname)
+    router.replace({ name: 'Home' })
     return
   }
 
   if (paymentKey && orderId && amount) {
-    confirmPayment(paymentKey, orderId, amount, planId)
-    window.history.replaceState({}, '', window.location.pathname)
+    const pendingOrder = readPendingOrder()
+    if (pendingOrder && pendingOrder.orderId === orderId && Number(pendingOrder.amount) !== Number(amount)) {
+      alert('결제 검증에 실패했습니다. 주문 정보가 일치하지 않습니다.')
+      return
+    }
+
+    redirectHandled.value = true
+    redirectTitle.value = '결제 확인이 완료되었습니다'
+    redirectMessage.value = '시뮬레이션과 보고서 생성 흐름으로 이동하고 있습니다.'
+    const confirmed = await confirmPayment(paymentKey, orderId, amount, simulationType)
+    if (confirmed) {
+      await handleConfirmedRedirect(pendingOrder, confirmed)
+      window.history.replaceState({}, '', window.location.pathname)
+      return
+    }
+    isRedirectProcessing.value = false
   }
+}
+
+async function resolvePendingUploadWithRetry(retries = 3, delayMs = 450) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    const pending = await getPendingUpload()
+    if (pending?.isPending) {
+      return pending
+    }
+
+    if (attempt < retries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+  }
+
+  return null
+}
+
+async function handleConfirmedRedirect(pendingOrder, confirmedResponse) {
+  const order = pendingOrder || readPendingOrder()
+
+  if (order?.kind === 'simulation' && !confirmedResponse?.already_confirmed) {
+    const amount = Number(order.amount || 0)
+    trackMarketingEvent('purchase', {
+      transaction_id: order.orderId,
+      value: amount,
+      currency: 'KRW',
+    })
+    trackGoogleAdsConversionOnce('purchase_completed', order.orderId, {
+      transaction_id: order.orderId,
+      value: amount,
+      currency: 'KRW',
+    })
+  }
+
+  if (order?.kind === 'pdf_download') {
+    redirectTitle.value = 'PDF를 준비하고 있습니다'
+    redirectMessage.value = '결제 확인 후 다운로드를 시작하는 중입니다.'
+    try {
+      await downloadConfirmedPdf({
+        apiBase: API_BASE,
+        reportId: order.reportId,
+        title: order.title || '보고서',
+      })
+      clearPendingOrder()
+      alert(confirmedResponse?.already_confirmed ? 'PDF 다운로드를 다시 시작했습니다.' : '결제가 완료되어 PDF 다운로드를 시작합니다.')
+    } catch (error) {
+      alert('결제는 완료되었지만 PDF 다운로드에 실패했습니다: ' + error.message)
+      return
+    }
+
+    if (order.redirectPath) {
+      router.replace(order.redirectPath)
+      return
+    }
+    isRedirectProcessing.value = false
+    return
+  }
+
+  const pending = await resolvePendingUploadWithRetry()
+  if (pending?.isPending) {
+    clearPendingOrder()
+    redirectTitle.value = '보고서 생성으로 이동 중입니다'
+    redirectMessage.value = '결제 완료가 확인되어 프로젝트와 보고서 생성 흐름을 이어갑니다.'
+    router.replace({ name: 'Process', params: { projectId: 'new' } })
+    return
+  }
+
+  isRedirectProcessing.value = false
+  alert('결제는 완료되었지만 업로드 상태를 바로 복원하지 못했습니다. 홈에서 다시 시작하면 추가 결제 없이 그대로 이어집니다.')
+  router.replace({ name: 'Home' })
+}
+
+function formatType(type) {
+  const map = {
+    'simulation_payment': '결제',
+    'pdf_payment': 'PDF',
+    'simulation_refund': '환불',
+    'pdf_refund': 'PDF 환불',
+    'purchase': '구매',
+    'usage': '사용',
+    'grant': '지급'
+  }
+  return map[type] || type
+}
+
+function formatAmount(amount) {
+  if (typeof amount !== 'number') return amount
+  const abs = Math.abs(amount).toLocaleString()
+  return amount < 0 ? `-${abs}원` : `${abs}원`
 }
 
 function formatDate(d) {
@@ -337,6 +293,53 @@ function formatDate(d) {
 </script>
 
 <style scoped>
+.redirect-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 24px;
+}
+
+.redirect-card {
+  width: min(100%, 420px);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 22px;
+  padding: 32px 28px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  text-align: center;
+}
+
+.redirect-spinner {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  border: 3px solid rgba(99, 102, 241, 0.18);
+  border-top-color: #4f46e5;
+  animation: redirect-spin 0.7s linear infinite;
+}
+
+.redirect-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.redirect-text {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+@keyframes redirect-spin {
+  to { transform: rotate(360deg); }
+}
+
 .sub-page {
   min-height: 100vh;
   background: var(--bg-primary);
@@ -438,53 +441,7 @@ function formatDate(d) {
 
 .usage-number.usage-secondary {
   color: var(--text-primary);
-  font-size: 1.8rem;
-}
-
-.usage-note {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Info Box */
-.info-box {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-
-.info-title {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-}
-
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.info-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-.info-check {
-  color: #6366f1;
-  font-weight: 600;
-  flex-shrink: 0;
-  font-size: 0.7rem;
-  margin-top: 1px;
+  font-size: 1.4rem;
 }
 
 /* Billing Section */
@@ -497,115 +454,6 @@ function formatDate(d) {
   font-weight: 600;
   margin: 0 0 12px;
   letter-spacing: -0.01em;
-}
-
-/* Plans Row */
-.plans-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.plan-card {
-  position: relative;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 16px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: border-color 0.2s;
-}
-
-.plan-card.featured {
-  border-color: #6366f1;
-}
-
-.plan-badge {
-  position: absolute;
-  top: -1px;
-  right: 12px;
-  background: #6366f1;
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 0 0 6px 6px;
-  letter-spacing: 0.02em;
-}
-
-.plan-name {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.plan-credits {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  margin-bottom: 4px;
-}
-
-.plan-credits-num {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.plan-credits-unit {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.plan-price {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.plan-savings {
-  font-size: 0.68rem;
-  color: #22c55e;
-  font-weight: 500;
-}
-
-.plan-btn {
-  width: 100%;
-  margin-top: 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.plan-btn:hover:not(:disabled) {
-  background: var(--border-color);
-}
-
-.plan-btn-featured {
-  background: #6366f1;
-  border-color: #6366f1;
-  color: #fff;
-}
-
-.plan-btn-featured:hover:not(:disabled) {
-  background: #5558e6;
-}
-
-.plan-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Transaction Table */
@@ -676,20 +524,12 @@ function formatDate(d) {
 }
 
 .tx-col-amount {
-  width: 60px;
+  width: 80px;
   flex-shrink: 0;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
   font-size: 0.78rem;
   text-align: right;
-}
-
-.tx-col-amount.positive {
-  color: #22c55e;
-}
-
-.tx-col-amount.negative {
-  color: var(--text-muted);
 }
 
 .tx-col-desc {
@@ -712,9 +552,21 @@ function formatDate(d) {
   letter-spacing: 0.02em;
 }
 
+.tx-badge.simulation_payment {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+}
+
+.tx-badge.pdf_payment,
 .tx-badge.purchase {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
+}
+
+.tx-badge.simulation_refund,
+.tx-badge.pdf_refund {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
 }
 
 .tx-badge.usage {
@@ -727,133 +579,17 @@ function formatDate(d) {
   color: #22c55e;
 }
 
-/* Payment Modal */
-.payment-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.payment-modal {
-  background: #fff;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 540px;
-  max-height: 90vh;
-  overflow-y: auto;
-  color: #111;
-}
-
-.payment-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
-  position: relative;
-}
-
-.payment-header h3 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.payment-amount {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #6366f1;
-}
-
-.payment-close {
-  position: absolute;
-  right: 14px;
-  top: 14px;
-  background: none;
-  border: none;
-  font-size: 1.4rem;
-  color: #999;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.payment-close:hover {
-  color: #333;
-}
-
-.payment-widget-area {
-  padding: 0 20px;
-  min-height: 200px;
-}
-
-.payment-agreement-area {
-  padding: 0 20px;
-}
-
-.payment-submit {
-  width: calc(100% - 40px);
-  margin: 14px 20px 20px;
-  background: #6366f1;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.payment-submit:hover:not(:disabled) {
-  background: #4f46e5;
-}
-
-.payment-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* Responsive */
 @media (max-width: 640px) {
-  .plans-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .plan-card {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
-    padding: 14px 16px;
-    gap: 12px;
-  }
-  .plan-card.featured {
-    border-color: #6366f1;
-  }
-  .plan-badge {
-    top: -1px;
-    right: 10px;
-  }
-  .plan-credits {
-    margin-bottom: 0;
-  }
-  .plan-btn {
-    width: auto;
-    margin-top: 0;
-    padding: 7px 18px;
-  }
   .tx-col-date {
     width: 90px;
     font-size: 0.65rem;
   }
   .tx-col-desc {
     display: none;
+  }
+  .usage-number.usage-secondary {
+    font-size: 1.2rem;
   }
 }
 </style>

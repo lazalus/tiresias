@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-const theme = ref(localStorage.getItem('tiresias_theme') || 'dark')
+const theme = ref(localStorage.getItem('tiresias_theme') || 'light')
 
 export function useTheme() {
   function setTheme(newTheme) {

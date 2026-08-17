@@ -1,5 +1,5 @@
 """
-业务服务模块
+비즈니스 서비스 모듈
 """
 
 from .ontology_generator import OntologyGenerator
@@ -28,6 +28,7 @@ from .zep_graph_memory_updater import (
     ZepGraphMemoryManager,
     AgentActivity
 )
+from .simulation_memory_compactor import SimulationMemoryCompactor
 from .simulation_ipc import (
     SimulationIPCClient,
     SimulationIPCServer,
@@ -63,6 +64,7 @@ __all__ = [
     'ZepGraphMemoryUpdater',
     'ZepGraphMemoryManager',
     'AgentActivity',
+    'SimulationMemoryCompactor',
     'SimulationIPCClient',
     'SimulationIPCServer',
     'IPCCommand',
@@ -70,4 +72,3 @@ __all__ = [
     'CommandType',
     'CommandStatus',
 ]
-

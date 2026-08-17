@@ -2,73 +2,51 @@
   <div class="main-view">
     <!-- Header -->
     <header class="app-header">
-      <div class="header-left">
-        <div class="brand" @click="router.push('/')">TIRESIAS</div>
+      <div class="header-left" @click="confirmLeave('/dashboard')" style="cursor:pointer;display:flex;align-items:center;">
+        <span class="app-name">TIRESIAS VIEW</span>
       </div>
-      
-      <div class="header-center">
-        <div class="view-switcher">
-          <button 
-            v-for="mode in ['graph', 'split', 'workbench']" 
-            :key="mode"
-            class="switch-btn"
-            :class="{ active: viewMode === mode }"
-            @click="viewMode = mode"
-          >
-            {{ { graph: '그래프', split: '분할', workbench: '워크벤치' }[mode] }}
-          </button>
-        </div>
-      </div>
-
       <div class="header-right">
-        <div class="workflow-step">
-          <span class="step-num">Step 4/5</span>
-          <span class="step-name">보고서 생성</span>
-        </div>
-        <div class="step-divider"></div>
+        <HeaderNav />
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
+          <span v-if="reportProgress && currentStatus === 'processing'" class="progress-text">{{ reportProgress }}</span>
         </span>
       </div>
     </header>
 
-    <!-- Main Content Area -->
     <main class="content-area">
-      <!-- Left Panel: Graph -->
-      <div class="panel-wrapper left" :style="leftPanelStyle">
-        <GraphPanel 
-          :graphData="graphData"
-          :loading="graphLoading"
-          :currentPhase="4"
-          :isSimulating="false"
-          @refresh="refreshGraph"
-          @toggle-maximize="toggleMaximize('graph')"
-        />
-      </div>
-
-      <!-- Right Panel: Step4 보고서 생성 -->
-      <div class="panel-wrapper right" :style="rightPanelStyle">
-        <Step4Report
-          :reportId="currentReportId"
-          :simulationId="simulationId"
-          :systemLogs="systemLogs"
-          @add-log="addLog"
-          @update-status="updateStatus"
-        />
+      <div class="panel-full">
+        <Step4Report :reportId="currentReportId" :simulationId="simulationId" :projectId="projectData?.project_id || null" :systemLogs="systemLogs" :activePanel="isDesktop ? '' : viewMode" @add-log="addLog" @update-status="updateStatus" @update-progress="updateProgress" />
       </div>
     </main>
+    <nav class="bottom-nav">
+      <button class="nav-item" :class="{ active: viewMode === 'report' }" @click="viewMode = 'report'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>보고서</span>
+      </button>
+      <button class="nav-item" :class="{ active: viewMode === 'workflow' }" @click="viewMode = 'workflow'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>워크플로우</span>
+      </button>
+      <button class="nav-item" @click="confirmLeave('/dashboard')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>홈</span>
+      </button>
+    </nav>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import HeaderNav from '../components/HeaderNav.vue'
 import GraphPanel from '../components/GraphPanel.vue'
 import Step4Report from '../components/Step4Report.vue'
 import { getProject, getGraphData } from '../api/graph'
 import { getSimulation } from '../api/simulation'
 import { getReport } from '../api/report'
+import { getUserProject } from '../api/projects'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,8 +56,10 @@ const props = defineProps({
   reportId: String
 })
 
-// Layout State - 기본적으로 워크벤치 뷰로 전환
-const viewMode = ref('workbench')
+// Layout State
+const isDesktop = ref(window.innerWidth >= 1024)
+const viewMode = ref('report') // report | workflow
+const onResize = () => { isDesktop.value = window.innerWidth >= 1024 }
 
 // Data State
 const currentReportId = ref(route.params.reportId)
@@ -89,19 +69,7 @@ const graphData = ref(null)
 const graphLoading = ref(false)
 const systemLogs = ref([])
 const currentStatus = ref('processing') // processing | completed | error
-
-// --- Computed Layout Styles ---
-const leftPanelStyle = computed(() => {
-  if (viewMode.value === 'graph') return { width: '100%', opacity: 1, transform: 'translateX(0)' }
-  if (viewMode.value === 'workbench') return { width: '0%', opacity: 0, transform: 'translateX(-20px)' }
-  return { width: '50%', opacity: 1, transform: 'translateX(0)' }
-})
-
-const rightPanelStyle = computed(() => {
-  if (viewMode.value === 'workbench') return { width: '100%', opacity: 1, transform: 'translateX(0)' }
-  if (viewMode.value === 'graph') return { width: '0%', opacity: 0, transform: 'translateX(20px)' }
-  return { width: '50%', opacity: 1, transform: 'translateX(0)' }
-})
+const reportProgress = ref('')
 
 // --- Status Computed ---
 const statusClass = computed(() => {
@@ -127,13 +95,8 @@ const updateStatus = (status) => {
   currentStatus.value = status
 }
 
-// --- Layout Methods ---
-const toggleMaximize = (target) => {
-  if (viewMode.value === target) {
-    viewMode.value = 'split'
-  } else {
-    viewMode.value = target
-  }
+const updateProgress = (progress) => {
+  reportProgress.value = progress
 }
 
 // --- Data Logic ---
@@ -155,14 +118,31 @@ const loadReportData = async () => {
           
           // project 정보 가져오기
           if (simData.project_id) {
-            const projRes = await getProject(simData.project_id)
-            if (projRes.success && projRes.data) {
-              projectData.value = projRes.data
-              addLog(`프로젝트 로드 성공: ${projRes.data.project_id}`)
+            const [graphProjectResult, userProjectResult] = await Promise.allSettled([
+              getProject(simData.project_id),
+              getUserProject(simData.project_id),
+            ])
 
-              // graph 데이터 가져오기
-              if (projRes.data.graph_id) {
-                await loadGraph(projRes.data.graph_id)
+            const graphProject = graphProjectResult.status === 'fulfilled' && graphProjectResult.value?.success
+              ? graphProjectResult.value.data
+              : null
+            const userProject = userProjectResult.status === 'fulfilled'
+              ? (userProjectResult.value?.project || userProjectResult.value?.data || null)
+              : null
+
+            if (graphProject || userProject) {
+              projectData.value = {
+                ...(graphProject || {}),
+                ...(userProject || {}),
+                project_id: simData.project_id,
+                graph_id: graphProject?.graph_id || userProject?.graph_id || null,
+                simulation_id: userProject?.simulation_id || graphProject?.simulation_id || simData.id,
+                report_id: userProject?.report_id || userProject?.reportId || graphProject?.report_id || graphProject?.reportId || currentReportId.value,
+              }
+              addLog(`프로젝트 로드 성공: ${simData.project_id}`)
+
+              if (projectData.value.graph_id) {
+                await loadGraph(projectData.value.graph_id)
               }
             }
           }
@@ -206,9 +186,37 @@ watch(() => route.params.reportId, (newId) => {
   }
 }, { immediate: true })
 
+function confirmLeave(path) {
+  if (currentStatus.value === 'completed') {
+    if (confirm('보고서 화면을 떠나면 심층 상호작용에 진입할 수 없습니다.\n이동하시겠습니까?')) {
+      router.push(path)
+    }
+  } else {
+    router.push(path)
+  }
+}
+
+// 라우터 가드: HeaderNav 등 다른 경로로 이동 시에도 경고
+onBeforeRouteLeave((to, from, next) => {
+  if (currentStatus.value === 'completed' && to.name !== 'Interaction') {
+    if (confirm('보고서 화면을 떠나면 심층 상호작용에 진입할 수 없습니다.\n이동하시겠습니까?')) {
+      next()
+    } else {
+      next(false)
+    }
+  } else {
+    next()
+  }
+})
+
 onMounted(() => {
+  window.addEventListener('resize', onResize)
   addLog('ReportView 초기화')
   loadReportData()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
 })
 </script>
 
@@ -235,74 +243,18 @@ onMounted(() => {
   position: relative;
 }
 
-.header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.brand {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.view-switcher {
-  display: flex;
-  background: #F5F5F5;
-  padding: 4px;
-  border-radius: 6px;
-  gap: 4px;
-}
-
-.switch-btn {
-  border: none;
-  background: transparent;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.switch-btn.active {
-  background: #FFF;
-  color: #000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+.app-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+  color: var(--text-primary);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.workflow-step {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.step-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  color: #999;
-}
-
-.step-name {
-  font-weight: 700;
-  color: #000;
-}
-
-.step-divider {
-  width: 1px;
-  height: 14px;
-  background-color: #E0E0E0;
+  gap: 12px;
 }
 
 .status-indicator {
@@ -321,6 +273,14 @@ onMounted(() => {
   background: #CCC;
 }
 
+.progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-left: 2px;
+}
+
 .status-indicator.processing .dot { background: #FF9800; animation: pulse 1s infinite; }
 .status-indicator.completed .dot { background: #4CAF50; }
 .status-indicator.error .dot { background: #F44336; }
@@ -333,16 +293,54 @@ onMounted(() => {
   display: flex;
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
-.panel-wrapper {
+.panel-full {
+  width: 100%;
   height: 100%;
-  overflow: hidden;
-  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, transform 0.3s ease;
-  will-change: width, opacity, transform;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-.panel-wrapper.left {
-  border-right: 1px solid #EAEAEA;
+/* Bottom Navigation */
+.bottom-nav {
+  display: flex;
+  border-top: 1px solid var(--border-color, #EAEAEA);
+  background: var(--bg-primary, #FFF);
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: var(--text-muted, #999);
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.nav-item.active {
+  color: var(--text-primary, #111);
+}
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
 }
 </style>

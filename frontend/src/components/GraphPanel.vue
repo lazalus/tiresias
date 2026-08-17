@@ -1,12 +1,12 @@
 <template>
   <div class="graph-panel">
     <div class="panel-header">
-      <span class="panel-title">Graph Relationship Visualization</span>
+      <span class="panel-title">그래프 관계 시각화</span>
       <!-- 상단 툴바 (Internal Top Right) -->
       <div class="header-tools">
         <button class="tool-btn" @click="$emit('refresh')" :disabled="loading" title="그래프 새로고침">
           <span class="icon-refresh" :class="{ 'spinning': loading }">↻</span>
-          <span class="btn-text">Refresh</span>
+          <span class="btn-text">새로고침</span>
         </button>
         <button class="tool-btn" @click="$emit('toggle-maximize')" title="최대화/복원">
           <span class="icon-maximize">⛶</span>
@@ -21,13 +21,7 @@
         
         <!-- 구축 중/시뮬레이션 중 알림 -->
         <div v-if="currentPhase === 1 || isSimulating" class="graph-building-hint">
-          <div class="memory-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="memory-icon">
-              <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-4.04z" />
-              <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-4.04z" />
-            </svg>
-          </div>
-          {{ isSimulating ? 'GraphRAG 장단기 메모리 실시간 업데이트 중' : '실시간 업데이트 중...' }}
+          {{ progressHintText }}
         </div>
         
         <!-- 시뮬레이션 종료 후 알림 -->
@@ -106,7 +100,7 @@
             <!-- 셀프루프 그룹 상세 -->
             <template v-if="selectedItem.data.isSelfLoopGroup">
               <div class="edge-relation-header self-loop-header">
-                {{ selectedItem.data.source_name }} - Self Relations
+                {{ selectedItem.data.source_name }} - 자기 관계
                 <span class="self-loop-count">{{ selectedItem.data.selfLoopCount }} items</span>
               </div>
               
@@ -215,11 +209,11 @@
 
     <!-- 하단 범례 (Bottom Left) -->
     <div v-if="graphData && entityTypes.length" class="graph-legend">
-      <span class="legend-title">Entity Types</span>
+      <span class="legend-title">엔티티 유형</span>
       <div class="legend-items">
         <div class="legend-item" v-for="type in entityTypes" :key="type.name">
           <span class="legend-dot" :style="{ background: type.color }"></span>
-          <span class="legend-label">{{ type.name }}</span>
+          <span class="legend-label">{{ translateEntityType(type.name) }}</span>
         </div>
       </div>
     </div>
@@ -230,7 +224,7 @@
         <input type="checkbox" v-model="showEdgeLabels" />
         <span class="slider"></span>
       </label>
-      <span class="toggle-label">Show Edge Labels</span>
+      <span class="toggle-label">관계 라벨 표시</span>
     </div>
   </div>
 </template>
@@ -243,7 +237,15 @@ const props = defineProps({
   graphData: Object,
   loading: Boolean,
   currentPhase: Number,
-  isSimulating: Boolean
+  isSimulating: Boolean,
+  isVisible: {
+    type: Boolean,
+    default: true,
+  },
+  statusMessage: {
+    type: String,
+    default: ''
+  }
 })
 
 const emit = defineEmits(['refresh', 'toggle-maximize'])
@@ -255,6 +257,11 @@ const showEdgeLabels = ref(true) // 기본적으로 엣지 라벨 표시
 const expandedSelfLoops = ref(new Set()) // 펼쳐진 셀프루프 항목
 const showSimulationFinishedHint = ref(false) // 시뮬레이션 종료 후 알림
 const wasSimulating = ref(false) // 이전에 시뮬레이션 중이었는지 추적
+
+const progressHintText = computed(() => {
+  if (props.statusMessage) return props.statusMessage
+  return props.isSimulating ? '그래프와 메모리를 갱신하고 있습니다.' : '지식 그래프를 구축하고 있습니다.'
+})
 
 // 시뮬레이션 종료 알림 닫기
 const dismissFinishedHint = () => {
@@ -279,6 +286,34 @@ const toggleSelfLoop = (id) => {
     newSet.add(id)
   }
   expandedSelfLoops.value = newSet
+}
+
+// 엔티티 유형 한글 번역
+function translateEntityType(name) {
+  const map = {
+    'Entity': '엔티티',
+    'Organization': '조직',
+    'Person': '인물',
+    'GovernmentAgency': '정부기관',
+    'FinancialInstitution': '금융기관',
+    'MonetaryPolicymaker': '통화정책 결정자',
+    'CentralBank': '중앙은행',
+    'CommercialBank': '상업은행',
+    'ResearchInstitute': '연구기관',
+    'NonBankFinancialInstitution': '비은행 금융기관',
+    'RegularBody': '규제기관',
+    'PolicyMaker': '정책 결정자',
+    'Analyst': '분석가',
+    'Investor': '투자자',
+    'Company': '기업',
+    'Market': '시장',
+    'Policy': '정책',
+    'Index': '지표',
+    'Event': '이벤트',
+    'Location': '지역',
+    'Concept': '개념'
+  }
+  return map[name] || name
 }
 
 // 범례용 엔티티 타입 계산
@@ -324,18 +359,61 @@ const closeDetailPanel = () => {
 let currentSimulation = null
 let linkLabelsRef = null
 let linkLabelBgRef = null
+const preservedNodePositions = new Map()
+let renderRetryFrame = null
+
+const getGraphSignature = (graphData) => {
+  if (!graphData) return ''
+  const nodeSignature = (graphData.nodes || [])
+    .map((node) => `${node.uuid}:${node.name || ''}`)
+    .sort()
+    .join('|')
+  const edgeSignature = (graphData.edges || [])
+    .map((edge) => `${edge.uuid || ''}:${edge.source_node_uuid}:${edge.target_node_uuid}:${edge.name || edge.fact_type || ''}`)
+    .sort()
+    .join('|')
+  return `${nodeSignature}__${edgeSignature}`
+}
+
+const preserveCurrentNodePositions = () => {
+  if (!currentSimulation) return
+  const nodes = currentSimulation.nodes?.() || []
+  nodes.forEach((node) => {
+    if (!node?.id) return
+    preservedNodePositions.set(node.id, {
+      x: node.x,
+      y: node.y,
+      fx: node.fx,
+      fy: node.fy,
+    })
+  })
+}
 
 const renderGraph = () => {
   if (!graphSvg.value || !props.graphData) return
   
   // 이전 시뮬레이션 중지
   if (currentSimulation) {
+    preserveCurrentNodePositions()
     currentSimulation.stop()
   }
   
   const container = graphContainer.value
   const width = container.clientWidth
   const height = container.clientHeight
+
+  if (!width || !height) {
+    if (renderRetryFrame) {
+      cancelAnimationFrame(renderRetryFrame)
+    }
+    renderRetryFrame = requestAnimationFrame(() => {
+      renderRetryFrame = null
+      if (props.isVisible) {
+        renderGraph()
+      }
+    })
+    return
+  }
   
   const svg = d3.select(graphSvg.value)
     .attr('width', width)
@@ -357,7 +435,8 @@ const renderGraph = () => {
     id: n.uuid,
     name: n.name || 'Unnamed',
     type: n.labels?.find(l => l !== 'Entity') || 'Entity',
-    rawData: n
+    rawData: n,
+    ...(preservedNodePositions.get(n.uuid) || {})
   }))
   
   const nodeIds = new Set(nodes.map(n => n.id))
@@ -409,7 +488,7 @@ const renderGraph = () => {
         source: e.source_node_uuid,
         target: e.target_node_uuid,
         type: 'SELF_LOOP',
-        name: `Self Relations (${allSelfLoops.length})`,
+        name: `자기 관계 (${allSelfLoops.length})`,
         curvature: 0,
         isSelfLoop: true,
         rawData: {
@@ -483,6 +562,9 @@ const renderGraph = () => {
     // 중심 방향 인력 추가, 독립 노드 그룹을 중앙 영역으로 모이게 함
     .force('x', d3.forceX(width / 2).strength(0.04))
     .force('y', d3.forceY(height / 2).strength(0.04))
+
+  simulation.alpha(0.35)
+  simulation.alphaDecay(0.08)
   
   currentSimulation = simulation
 
@@ -690,8 +772,14 @@ const renderGraph = () => {
         if (d._isDragging) {
           simulation.alphaTarget(0)
         }
-        d.fx = null
-        d.fy = null
+        preservedNodePositions.set(d.id, {
+          x: d.x,
+          y: d.y,
+          fx: d.x,
+          fy: d.y,
+        })
+        d.fx = d.x
+        d.fy = d.y
         d._isDragging = false
       })
     )
@@ -772,6 +860,10 @@ const renderGraph = () => {
       .attr('x', d => d.x)
       .attr('y', d => d.y)
   })
+
+  simulation.on('end', () => {
+    preserveCurrentNodePositions()
+  })
   
   // 빈 영역 클릭 시 상세 패널 닫기
   svg.on('click', () => {
@@ -783,9 +875,15 @@ const renderGraph = () => {
   })
 }
 
-watch(() => props.graphData, () => {
+watch(() => getGraphSignature(props.graphData), () => {
   nextTick(renderGraph)
-}, { deep: true })
+})
+
+watch(() => props.isVisible, (visible) => {
+  if (visible) {
+    nextTick(renderGraph)
+  }
+})
 
 // 엣지 라벨 표시 토글 감시
 watch(showEdgeLabels, (newVal) => {
@@ -809,6 +907,10 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   if (currentSimulation) {
     currentSimulation.stop()
+  }
+  if (renderRetryFrame) {
+    cancelAnimationFrame(renderRetryFrame)
+    renderRetryFrame = null
   }
 })
 </script>
@@ -911,17 +1013,20 @@ onUnmounted(() => {
   opacity: 0.2;
 }
 
-/* Entity Types Legend - Bottom Left */
+/* 엔티티 유형 범례 */
 .graph-legend {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
-  background: rgba(255,255,255,0.95);
-  padding: 12px 16px;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: var(--bg-secondary, rgba(255,255,255,0.95));
+  padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #EAEAEA;
+  border: 1px solid var(--border-color, #EAEAEA);
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   z-index: 10;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 .legend-title {
@@ -938,7 +1043,7 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px 16px;
-  max-width: 320px;
+  max-width: min(320px, 90vw);
 }
 
 .legend-item {
@@ -1031,7 +1136,7 @@ input:checked + .slider:before {
   position: absolute;
   top: 60px;
   right: 20px;
-  width: 320px;
+  width: min(320px, calc(100% - 40px));
   max-height: calc(100% - 100px);
   background: #FFF;
   border: 1px solid #EAEAEA;
@@ -1213,41 +1318,21 @@ input:checked + .slider:before {
 /* Building hint */
 .graph-building-hint {
   position: absolute;
-  bottom: 160px; /* Moved up from 80px */
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   color: #fff;
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 6px;
   font-weight: 500;
-  letter-spacing: 0.5px;
+  white-space: nowrap;
   z-index: 100;
-}
-
-.memory-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: breathe 2s ease-in-out infinite;
-}
-
-.memory-icon {
-  width: 18px;
-  height: 18px;
-  color: #4CAF50;
-}
-
-@keyframes breathe {
-  0%, 100% { opacity: 0.7; transform: scale(1); filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.3)); }
-  50% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.6)); }
 }
 
 /* 시뮬레이션 종료 후 알림 스타일 */
